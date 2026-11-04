@@ -86,6 +86,13 @@ export const api = {
   },
 
   /**
+   * Track ticket by ticket number (public for customers)
+   */
+  async trackTicket(ticketNumber) {
+    return apiFetch(`/tickets/track/${encodeURIComponent(ticketNumber)}`);
+  },
+
+  /**
    * Admin analytics summary
    */
   async getAdminAnalytics(adminKey) {
