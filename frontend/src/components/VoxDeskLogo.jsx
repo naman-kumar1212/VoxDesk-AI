@@ -5,16 +5,18 @@ import React from 'react';
  *
  * Implements the Signal Slate design identity:
  * - Equalizer / Microphone icon with clean geometric bars
- * - "VoxDesk" in dark navy (#111827)
- * - "AI" in refined violet brand color (#5B3CC4)
+ * - "VoxDesk" in dark navy (#111827) on light surfaces, or crisp white (#FFFFFF) on dark surfaces
+ * - "AI" in refined violet brand color (#5B3CC4 or #8B6CF0)
  * - Optical alignment and balanced spacing
  */
-export default function VoxDeskLogo({ size = 'md', className = '' }) {
+export default function VoxDeskLogo({ size = 'md', className = '', theme = 'light' }) {
   const isSm = size === 'sm';
   const isLg = size === 'lg';
 
   const iconSize = isSm ? 'w-6 h-6' : isLg ? 'w-9 h-9' : 'w-7 h-7';
   const textClasses = isSm ? 'text-base' : isLg ? 'text-2xl' : 'text-lg';
+  const brandTextClass = theme === 'dark' ? 'text-white' : 'text-[#111827]';
+  const aiTextClass = theme === 'dark' ? 'text-[#8B6CF0]' : 'text-brand';
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
@@ -40,10 +42,9 @@ export default function VoxDeskLogo({ size = 'md', className = '' }) {
       </div>
 
       {/* Typography with optical weight and spacing */}
-      <span className={`font-bold tracking-tight text-[#111827] leading-none ${textClasses}`}>
-        VoxDesk <span className="text-brand font-semibold ml-0.5">AI</span>
+      <span className={`font-bold tracking-tight leading-none ${brandTextClass} ${textClasses}`}>
+        VoxDesk <span className={`${aiTextClass} font-semibold ml-0.5`}>AI</span>
       </span>
     </div>
   );
 }
-

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import StatusBadge from '../StatusBadge';
@@ -50,8 +51,6 @@ import {
 
 } from 'lucide-react';
 
-
-
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
 function formatDate(ts, opts = { month: 'short', day: 'numeric' }) {
@@ -61,8 +60,6 @@ function formatDate(ts, opts = { month: 'short', day: 'numeric' }) {
   return new Date(ts).toLocaleDateString(undefined, opts);
 
 }
-
-
 
 function formatDateTime(ts) {
 
@@ -83,8 +80,6 @@ function formatDateTime(ts) {
   });
 
 }
-
-
 
 export default function TicketsView({ authToken }) {
 
@@ -114,8 +109,6 @@ export default function TicketsView({ authToken }) {
 
   const [feedback, setFeedback] = useState(null);
 
-
-
   /* ── Filter & Search states ────────────────────────────────────────── */
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,8 +129,6 @@ export default function TicketsView({ authToken }) {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-
-
   // Debounce search input
 
   useEffect(() => {
@@ -154,8 +145,6 @@ export default function TicketsView({ authToken }) {
 
   }, [searchQuery]);
 
-
-
   // Load departments once
 
   useEffect(() => {
@@ -169,8 +158,6 @@ export default function TicketsView({ authToken }) {
       .catch((err) => console.error('Failed to load departments:', err));
 
   }, [authToken]);
-
-
 
   // Load tickets list from API
 
@@ -206,15 +193,11 @@ export default function TicketsView({ authToken }) {
 
       });
 
-
-
       const list = data?.tickets || [];
 
       setTickets(list);
 
       setPagination(data?.pagination || { total: 0, page: 1, page_size: 25, total_pages: 1 });
-
-
 
       // Refresh selected ticket from list if currently open
 
@@ -246,15 +229,11 @@ export default function TicketsView({ authToken }) {
 
   }, [authToken, statusFilter, priorityFilter, categoryFilter, departmentFilter, debouncedSearch, sortBy, sortDir, currentPage, selectedTicket]);
 
-
-
   useEffect(() => {
 
     loadTickets();
 
   }, [loadTickets]);
-
-
 
   // Select ticket & load chronological event history
 
@@ -265,8 +244,6 @@ export default function TicketsView({ authToken }) {
     setInternalNotesInput(ticket.internal_notes || '');
 
     setIsLoadingEvents(true);
-
-
 
     try {
 
@@ -293,8 +270,6 @@ export default function TicketsView({ authToken }) {
     }
 
   };
-
-
 
   // Status transition action
 
@@ -332,8 +307,6 @@ export default function TicketsView({ authToken }) {
 
   };
 
-
-
   // Department reassignment action
 
   const handleReassignDepartment = async (targetDeptName) => {
@@ -370,8 +343,6 @@ export default function TicketsView({ authToken }) {
 
   };
 
-
-
   // Save internal notes
 
   const handleSaveNotes = async () => {
@@ -406,8 +377,6 @@ export default function TicketsView({ authToken }) {
 
   };
 
-
-
   // Auto clear feedback after 3 seconds
 
   useEffect(() => {
@@ -419,8 +388,6 @@ export default function TicketsView({ authToken }) {
     return () => clearTimeout(t);
 
   }, [feedback]);
-
-
 
   return (
 
@@ -450,8 +417,6 @@ export default function TicketsView({ authToken }) {
 
         </div>
 
-
-
         <button
 
           type="button"
@@ -471,8 +436,6 @@ export default function TicketsView({ authToken }) {
         </button>
 
       </div>
-
-
 
       {/* Feedback Banner */}
 
@@ -511,8 +474,6 @@ export default function TicketsView({ authToken }) {
         </div>
 
       )}
-
-
 
       {/* ─────────────────────────────────────────────────────────────────── */}
 
@@ -554,8 +515,6 @@ export default function TicketsView({ authToken }) {
 
               </div>
 
-
-
               {/* Quick Filter Selectors */}
 
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -584,8 +543,6 @@ export default function TicketsView({ authToken }) {
 
                 </select>
 
-
-
                 {/* Priority */}
 
                 <select
@@ -607,8 +564,6 @@ export default function TicketsView({ authToken }) {
                   <option value="low">Low</option>
 
                 </select>
-
-
 
                 {/* Category (Restored) */}
 
@@ -640,8 +595,6 @@ export default function TicketsView({ authToken }) {
 
                 </select>
 
-
-
                 {/* Department */}
 
                 <select
@@ -663,8 +616,6 @@ export default function TicketsView({ authToken }) {
                   ))}
 
                 </select>
-
-
 
                 {/* Sort Toggle */}
 
@@ -691,8 +642,6 @@ export default function TicketsView({ authToken }) {
             </div>
 
           </div>
-
-
 
           {/* Tickets Table */}
 
@@ -820,8 +769,6 @@ export default function TicketsView({ authToken }) {
 
           </div>
 
-
-
           {/* Table Pagination Controls */}
 
           <div className="p-3.5 border-t border-border flex items-center justify-between text-xs bg-surface-subtle">
@@ -833,8 +780,6 @@ export default function TicketsView({ authToken }) {
               <span className="font-semibold text-primary-text">{pagination.total_pages || 1}</span> ({pagination.total} tickets)
 
             </span>
-
-
 
             <div className="flex items-center gap-1.5">
 
@@ -878,47 +823,30 @@ export default function TicketsView({ authToken }) {
 
         </div>
 
-
-
       </div>
 
-
-
       {/* ─────────────────────────────────────────────────────────────────── */}
 
-      {/* 3. Slide-Over Ticket Inspector Drawer (Overlay on right, no table squeeze) */}
-
+            {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 3. Slide-Over Ticket Inspector Drawer (Portaled to document.body for full-viewport height) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
+      {selectedTicket && typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Global Backdrop: Dims entire screen including topbar and sidebar */}
+          <div
+            className="fixed inset-0 bg-slate-900/40 z-[100] transition-opacity"
+            onClick={() => setSelectedTicket(null)}
+            aria-hidden="true"
+          />
 
-      {selectedTicket && (
-
-        <div
-
-          className="fixed inset-0 bg-slate-900/25 z-20 md:z-20 transition-opacity"
-
-          onClick={() => setSelectedTicket(null)}
-
-          aria-hidden="true"
-
-        />
-
-      )}
-
-
-
-      {selectedTicket && (
-
-        <div
-
-          role="dialog"
-
-          aria-label="Ticket Inspector"
-
-          className="fixed inset-y-0 right-0 z-50 w-full sm:max-w-lg md:max-w-xl bg-surface border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 ease-out"
-
-        >
-
-          {/* Drawer Top Bar with ID, Status & Close Action */}
+          {/* Full-Height Drawer: Extends from top-0 to bottom-0 with zero gap or partition */}
+          <aside
+            role="dialog"
+            aria-label="Ticket Inspector"
+            aria-modal="true"
+            className="fixed inset-y-0 right-0 z-[101] w-full sm:max-w-lg md:max-w-xl bg-surface border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 ease-out"
+          >
+            {/* Drawer Top Bar with ID, Status & Close Action */}
 
           <div className="p-5 border-b border-border flex items-center justify-between bg-surface-subtle shrink-0">
 
@@ -963,8 +891,6 @@ export default function TicketsView({ authToken }) {
             </div>
 
           </div>
-
-
 
           {/* Drawer Scrollable Content */}
 
@@ -1020,8 +946,6 @@ export default function TicketsView({ authToken }) {
 
             </div>
 
-
-
             {/* Quick Status Transitions */}
 
             <div className="space-y-2">
@@ -1056,8 +980,6 @@ export default function TicketsView({ authToken }) {
               </div>
             </div>
 
-
-
             {/* Department Reassignment Dropdown */}
 
             <div className="space-y-1.5">
@@ -1089,8 +1011,6 @@ export default function TicketsView({ authToken }) {
               </select>
 
             </div>
-
-
 
             {/* Internal Admin Notes */}
 
@@ -1134,8 +1054,6 @@ export default function TicketsView({ authToken }) {
 
             </div>
 
-
-
             {/* Transcript Quote */}
 
             <div className="space-y-2 text-xs">
@@ -1149,8 +1067,6 @@ export default function TicketsView({ authToken }) {
               </div>
 
             </div>
-
-
 
             {/* Chronological Audit Events */}
 
@@ -1167,14 +1083,10 @@ export default function TicketsView({ authToken }) {
             </div>
 
           </div>
-
-        </div>
-
+          </aside>
+        </>,
+        document.body
       )}
-
     </div>
-
   );
-
 }
-
