@@ -27,7 +27,7 @@ class Config:
 
     # Gemini — Free Tier only. Never attach billing.
     GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    GEMINI_MODEL: str = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 
     # TTS — browser only; no external TTS provider
     TTS_PROVIDER: str = "browser"
