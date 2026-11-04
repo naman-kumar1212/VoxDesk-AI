@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Inbox,
   FileText,
-  Sparkles,
   History,
   Building2,
   CheckCircle2,
@@ -19,9 +18,10 @@ import {
   Loader2,
   User,
   Mail,
-  StickyNote,
   Tag,
   Calendar,
+  X,
+  ShieldAlert,
 } from 'lucide-react';
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
@@ -33,12 +33,13 @@ function formatDate(ts, opts = { month: 'short', day: 'numeric' }) {
 function formatDateTime(ts) {
   if (!ts) return '—';
   return new Date(ts).toLocaleString([], {
-    month: 'short', day: 'numeric', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
-
-/* ── Per-action feedback state shape: { type: 'success'|'error', message: string } ── */
 
 export default function TicketsView({ authToken }) {
   /* ── Data states ───────────────────────────────────────────────────── */
@@ -48,738 +49,393 @@ export default function TicketsView({ authToken }) {
   const [selectedTicketEvents, setSelectedTicketEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [feedback, setFeedback] = useState(null);
 
-  /* ── Filter & Search states ────────────────────────────────────────── */
-  const [searchQuery, setSearchQuery]           = useState('');
-  const [debouncedSearch, setDebouncedSearch]   = useState('');
-  const [statusFilter, setStatusFilter]         = useState('ALL');
-  const [priorityFilter, setPriorityFilter]     = useState('ALL');
-  const [categoryFilter, setCategoryFilter]     = useState('ALL');
+  /* ── Filter states ─────────────────────────────────────────────────── */
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [priorityFilter, setPriorityFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
-  const [sortBy, setSortBy]   = useState('created_at');
-  const [sortDir, setSortDir] = useState('desc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [page, setPage] = useState(1);
 
-  // Debounce search input to prevent firing requests on every keystroke
+  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
+      setDebouncedSearch(search);
+      setPage(1);
     }, 300);
     return () => clearTimeout(handler);
-  }, [searchQuery]);
+  }, [search]);
 
-  /* ── Departments list for filter & reassignment ────────────────────── */
-  const [departments, setDepartments] = useState([]);
-
-  /* ── Ticket detail actions ─────────────────────────────────────────── */
-  const [targetStatus, setTargetStatus]         = useState('');
-  const [targetDepartment, setTargetDepartment] = useState('');
-  const [internalNotesInput, setInternalNotesInput] = useState('');
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [isUpdatingDept,   setIsUpdatingDept]   = useState(false);
-  const [isSavingNotes,    setIsSavingNotes]     = useState(false);
-
-  /* Separate per-action feedback so they don't collide */
-  const [statusFeedback, setStatusFeedback] = useState(null); // { type, message }
-  const [deptFeedback,   setDeptFeedback]   = useState(null);
-  const [notesFeedback,  setNotesFeedback]  = useState(null);
-
-  /* ── Load departments once ─────────────────────────────────────────── */
+  // Load departments list for filtering & reassignment
   useEffect(() => {
     if (!authToken) return;
     api.getDepartments(authToken)
-      .then((data) => setDepartments(data?.departments || []))
-      .catch((err) => console.error('Failed to load departments:', err));
+      .then((res) => setDepartments(res?.departments || []))
+      .catch((err) => console.error('Failed to load departments in TicketsView:', err));
   }, [authToken]);
 
-  /* ── Load tickets list ─────────────────────────────────────────────── */
-  const loadTickets = useCallback(async (bypassCache = false) => {
+  // Load Tickets table
+  const fetchTickets = useCallback(async () => {
     if (!authToken) return;
     setIsLoading(true);
+    setFeedback(null);
     try {
-      const data = await api.getAdminTickets(authToken, {
-        status: statusFilter,
-        priority: priorityFilter,
-        category: categoryFilter,
-        department: departmentFilter,
-        q: debouncedSearch,
-        sortBy,
-        sortDir,
-        page: currentPage,
-        pageSize: 25,
-        bypassCache,
-      });
+      const params = {
+        page,
+        page_size: 25,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (statusFilter !== 'ALL') params.status = statusFilter;
+      if (priorityFilter !== 'ALL') params.priority = priorityFilter;
+      if (categoryFilter !== 'ALL') params.category = categoryFilter;
+      if (departmentFilter !== 'ALL') params.department_id = departmentFilter;
 
-      const list = data?.tickets || [];
-      setTickets(list);
+      const data = await api.getTickets(authToken, params);
+      setTickets(data?.tickets || []);
       setPagination(data?.pagination || { total: 0, page: 1, page_size: 25, total_pages: 1 });
-
-      // Refresh selected ticket from list
-      if (selectedTicket) {
-        const found = list.find((t) => t.id === selectedTicket.id);
-        if (found) {
-          setSelectedTicket(found);
-          setTargetStatus(found.status);
-          setTargetDepartment(found.department);
-          setInternalNotesInput(found.internal_notes || '');
-        }
-      }
     } catch (err) {
-      console.error('Failed to query tickets:', err);
+      console.error('Failed to fetch tickets:', err);
+      setFeedback({ type: 'error', message: err.message || 'Unable to load tickets table.' });
     } finally {
       setIsLoading(false);
     }
-  }, [authToken, statusFilter, priorityFilter, categoryFilter, departmentFilter, debouncedSearch, sortBy, sortDir, currentPage]);
+  }, [authToken, page, debouncedSearch, statusFilter, priorityFilter, categoryFilter, departmentFilter, sortBy, sortOrder]);
 
-  useEffect(() => { loadTickets(); }, [loadTickets]);
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
-  /* ── Select ticket & load events ───────────────────────────────────── */
+  // Select Ticket & Fetch Chronological Events
   const handleSelectTicket = async (ticket) => {
     setSelectedTicket(ticket);
-    setTargetStatus(ticket.status);
-    setTargetDepartment(ticket.department);
-    setInternalNotesInput(ticket.internal_notes || '');
-    setStatusFeedback(null);
-    setDeptFeedback(null);
-    setNotesFeedback(null);
     setIsLoadingEvents(true);
-
     try {
-      const data = await api.getAdminTicketDetail(authToken, ticket.id);
-      if (data?.ticket) {
+      const data = await api.getTicket(ticket.ticket_number);
+      if (data && data.ticket) {
         setSelectedTicket(data.ticket);
-        setTargetStatus(data.ticket.status);
-        setTargetDepartment(data.ticket.department);
-        setInternalNotesInput(data.ticket.internal_notes || '');
+        setSelectedTicketEvents(data.ticket.events || []);
       }
-      setSelectedTicketEvents(data?.events || []);
     } catch (err) {
-      console.error('Failed to load ticket events:', err);
+      console.error('Failed to fetch ticket details:', err);
     } finally {
       setIsLoadingEvents(false);
     }
   };
 
-  /* ── Auto-clear feedback after 3 s ─────────────────────────────────── */
-  useEffect(() => {
-    if (!statusFeedback) return;
-    const t = setTimeout(() => setStatusFeedback(null), 3000);
-    return () => clearTimeout(t);
-  }, [statusFeedback]);
-
-  useEffect(() => {
-    if (!deptFeedback) return;
-    const t = setTimeout(() => setDeptFeedback(null), 3000);
-    return () => clearTimeout(t);
-  }, [deptFeedback]);
-
-  useEffect(() => {
-    if (!notesFeedback) return;
-    const t = setTimeout(() => setNotesFeedback(null), 3000);
-    return () => clearTimeout(t);
-  }, [notesFeedback]);
-
-  /* ── Status update ──────────────────────────────────────────────────── */
-  const handleUpdateStatus = async () => {
-    if (!selectedTicket || !targetStatus || targetStatus === selectedTicket.status) return;
-    setIsUpdatingStatus(true);
-    setStatusFeedback(null);
+  // Status & Assignment Actions
+  const handleUpdateStatus = async (newStatus) => {
+    if (!selectedTicket || isUpdating) return;
+    setIsUpdating(true);
     try {
-      await api.updateTicket(authToken, selectedTicket.id, {
-        status: targetStatus,
-        reason: 'Updated from Tickets Management',
-      });
-      setStatusFeedback({ type: 'success', message: `Status updated to ${targetStatus.replace(/_/g, ' ')}.` });
-      await loadTickets();
-      await handleSelectTicket({ ...selectedTicket, status: targetStatus });
+      await api.updateTicket(authToken, selectedTicket.id, { status: newStatus });
+      setFeedback({ type: 'success', message: `Status updated to ${newStatus}.` });
+      handleSelectTicket(selectedTicket);
+      fetchTickets();
     } catch (err) {
-      setStatusFeedback({ type: 'error', message: err.message || 'Status transition denied.' });
+      setFeedback({ type: 'error', message: err.message || 'Failed to update ticket status.' });
     } finally {
-      setIsUpdatingStatus(false);
+      setIsUpdating(false);
     }
   };
 
-  /* ── Department reassignment ────────────────────────────────────────── */
-  const handleReassignDepartment = async () => {
-    if (!selectedTicket || !targetDepartment || targetDepartment === selectedTicket.department) return;
-    setIsUpdatingDept(true);
-    setDeptFeedback(null);
+  const handleReassignDepartment = async (deptId) => {
+    if (!selectedTicket || isUpdating) return;
+    setIsUpdating(true);
     try {
-      await api.updateTicket(authToken, selectedTicket.id, {
-        department: targetDepartment,
-        reason: `Reassigned to ${targetDepartment}`,
-      });
-      setDeptFeedback({ type: 'success', message: `Reassigned to ${targetDepartment}.` });
-      await loadTickets();
-      await handleSelectTicket({ ...selectedTicket, department: targetDepartment });
+      await api.updateTicket(authToken, selectedTicket.id, { department_id: deptId });
+      setFeedback({ type: 'success', message: 'Department successfully reassigned.' });
+      handleSelectTicket(selectedTicket);
+      fetchTickets();
     } catch (err) {
-      setDeptFeedback({ type: 'error', message: err.message || 'Department reassignment failed.' });
+      setFeedback({ type: 'error', message: err.message || 'Failed to reassign department.' });
     } finally {
-      setIsUpdatingDept(false);
+      setIsUpdating(false);
     }
   };
 
-  /* ── Save internal notes ────────────────────────────────────────────── */
-  const handleSaveNotes = async () => {
-    if (!selectedTicket) return;
-    setIsSavingNotes(true);
-    setNotesFeedback(null);
-    try {
-      await api.updateTicket(authToken, selectedTicket.id, {
-        internalNotes: internalNotesInput,
-      });
-      setNotesFeedback({ type: 'success', message: 'Admin notes saved.' });
-      await loadTickets();
-      await handleSelectTicket({ ...selectedTicket, internal_notes: internalNotesInput });
-    } catch (err) {
-      setNotesFeedback({ type: 'error', message: err.message || 'Failed to save notes.' });
-    } finally {
-      setIsSavingNotes(false);
-    }
-  };
-
-  /* ── Inline feedback pill ───────────────────────────────────────────── */
-  const FeedbackPill = ({ fb }) => {
-    if (!fb) return null;
-    return (
-      <div
-        className={`flex items-center gap-1.5 mt-1.5 text-[11px] font-medium px-2 py-1 rounded-lg ${
-          fb.type === 'success'
-            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-            : 'bg-rose-50 text-rose-800 border border-rose-200'
-        }`}
-      >
-        {fb.type === 'success'
-          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          : <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
-        {fb.message}
-      </div>
-    );
-  };
-
-  /* ══════════════════════════════════════════════════════════════════
-     RENDER
-  ══════════════════════════════════════════════════════════════════ */
   return (
     <div className="space-y-6">
+      {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 1. Header & Quick Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
             Tickets Management
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Search, filter, inspect transcripts, reassign departments, and update grievance statuses.
+          <p className="text-xs text-secondary-text mt-0.5">
+            Enterprise grievance records, server-side pagination, and real-time status transitions.
           </p>
         </div>
 
         <button
-          onClick={() => loadTickets(true)}
+          type="button"
+          onClick={() => fetchTickets()}
           disabled={isLoading}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
-                     text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl
-                     shadow-sm hover:bg-slate-50 transition focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-medium text-slate-700 hover:bg-surface-subtle transition shadow-xs self-start sm:self-auto cursor-pointer"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary-600' : ''}`} />
-          <span>Refresh</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>Refresh Table</span>
         </button>
       </div>
 
-      {/* 2. Search & Multi-Filter Bar */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 2. Structured Search & Filter Bar */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="bg-surface border border-border rounded-card p-4 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by ticket ID, customer name/email, complaint…"
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl
-                         outline-none focus:bg-white focus:border-primary-500 transition
-                         focus-visible:ring-2 focus-visible:ring-primary-500"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by ticket ID, transcript, customer name..."
+              className="w-full pl-9 pr-3 py-2 bg-surface border border-border rounded-input text-xs text-primary-text focus:border-brand focus:ring-1 focus:ring-brand outline-none transition"
             />
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={`${sortBy}:${sortDir}`}
-              onChange={(e) => { const [sb, sd] = e.target.value.split(':'); setSortBy(sb); setSortDir(sd); }}
-              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl
-                         px-2.5 py-2 outline-none text-slate-700"
-            >
-              <option value="created_at:desc">Newest First</option>
-              <option value="created_at:asc">Oldest First</option>
-              <option value="priority:desc">High Priority First</option>
-              <option value="ticket_number:asc">Ticket ID (A–Z)</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Filter Pills Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100 text-xs">
-          {/* Status Filter */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Status
-            </label>
+          {/* Quick Filter Selectors */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Status */}
             <select
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 outline-none"
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              className="px-2.5 py-2 bg-surface border border-border rounded-input text-secondary-text focus:border-brand outline-none cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               <option value="open">Open</option>
               <option value="in_progress">In Progress</option>
-              <option value="escalated">Escalated</option>
               <option value="resolved">Resolved</option>
+              <option value="escalated">Escalated</option>
             </select>
-          </div>
 
-          {/* Priority Filter */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Priority
-            </label>
+            {/* Priority */}
             <select
               value={priorityFilter}
-              onChange={(e) => { setPriorityFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 outline-none"
+              onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
+              className="px-2.5 py-2 bg-surface border border-border rounded-input text-secondary-text focus:border-brand outline-none cursor-pointer"
             >
               <option value="ALL">All Priorities</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
-          </div>
 
-          {/* Category Filter */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Category
-            </label>
-            <select
-              value={categoryFilter}
-              onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 outline-none"
-            >
-              <option value="ALL">All Categories</option>
-              <option value="payment">Payment</option>
-              <option value="orders">Orders</option>
-              <option value="delivery">Delivery</option>
-              <option value="technical">Technical</option>
-              <option value="account">Account</option>
-              <option value="refund">Refund</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          {/* Department Filter */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Department
-            </label>
+            {/* Department */}
             <select
               value={departmentFilter}
-              onChange={(e) => { setDepartmentFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 outline-none"
+              onChange={(e) => { setDepartmentFilter(e.target.value); setPage(1); }}
+              className="px-2.5 py-2 bg-surface border border-border rounded-input text-secondary-text focus:border-brand outline-none cursor-pointer"
             >
               <option value="ALL">All Departments</option>
               {departments.map((d) => (
-                <option key={d.id} value={d.name}>{d.name}</option>
+                <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
+
+            {/* Sort */}
+            <button
+              type="button"
+              onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface border border-border rounded-input text-secondary-text hover:text-primary-text transition cursor-pointer"
+              title="Toggle Sort Order"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              <span>{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 3. Main Workspace: Tickets Table & Details Drawer */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 3. Main Data Workspace: Table + Detail Drawer/Panel */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        {/* ── Tickets Table (Left Column) ──────────────────────────────── */}
-        <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-          {/* Table Header */}
-          <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-800">Tickets Log</span>
-              <span className="text-[11px] font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full">
-                {pagination.total} Total
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-400">
-              Page {pagination.page} of {pagination.total_pages}
-            </span>
-          </div>
-
-          {/* Table Body */}
-          <div className="overflow-x-auto min-h-[360px]">
-            {isLoading && tickets.length === 0 ? (
-              <div className="p-4 space-y-2">
-                <TicketRowSkeleton /><TicketRowSkeleton />
-                <TicketRowSkeleton /><TicketRowSkeleton />
-              </div>
-            ) : tickets.length === 0 ? (
-              <div className="py-20 text-center text-xs text-slate-400 space-y-2">
-                <Inbox className="w-8 h-8 mx-auto text-slate-300" />
-                <p className="font-semibold text-slate-600">No matching tickets found.</p>
-                <p className="text-[11px]">Adjust your search query or reset filter settings.</p>
-              </div>
-            ) : (
-              <table
-                role="table"
-                aria-label="Ticket list"
-                className="w-full text-left text-xs border-collapse"
-              >
-                <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-100 text-[10px] font-bold
-                                 uppercase tracking-wider text-slate-400 select-none">
-                    <th className="py-2.5 px-4 whitespace-nowrap">Ticket</th>
-                    <th className="py-2.5 px-3 whitespace-nowrap">Customer</th>
-                    <th className="py-2.5 px-3 whitespace-nowrap">Department</th>
-                    <th className="py-2.5 px-3 whitespace-nowrap min-w-[80px]">Priority</th>
-                    <th className="py-2.5 px-3 whitespace-nowrap min-w-[110px]">Status</th>
-                    <th className="py-2.5 px-3 text-right whitespace-nowrap">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {tickets.map((t) => {
+        {/* Tickets Table (8 cols on large screens, 12 if no selection) */}
+        <div className={`${selectedTicket ? 'lg:col-span-7 xl:col-span-8' : 'lg:col-span-12'} bg-surface border border-border rounded-card shadow-xs overflow-hidden transition-all`}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-surface-subtle text-muted-text font-semibold border-b border-border">
+                <tr>
+                  <th className="py-3 px-3">Ticket ID</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Priority</th>
+                  <th className="py-3 px-3">Category</th>
+                  <th className="py-3 px-3">Department</th>
+                  <th className="py-3 px-3">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {isLoading ? (
+                  [...Array(6)].map((_, i) => <TicketRowSkeleton key={i} />)
+                ) : tickets.length > 0 ? (
+                  tickets.map((t) => {
                     const isSelected = selectedTicket?.id === t.id;
-                    const customerName  = t.customer_name  || 'Anonymous Customer';
-                    const customerEmail = t.customer_email || 'Email not provided';
-
                     return (
                       <tr
                         key={t.id}
                         onClick={() => handleSelectTicket(t)}
-                        className={`cursor-pointer transition align-middle ${
-                          isSelected
-                            ? 'bg-primary-50/70 border-l-4 border-l-primary-600'
-                            : 'hover:bg-slate-50/80'
+                        className={`hover:bg-surface-subtle/70 transition cursor-pointer ${
+                          isSelected ? 'bg-brand-subtle/50 font-medium' : ''
                         }`}
                       >
-                        {/* Ticket ID + summary */}
-                        <td className="py-3 px-4">
-                          <div className="font-mono font-extrabold text-slate-900 whitespace-nowrap">
-                            {t.ticket_number}
-                          </div>
-                          <div
-                            className="text-[11px] text-slate-500 truncate max-w-[140px]"
-                            title={t.summary}
-                          >
-                            {t.summary || '—'}
-                          </div>
+                        <td className="py-3 px-3 font-mono font-bold text-primary-text">
+                          {t.ticket_number}
                         </td>
-
-                        {/* Customer */}
                         <td className="py-3 px-3">
-                          <div
-                            className="font-bold text-slate-800 truncate max-w-[130px]"
-                            title={customerName}
-                          >
-                            {customerName}
-                          </div>
-                          <div
-                            className="text-[10px] text-slate-400 truncate max-w-[130px]"
-                            title={customerEmail}
-                          >
-                            {customerEmail}
-                          </div>
+                          <StatusBadge type="status" value={t.status} />
                         </td>
-
-                        {/* Department */}
                         <td className="py-3 px-3">
-                          <span
-                            className="text-slate-700 font-semibold text-[11px] truncate max-w-[110px] block"
-                            title={t.department}
-                          >
-                            {t.department || '—'}
-                          </span>
-                        </td>
-
-                        {/* Priority */}
-                        <td className="py-3 px-3 whitespace-nowrap min-w-[80px]">
                           <StatusBadge type="priority" value={t.priority} />
                         </td>
-
-                        {/* Status */}
-                        <td className="py-3 px-3 whitespace-nowrap min-w-[110px]">
-                          <StatusBadge value={t.status} />
+                        <td className="py-3 px-3 text-secondary-text capitalize">
+                          {t.category || 'Support'}
                         </td>
-
-                        {/* Created date */}
-                        <td className="py-3 px-3 text-right text-[10px] text-slate-400 font-mono whitespace-nowrap">
+                        <td className="py-3 px-3 text-secondary-text">
+                          {t.department?.name || t.department_name || 'General Support'}
+                        </td>
+                        <td className="py-3 px-3 text-muted-text whitespace-nowrap">
                           {formatDate(t.created_at)}
                         </td>
                       </tr>
                     );
-                  })}
-                </tbody>
-              </table>
-            )}
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-xs text-muted-text">
+                      No matching tickets found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Pagination Controls Footer */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs shrink-0">
-            <span className="text-slate-500 text-[11px]">
-              Showing {tickets.length} of {pagination.total} tickets
+          {/* Table Pagination Controls */}
+          <div className="p-3.5 border-t border-border flex items-center justify-between text-xs bg-surface-subtle">
+            <span className="text-muted-text">
+              Showing page <span className="font-semibold text-primary-text">{pagination.page}</span> of{' '}
+              <span className="font-semibold text-primary-text">{pagination.total_pages || 1}</span> ({pagination.total} tickets)
             </span>
+
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={pagination.page <= 1 || isLoading}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white
-                           disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-primary-500"
-                aria-label="Previous page"
+                disabled={pagination.page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="p-1.5 rounded-btn bg-surface border border-border disabled:opacity-40 hover:bg-surface-muted transition cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
               </button>
-              <span className="px-2 text-xs font-semibold text-slate-700">
-                {pagination.page} / {pagination.total_pages || 1}
-              </span>
               <button
                 type="button"
-                onClick={() => setCurrentPage((p) => Math.min(pagination.total_pages, p + 1))}
-                disabled={pagination.page >= pagination.total_pages || isLoading}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white
-                           disabled:opacity-40 transition focus-visible:ring-2 focus-visible:ring-primary-500"
-                aria-label="Next page"
+                disabled={pagination.page >= pagination.total_pages}
+                onClick={() => setPage((p) => p + 1)}
+                className="p-1.5 rounded-btn bg-surface border border-border disabled:opacity-40 hover:bg-surface-muted transition cursor-pointer"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Ticket Details & Action Panel (Right Column) ─────────────── */}
-        <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
-          {selectedTicket ? (
-            <div className="divide-y divide-slate-100 overflow-y-auto max-h-[calc(100vh-220px)]">
-
-              {/* ① Ticket ID + Status + Date ─────────────────────────── */}
-              <div className="px-5 py-4 flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-sm font-extrabold text-slate-900 font-mono">
-                      {selectedTicket.ticket_number}
-                    </h2>
-                    <StatusBadge value={selectedTicket.status} />
-                    {selectedTicket.escalated && selectedTicket.status !== 'escalated' && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider
-                                       text-red-700 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
-                        Escalated
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>Filed {formatDateTime(selectedTicket.created_at)}</span>
-                  </div>
-                </div>
+        {/* Selected Ticket Details Drawer (5 cols on large screens) */}
+        {selectedTicket && (
+          <div className="lg:col-span-5 xl:col-span-4 bg-surface border border-border rounded-card p-5 shadow-xs space-y-5 animate-in fade-in duration-150 sticky top-20">
+            {/* Drawer Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-border">
+              <div>
+                <span className="text-[11px] font-semibold text-muted-text uppercase tracking-wider block">
+                  Ticket Inspector
+                </span>
+                <span className="font-mono text-lg font-bold text-primary-text">
+                  {selectedTicket.ticket_number}
+                </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTicket(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-btn transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              {/* ② Customer Info ─────────────────────────────────────── */}
-              <div className="px-5 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                  Customer
-                </p>
-                <div className="space-y-1">
-                  <div className="flex items-start gap-2 text-xs">
-                    <User className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                    <span className="font-semibold text-slate-800 break-all">
-                      {selectedTicket.customer_name || 'Anonymous Customer'}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                    <span className="text-slate-500 font-mono break-all">
-                      {selectedTicket.customer_email || 'Email not provided'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ③ Voice Transcript ──────────────────────────────────── */}
-              <div className="px-5 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
-                  Customer Voice Transcript
-                </p>
-                <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 max-h-28 overflow-y-auto">
-                  <p className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
-                    {selectedTicket.transcript || 'No transcript available.'}
-                  </p>
-                </div>
-              </div>
-
-              {/* ④ AI Summary ────────────────────────────────────────── */}
-              <div className="px-5 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-primary-500" />
-                  AI Extracted Summary
-                </p>
-                <p className="text-xs text-slate-700 bg-primary-50/40 p-2.5 rounded-xl
-                              border border-primary-100 font-medium leading-relaxed">
-                  {selectedTicket.summary || '—'}
-                </p>
-              </div>
-
-              {/* ⑤ Metadata row: Priority / Category / Department ───── */}
-              <div className="px-5 py-3">
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-0.5">
-                      <Tag className="w-3 h-3" /> Priority
-                    </p>
-                    <StatusBadge type="priority" value={selectedTicket.priority} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                      Category
-                    </p>
-                    <span className="text-slate-700 font-semibold capitalize">
-                      {selectedTicket.category || '—'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-0.5">
-                      <Building2 className="w-3 h-3" /> Dept
-                    </p>
-                    <span className="text-slate-700 font-semibold text-[11px] leading-tight block">
-                      {selectedTicket.department || '—'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ⑥ Update Status ─────────────────────────────────────── */}
-              <div className="px-5 py-3">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                  Update Resolution Status
-                </label>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={targetStatus}
-                    onChange={(e) => setTargetStatus(e.target.value)}
-                    disabled={isUpdatingStatus}
-                    className="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs
-                               font-semibold text-slate-800 outline-none capitalize
-                               focus-visible:ring-2 focus-visible:ring-primary-500"
-                  >
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="escalated">Escalated</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-
+            {/* Quick Status & Priority Transitions */}
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-primary-text block">
+                Manage Ticket Status
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {['open', 'in_progress', 'resolved', 'escalated'].map((st) => (
                   <button
-                    onClick={handleUpdateStatus}
-                    disabled={isUpdatingStatus || targetStatus === selectedTicket.status}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary-700
-                               hover:bg-primary-800 text-white text-xs font-bold rounded-lg shadow-sm
-                               disabled:opacity-50 disabled:cursor-not-allowed transition
-                               focus-visible:ring-2 focus-visible:ring-primary-500"
+                    key={st}
+                    type="button"
+                    onClick={() => handleUpdateStatus(st)}
+                    disabled={isUpdating || selectedTicket.status === st}
+                    className={`py-1.5 px-2.5 rounded-btn border text-center font-medium capitalize transition cursor-pointer ${
+                      selectedTicket.status === st
+                        ? 'bg-brand text-white border-brand'
+                        : 'bg-surface border-border text-secondary-text hover:bg-surface-subtle'
+                    }`}
                   >
-                    {isUpdatingStatus
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Updating…</span></>
-                      : 'Apply'}
+                    {st.replace('_', ' ')}
                   </button>
-                </div>
-                <FeedbackPill fb={statusFeedback} />
-              </div>
-
-              {/* ⑦ Reassign Department ───────────────────────────────── */}
-              <div className="px-5 py-3">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-slate-400" /> Assigned Department
-                </label>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={targetDepartment}
-                    onChange={(e) => setTargetDepartment(e.target.value)}
-                    disabled={isUpdatingDept}
-                    className="flex-1 bg-white border border-slate-300 rounded-lg p-2 text-xs
-                               font-semibold text-slate-800 outline-none
-                               focus-visible:ring-2 focus-visible:ring-primary-500"
-                  >
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.name}>{d.name}</option>
-                    ))}
-                  </select>
-
-                  <button
-                    onClick={handleReassignDepartment}
-                    disabled={isUpdatingDept || targetDepartment === selectedTicket.department}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800
-                               hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm
-                               disabled:opacity-50 disabled:cursor-not-allowed transition
-                               focus-visible:ring-2 focus-visible:ring-primary-500"
-                  >
-                    {isUpdatingDept
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Moving…</span></>
-                      : 'Reassign'}
-                  </button>
-                </div>
-                <FeedbackPill fb={deptFeedback} />
-              </div>
-
-              {/* ⑧ Internal Admin Notes ──────────────────────────────── */}
-              <div className="px-5 py-3">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-2 flex items-center gap-1">
-                  <StickyNote className="w-3 h-3 text-slate-400" /> Internal Admin Notes
-                </label>
-                <textarea
-                  rows={2}
-                  value={internalNotesInput}
-                  onChange={(e) => setInternalNotesInput(e.target.value)}
-                  placeholder="Add internal investigation notes or operator instructions…"
-                  className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg outline-none
-                             focus:border-primary-500 transition resize-none
-                             focus-visible:ring-2 focus-visible:ring-primary-500"
-                />
-                <div className="flex items-center justify-between mt-1.5">
-                  <FeedbackPill fb={notesFeedback} />
-                  <button
-                    onClick={handleSaveNotes}
-                    disabled={isSavingNotes || internalNotesInput === (selectedTicket.internal_notes || '')}
-                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-700
-                               hover:bg-primary-800 text-white text-xs font-bold rounded-lg shadow-sm
-                               disabled:opacity-50 disabled:cursor-not-allowed transition
-                               focus-visible:ring-2 focus-visible:ring-primary-500"
-                  >
-                    {isSavingNotes
-                      ? <><Loader2 className="w-3 h-3 animate-spin" /><span>Saving…</span></>
-                      : 'Save Notes'}
-                  </button>
-                </div>
-              </div>
-
-              {/* ⑨ Activity History Timeline ─────────────────────────── */}
-              <div className="px-5 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1">
-                  <History className="w-3 h-3 text-slate-500" />
-                  Activity History
-                </p>
-                <ActivityTimeline
-                  events={selectedTicketEvents}
-                  isLoading={isLoadingEvents}
-                />
+                ))}
               </div>
             </div>
-          ) : (
-            /* Empty state — no ticket selected */
-            <div className="py-24 text-center text-xs text-slate-400 space-y-2">
-              <Inbox className="w-8 h-8 mx-auto text-slate-300" />
-              <p className="font-semibold text-slate-600">No ticket selected</p>
-              <p className="text-[11px]">
-                Click any ticket on the left to inspect transcripts and manage resolution.
-              </p>
+
+            {/* Department Reassignment Dropdown */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-primary-text block">
+                Assigned Department
+              </label>
+              <select
+                value={selectedTicket.department_id || ''}
+                onChange={(e) => handleReassignDepartment(e.target.value)}
+                disabled={isUpdating}
+                className="w-full p-2 bg-surface border border-border rounded-input text-xs text-primary-text focus:border-brand outline-none cursor-pointer"
+              >
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
             </div>
-          )}
-        </div>
+
+            {/* Transcript & Summary */}
+            <div className="space-y-2 text-xs">
+              <span className="font-semibold text-primary-text block">Customer Transcript</span>
+              <div className="p-3 rounded-lg bg-surface-subtle border border-border text-secondary-text leading-relaxed max-h-36 overflow-y-auto whitespace-pre-wrap">
+                {selectedTicket.transcript || 'No transcript record available.'}
+              </div>
+            </div>
+
+            {/* Chronological Audit Events */}
+            <div className="space-y-2 pt-2 border-t border-border">
+              <span className="text-xs font-semibold text-primary-text block">
+                Audit Timeline Events
+              </span>
+              {isLoadingEvents ? (
+                <div className="py-4 text-center">
+                  <Loader2 className="w-4 h-4 animate-spin text-brand mx-auto" />
+                </div>
+              ) : (
+                <ActivityTimeline events={selectedTicketEvents} />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

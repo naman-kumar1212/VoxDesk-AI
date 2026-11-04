@@ -5,18 +5,16 @@ import { StatCardSkeleton } from '../LoadingSkeleton';
 import { api } from '../../services/api';
 import {
   Calendar,
-  ShieldCheck,
-  CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   Clock,
-  Activity,
   Layers,
   Building2,
-  Users,
   ArrowRight,
   TrendingUp,
   Inbox,
   RefreshCw,
+  ShieldAlert,
 } from 'lucide-react';
 
 export default function DashboardView({ authToken, onNavigateToTickets }) {
@@ -48,256 +46,222 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
     loadData();
   }, [authToken]);
 
-  if (isLoading && !summary) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-          <StatCardSkeleton />
-        </div>
-        <div className="h-64 bg-slate-100 rounded-2xl animate-pulse" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center space-y-3">
-        <p className="text-sm font-semibold text-rose-700">{error}</p>
-        <button
-          onClick={loadData}
-          className="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl shadow hover:bg-rose-700 transition"
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
-  }
-
-  const catDist = summary?.category_distribution || {};
-  const maxCatCount = Math.max(1, ...Object.values(catDist));
-
   return (
-    <div className="space-y-8">
-      {/* 1. Header Title & Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-6">
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 1. Header with Operational Context & Refresh */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
             Operational Overview
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Real-time support operations, queue distribution and department workload across actual database records.
+          <p className="text-xs text-secondary-text mt-0.5">
+            Real-time grievance ingestion metrics, active department workloads, and recent audit logs.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={() => loadData(true)}
           disabled={isLoading}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-medium text-slate-700 hover:bg-surface-subtle transition shadow-xs self-start sm:self-auto cursor-pointer"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary-600' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           <span>Refresh Metrics</span>
         </button>
       </div>
 
-      {/* 2. Top Metric Cards (6 Operational KPIs) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <StatCard
-          title="Total Tickets"
-          value={summary?.total_tickets ?? 0}
-          icon={Calendar}
-          iconBgClass="bg-purple-50"
-          colorClass="text-purple-600"
-        />
-        <StatCard
-          title="Open"
-          value={summary?.open_tickets ?? 0}
-          icon={Clock}
-          iconBgClass="bg-slate-100"
-          colorClass="text-slate-600"
-        />
-        <StatCard
-          title="In Progress"
-          value={summary?.in_progress_tickets ?? 0}
-          icon={ShieldCheck}
-          iconBgClass="bg-blue-50"
-          colorClass="text-blue-600"
-        />
-        <StatCard
-          title="Resolved"
-          value={summary?.resolved_tickets ?? 0}
-          icon={CheckCircle}
-          iconBgClass="bg-emerald-50"
-          colorClass="text-emerald-600"
-        />
-        <StatCard
-          title="Escalated"
-          value={summary?.escalated_tickets ?? 0}
-          icon={AlertTriangle}
-          iconBgClass="bg-rose-50"
-          colorClass="text-rose-600"
-        />
-        <StatCard
-          title="High Priority"
-          value={summary?.high_priority_tickets ?? 0}
-          icon={TrendingUp}
-          iconBgClass="bg-amber-50"
-          colorClass="text-amber-600"
-        />
-      </div>
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 2. Structured Responsive 6-KPI Metric Section */}
+      {/* Main 4 core KPIs in top row, 2 critical operational badges in 2nd */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          {[...Array(6)].map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          <StatCard
+            title="Total Tickets"
+            value={summary?.total_tickets}
+            icon={Calendar}
+            iconBgClass="bg-surface-subtle"
+            colorClass="text-slate-700"
+          />
+          <StatCard
+            title="Open"
+            value={summary?.open_tickets}
+            icon={Inbox}
+            iconBgClass="bg-[#F1F5F9]"
+            colorClass="text-[#475569]"
+          />
+          <StatCard
+            title="In Progress"
+            value={summary?.in_progress_tickets}
+            icon={Clock}
+            iconBgClass="bg-[#EFF6FF]"
+            colorClass="text-[#2563EB]"
+          />
+          <StatCard
+            title="Resolved"
+            value={summary?.resolved_tickets}
+            icon={CheckCircle2}
+            iconBgClass="bg-[#ECFDF3]"
+            colorClass="text-[#15803D]"
+          />
+          <StatCard
+            title="Escalated"
+            value={summary?.escalated_tickets}
+            icon={AlertTriangle}
+            iconBgClass="bg-[#FEF2F2]"
+            colorClass="text-[#B91C1C]"
+          />
+          <StatCard
+            title="High Priority"
+            value={summary?.high_priority_tickets}
+            icon={ShieldAlert}
+            iconBgClass="bg-[#FFFBEB]"
+            colorClass="text-[#B45309]"
+          />
+        </div>
+      )}
 
-      {/* 3. Middle Section: Category Distribution & Department Workload */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 3. Operational Content: Categories Breakdown & Department Workloads */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Category Distribution Progress Bars */}
-        <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary-600" />
-              <span>Grievance Categories</span>
-            </h2>
-            <span className="text-[11px] font-semibold text-slate-400">
-              {Object.keys(catDist).length} categories
+        {/* Left Column: Grievance Categories Breakdown */}
+        <div className="lg:col-span-5 bg-surface border border-border rounded-card p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-brand" />
+              <h2 className="text-sm font-semibold text-primary-text">Grievance Categories</h2>
+            </div>
+            <span className="text-xs text-muted-text">
+              {summary?.categories?.length || 0} categories
             </span>
           </div>
 
           <div className="space-y-3">
-            {Object.entries(catDist).map(([category, count]) => {
-              const percentage = Math.round((count / (summary?.total_tickets || 1)) * 100);
-              const barWidth = Math.round((count / maxCatCount) * 100);
-
-              return (
-                <div key={category} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-700 capitalize">
-                      {category.replace('_', ' ')}
-                    </span>
-                    <span className="font-mono text-[11px] text-slate-500">
-                      {count} ({percentage}%)
-                    </span>
+            {summary?.categories && summary.categories.length > 0 ? (
+              summary.categories.map((cat) => {
+                const total = summary.total_tickets || 1;
+                const percentage = Math.round((cat.count / total) * 100);
+                return (
+                  <div key={cat.category} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-slate-700 capitalize">
+                        {cat.category}
+                      </span>
+                      <span className="text-muted-text font-mono">
+                        {cat.count} ({percentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-surface-muted h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-brand h-full rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-primary-600 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${barWidth}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="py-8 text-center text-xs text-muted-text">
+                No categorical distributions recorded
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right: Department Workload Table */}
-        <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary-600" />
-              <span>Department Workload</span>
-            </h2>
-            <span className="text-[11px] font-semibold text-slate-400">Active distribution</span>
+        {/* Right Column: Department Active Workload Table */}
+        <div className="lg:col-span-7 bg-surface border border-border rounded-card p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-slate-700" />
+              <h2 className="text-sm font-semibold text-primary-text">Department Workload</h2>
+            </div>
+            <span className="text-xs text-muted-text">Active distribution</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  <th className="pb-2.5">Department</th>
-                  <th className="pb-2.5 text-center">Open</th>
-                  <th className="pb-2.5 text-center">In Progress</th>
-                  <th className="pb-2.5 text-center">Resolved</th>
-                  <th className="pb-2.5 text-center">Escalated</th>
-                  <th className="pb-2.5 text-right">Total</th>
+            <table className="w-full text-xs text-left">
+              <thead className="bg-surface-subtle text-muted-text font-semibold border-b border-border">
+                <tr>
+                  <th className="py-2.5 px-3">Department</th>
+                  <th className="py-2.5 px-2 text-center">Open</th>
+                  <th className="py-2.5 px-2 text-center">In Progress</th>
+                  <th className="py-2.5 px-2 text-center">Resolved</th>
+                  <th className="py-2.5 px-2 text-center">Escalated</th>
+                  <th className="py-2.5 px-3 text-right">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50 font-medium">
-                {(summary?.department_workload || []).map((dept) => (
-                  <tr key={dept.name} className="hover:bg-slate-50/70 transition">
-                    <td className="py-2.5 font-bold text-slate-800">{dept.name}</td>
-                    <td className="py-2.5 text-center font-mono text-slate-600">{dept.open}</td>
-                    <td className="py-2.5 text-center font-mono text-blue-600 font-semibold">{dept.in_progress}</td>
-                    <td className="py-2.5 text-center font-mono text-emerald-600 font-semibold">{dept.resolved}</td>
-                    <td className="py-2.5 text-center font-mono">
-                      {dept.escalated > 0 ? (
-                        <span className="text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded text-[10px]">
-                          {dept.escalated}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">0</span>
-                      )}
+              <tbody className="divide-y divide-border">
+                {summary?.departments && summary.departments.length > 0 ? (
+                  summary.departments.map((dept) => (
+                    <tr key={dept.id || dept.name} className="hover:bg-surface-subtle/50 transition">
+                      <td className="py-2.5 px-3 font-medium text-primary-text">{dept.name}</td>
+                      <td className="py-2.5 px-2 text-center text-slate-600 font-mono">{dept.open || 0}</td>
+                      <td className="py-2.5 px-2 text-center text-blue-600 font-mono font-semibold">{dept.in_progress || 0}</td>
+                      <td className="py-2.5 px-2 text-center text-emerald-600 font-mono">{dept.resolved || 0}</td>
+                      <td className="py-2.5 px-2 text-center text-rose-600 font-mono font-semibold">{dept.escalated || 0}</td>
+                      <td className="py-2.5 px-3 text-right font-bold text-primary-text font-mono">{dept.total || 0}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-6 text-center text-xs text-muted-text">
+                      No departmental allocations recorded
                     </td>
-                    <td className="py-2.5 text-right font-mono font-extrabold text-slate-900">{dept.total}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      {/* 4. Recent Real-Time Activity Feed */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-primary-600" />
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">
-              Recent System Activity Stream
-            </h2>
-            <span className="text-[10px] font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full">
-              Live DB
-            </span>
-          </div>
-
-          {onNavigateToTickets && (
-            <button
-              onClick={() => onNavigateToTickets()}
-              className="text-xs font-semibold text-primary-700 hover:text-primary-800 flex items-center gap-1 transition"
-            >
-              <span>View All Tickets</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 4. Recent Chronological Audit Activity Stream */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="bg-surface border border-border rounded-card p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
+          <h2 className="text-sm font-semibold text-primary-text">Recent Chronological Audit Log</h2>
+          <button
+            type="button"
+            onClick={() => onNavigateToTickets && onNavigateToTickets()}
+            className="text-xs font-semibold text-brand hover:text-brand-hover inline-flex items-center gap-1 cursor-pointer"
+          >
+            <span>View All Tickets</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {activities.length === 0 ? (
-          <div className="text-center py-10 text-xs text-slate-400 space-y-1">
-            <Inbox className="w-8 h-8 mx-auto text-slate-300" />
-            <p>No recorded activity events yet.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
-            {activities.map((act) => (
-              <div
-                key={act.id}
-                className="p-3 bg-slate-50/70 border border-slate-100 rounded-xl text-xs space-y-1 hover:bg-slate-50 transition"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-900">
-                    {act.ticket_number}
+        {activities && activities.length > 0 ? (
+          <div className="divide-y divide-border text-xs">
+            {activities.slice(0, 5).map((act, idx) => (
+              <div key={idx} className="py-2.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[11px] font-bold text-primary-text bg-surface-muted px-2 py-0.5 rounded">
+                    {act.ticket_number || 'VD-XXXX'}
                   </span>
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <span className="text-secondary-text line-clamp-1">{act.description || act.event_type}</span>
                 </div>
-                <div className="text-slate-700 font-medium truncate" title={act.summary}>
-                  {act.summary}
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-slate-500 pt-0.5">
-                  <span className="capitalize font-semibold text-primary-700">
-                    {act.event_type.replace(/_/g, ' ').toLowerCase()}
-                  </span>
-                  <span>•</span>
-                  <span>{act.customer_name}</span>
-                  <span>•</span>
-                  <span>{act.department}</span>
-                </div>
+                <span className="text-[11px] text-muted-text shrink-0">
+                  {act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                </span>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="py-6 text-center text-xs text-muted-text">
+            No recent activity logged
           </div>
         )}
       </div>
     </div>
   );
 }
-

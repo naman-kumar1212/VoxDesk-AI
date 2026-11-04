@@ -55,7 +55,7 @@ export default function DepartmentsView({ authToken }) {
     loadDepartments();
   }, [loadDepartments]);
 
-  const handleOpenCreateModal = () => {
+  const handleOpenCreate = () => {
     setEditingDept(null);
     setFormName('');
     setFormDescription('');
@@ -64,26 +64,19 @@ export default function DepartmentsView({ authToken }) {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (dept) => {
+  const handleOpenEdit = (dept) => {
     setEditingDept(dept);
-    setFormName(dept.name);
+    setFormName(dept.name || '');
     setFormDescription(dept.description || '');
     setFormStatus(dept.status || 'active');
     setModalError(null);
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingDept(null);
-    setModalError(null);
-  };
-
-  const handleSubmitModal = async (e) => {
+  const handleSaveDepartment = async (e) => {
     e.preventDefault();
-    const name = formName.trim();
-    if (!name || name.length < 2) {
-      setModalError('Department name must be at least 2 characters.');
+    if (!formName.trim()) {
+      setModalError('Department name is required.');
       return;
     }
 
@@ -91,44 +84,41 @@ export default function DepartmentsView({ authToken }) {
     setModalError(null);
 
     try {
+      const payload = {
+        name: formName.trim(),
+        description: formDescription.trim(),
+        status: formStatus,
+      };
+
       if (editingDept) {
-        await api.updateDepartment(authToken, editingDept.id, {
-          name,
-          description: formDescription.trim(),
-          status: formStatus,
-        });
-        setFeedback({ type: 'success', message: `Department '${name}' updated successfully.` });
+        await api.updateDepartment(authToken, editingDept.id, payload);
+        setFeedback({ type: 'success', message: `Department "${payload.name}" updated successfully.` });
       } else {
-        await api.createDepartment(authToken, {
-          name,
-          description: formDescription.trim(),
-          status: formStatus,
-        });
-        setFeedback({ type: 'success', message: `Department '${name}' created successfully.` });
+        await api.createDepartment(authToken, payload);
+        setFeedback({ type: 'success', message: `Department "${payload.name}" created successfully.` });
       }
-      handleCloseModal();
-      await loadDepartments();
+
+      setIsModalOpen(false);
+      loadDepartments();
     } catch (err) {
-      console.error('Department submit error:', err);
-      setModalError(err.message || 'Failed to save department.');
+      console.error('Department save failed:', err);
+      setModalError(err.message || 'Operation failed. Please verify credentials.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (dept) => {
-    if (!dept) return;
+  const handleDeleteDepartment = async () => {
+    if (!deptToDelete) return;
     setIsDeleting(true);
-    setFeedback(null);
     try {
-      await api.deleteDepartment(authToken, dept.id);
-      setFeedback({ type: 'success', message: `Department '${dept.name}' deleted successfully.` });
+      await api.deleteDepartment(authToken, deptToDelete.id);
+      setFeedback({ type: 'success', message: `Department "${deptToDelete.name}" deleted.` });
       setDeptToDelete(null);
-      await loadDepartments();
+      loadDepartments();
     } catch (err) {
-      console.error('Delete department error:', err);
-      setFeedback({ type: 'error', message: err.message || 'Failed to delete department.' });
-      setDeptToDelete(null);
+      console.error('Department deletion failed:', err);
+      setFeedback({ type: 'error', message: err.message || 'Cannot delete department with active tickets.' });
     } finally {
       setIsDeleting(false);
     }
@@ -136,249 +126,240 @@ export default function DepartmentsView({ authToken }) {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header & Add Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 1. Header & Primary CTA */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
             Departments Management
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Configure routing departments, assign specialized support teams, and monitor assigned grievance queues.
+          <p className="text-xs text-secondary-text mt-0.5">
+            Operational unit capacity, active ticket queues, and routing rules.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={loadDepartments}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition"
+            className="p-2 rounded-btn bg-surface border border-border text-slate-600 hover:text-primary-text transition shadow-xs cursor-pointer"
+            title="Refresh departments"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary-600' : ''}`} />
-            <span>Refresh</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
 
           <button
-            onClick={handleOpenCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary-700 hover:bg-primary-800 text-white rounded-xl text-xs font-bold shadow-md shadow-primary-700/20 transition cursor-pointer"
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-xs transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Add Department</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Global Feedback Banner */}
+      {/* Global Feedback Alert */}
       {feedback && (
         <div
-          className={`p-3 rounded-xl text-xs font-medium flex items-center justify-between gap-2 ${
+          className={`p-3.5 rounded-lg border text-xs flex items-center justify-between ${
             feedback.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
           }`}
         >
-          <div className="flex items-center gap-2">
-            {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            )}
-            <span>{feedback.message}</span>
-          </div>
-          <button onClick={() => setFeedback(null)} className="text-slate-400 hover:text-slate-600">
-            <X className="w-3.5 h-3.5" />
+          <span>{feedback.message}</span>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* 3. Department Cards Grid */}
-      {isLoading && departments.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="h-48 bg-slate-100 rounded-2xl animate-pulse" />
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 2. Departments Grid */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-48 rounded-card bg-surface-muted animate-pulse" />
           ))}
         </div>
-      ) : departments.length === 0 ? (
-        <div className="py-20 text-center text-xs text-slate-400 space-y-2 bg-white rounded-2xl border border-slate-200/80">
-          <Inbox className="w-8 h-8 mx-auto text-slate-300" />
-          <p className="font-semibold text-slate-600">No departments configured yet.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      ) : departments.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
           {departments.map((dept) => {
-            const hasAssignedTickets = (dept.total_tickets || 0) > 0;
+            const isActive = dept.status === 'active';
+            const totalTickets = dept.ticket_count || dept.total_tickets || 0;
 
             return (
               <div
                 key={dept.id}
-                className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-between hover:shadow-md transition"
+                className="bg-surface border border-border rounded-card p-5 shadow-xs space-y-4 hover:border-slate-300 transition"
               >
-                <div>
-                  {/* Card Title & Status Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-xl bg-primary-50 text-primary-700">
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900">{dept.name}</h3>
-                        <span
-                          className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
-                            dept.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
-                        >
-                          {dept.status}
-                        </span>
-                      </div>
+                {/* Header: Name + Status */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-2 rounded-btn bg-surface-subtle text-slate-700 shrink-0">
+                      <Building2 className="w-4 h-4" />
                     </div>
-
-                    {/* Actions Menu */}
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleOpenEditModal(dept)}
-                        title="Edit Department"
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeptToDelete(dept)}
-                        title="Delete Department"
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div>
+                      <h3 className="text-sm font-bold text-primary-text tracking-tight">
+                        {dept.name}
+                      </h3>
+                      <span className="text-[11px] text-muted-text line-clamp-1 mt-0.5">
+                        {dept.description || 'Core service & support operations'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-xs text-slate-600 mt-3 leading-relaxed line-clamp-2">
-                    {dept.description || 'No specialized description provided for this department.'}
-                  </p>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                      isActive
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    {isActive ? 'Active' : 'Inactive'}
+                  </span>
                 </div>
 
-                {/* Queue Metrics 4-Box Grid */}
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500 pb-1">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{dept.staff_count || 0} Assigned Staff</span>
-                    </div>
-                    <span className="font-extrabold font-mono text-slate-900">
-                      {dept.total_tickets || 0} Total
-                    </span>
+                {/* Metrics Breakdown Grid */}
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-surface-subtle border border-border text-center text-xs">
+                  <div>
+                    <span className="text-[10px] text-muted-text block">Open</span>
+                    <span className="font-mono font-bold text-slate-700">{dept.open_tickets || 0}</span>
                   </div>
+                  <div>
+                    <span className="text-[10px] text-muted-text block">In Progress</span>
+                    <span className="font-mono font-bold text-blue-600">{dept.in_progress_tickets || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-text block">Resolved</span>
+                    <span className="font-mono font-bold text-emerald-600">{dept.resolved_tickets || 0}</span>
+                  </div>
+                </div>
 
-                  <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
-                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                      <div className="text-[10px] text-slate-400 uppercase font-semibold">Open</div>
-                      <div className="font-bold text-slate-700 font-mono">{dept.open_tickets || 0}</div>
-                    </div>
-                    <div className="bg-blue-50/60 p-2 rounded-xl border border-blue-100">
-                      <div className="text-[10px] text-blue-500 uppercase font-semibold">Active</div>
-                      <div className="font-bold text-blue-700 font-mono">{dept.in_progress_tickets || 0}</div>
-                    </div>
-                    <div className="bg-emerald-50/60 p-2 rounded-xl border border-emerald-100">
-                      <div className="text-[10px] text-emerald-500 uppercase font-semibold">Done</div>
-                      <div className="font-bold text-emerald-700 font-mono">{dept.resolved_tickets || 0}</div>
-                    </div>
-                    <div className="bg-rose-50/60 p-2 rounded-xl border border-rose-100">
-                      <div className="text-[10px] text-rose-500 uppercase font-semibold">Esc.</div>
-                      <div className="font-bold text-rose-700 font-mono">{dept.escalated_tickets || 0}</div>
-                    </div>
+                {/* Footer Controls: Total tickets + Edit/Delete */}
+                <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-muted-text">
+                    <strong className="text-primary-text font-mono">{totalTickets}</strong> total tickets
+                  </span>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(dept)}
+                      className="p-1.5 rounded-btn hover:bg-surface-subtle text-slate-500 hover:text-primary-text transition"
+                      title="Edit department"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeptToDelete(dept)}
+                      className="p-1.5 rounded-btn hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
+                      title="Delete department"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+      ) : (
+        <div className="p-12 text-center bg-surface border border-border rounded-card space-y-2">
+          <Building2 className="w-8 h-8 text-slate-400 mx-auto" />
+          <span className="text-xs font-semibold text-primary-text block">No departments configured</span>
+          <p className="text-xs text-muted-text">Click Add Department to set up your organizational routing.</p>
+        </div>
       )}
 
-      {/* 4. Add/Edit Department Modal */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 3. Add / Edit Department Modal */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h2 className="text-sm font-bold text-slate-900">
-                {editingDept ? 'Edit Department' : 'Create New Department'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-surface border border-border rounded-card p-6 shadow-elevated w-full max-w-md space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h2 className="text-base font-bold text-primary-text">
+                {editingDept ? 'Edit Department' : 'Add Department'}
               </h2>
-              <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-primary-text"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {modalError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{modalError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmitModal} className="space-y-3.5 text-xs text-left">
+            <form onSubmit={handleSaveDepartment} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                  Department Name
+                <label className="font-semibold text-primary-text block mb-1">
+                  Department Name *
                 </label>
                 <input
                   type="text"
+                  required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Fraud Investigation"
-                  required
-                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:bg-white focus:border-primary-500"
+                  placeholder="e.g. Logistics & Delivery"
+                  className="w-full p-2.5 bg-surface border border-border rounded-input text-primary-text focus:border-brand outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+                <label className="font-semibold text-primary-text block mb-1">
                   Description
                 </label>
                 <textarea
                   rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Summarize the core scope and grievance responsibilities..."
-                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:bg-white focus:border-primary-500"
+                  placeholder="Responsibilities and routing guidelines..."
+                  className="w-full p-2.5 bg-surface border border-border rounded-input text-primary-text focus:border-brand outline-none resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">
-                  Operational Status
+                <label className="font-semibold text-primary-text block mb-1">
+                  Status
                 </label>
                 <select
                   value={formStatus}
                   onChange={(e) => setFormStatus(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none text-slate-800"
+                  className="w-full p-2.5 bg-surface border border-border rounded-input text-primary-text focus:border-brand outline-none cursor-pointer"
                 >
-                  <option value="active">Active (Receives automated routing)</option>
-                  <option value="inactive">Inactive (Suspended)</option>
+                  <option value="active">Active (Receives Tickets)</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              {modalError && (
+                <p className="text-rose-600 font-medium">{modalError}</p>
+              )}
+
+              <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={handleCloseModal}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-btn bg-surface border border-border text-secondary-text hover:bg-surface-subtle"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !formName.trim()}
-                  className="px-5 py-2 bg-primary-700 hover:bg-primary-800 text-white font-bold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white font-semibold disabled:bg-slate-300"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <span>{editingDept ? 'Update Department' : 'Create Department'}</span>
-                  )}
+                  {isSubmitting ? 'Saving...' : editingDept ? 'Save Changes' : 'Create Department'}
                 </button>
               </div>
             </form>
@@ -386,46 +367,39 @@ export default function DepartmentsView({ authToken }) {
         </div>
       )}
 
-      {/* 5. Safe Delete Guard Confirmation Modal */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* 4. Delete Confirmation Guard Dialog */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
       {deptToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-3.5 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-surface border border-border rounded-card p-6 shadow-elevated w-full max-w-sm space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
-            <h3 className="text-sm font-bold text-slate-900">
-              Delete Department '{deptToDelete.name}'?
-            </h3>
-
-            {deptToDelete.total_tickets > 0 ? (
-              <p className="text-xs text-rose-700 bg-rose-50 p-3 rounded-xl border border-rose-200 text-left leading-relaxed">
-                <strong>Cannot Delete:</strong> {deptToDelete.total_tickets} tickets are currently assigned to this department. You must reassign tickets in the Tickets Management tab or deactivate this department instead.
+            <div className="space-y-1">
+              <h2 className="text-base font-bold text-primary-text">Delete Department?</h2>
+              <p className="text-xs text-muted-text">
+                Are you sure you want to delete <strong>"{deptToDelete.name}"</strong>? This action cannot be reversed.
               </p>
-            ) : (
-              <p className="text-xs text-slate-500 leading-relaxed">
-                This department has no assigned tickets and can be removed safely. Are you sure you wish to proceed?
-              </p>
-            )}
+            </div>
 
-            <div className="flex items-center justify-center gap-2 pt-2">
+            <div className="pt-2 flex justify-center gap-2">
               <button
                 type="button"
                 onClick={() => setDeptToDelete(null)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-50 transition"
+                className="px-4 py-2 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-subtle"
               >
-                Close
+                Cancel
               </button>
-              {deptToDelete.total_tickets === 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleDelete(deptToDelete)}
-                  disabled={isDeleting}
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirm Deletion'}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleDeleteDepartment}
+                disabled={isDeleting}
+                className="px-5 py-2 rounded-btn bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold disabled:bg-rose-300"
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
             </div>
           </div>
         </div>
@@ -433,4 +407,3 @@ export default function DepartmentsView({ authToken }) {
     </div>
   );
 }
-

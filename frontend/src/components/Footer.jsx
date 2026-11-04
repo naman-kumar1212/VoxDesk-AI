@@ -1,30 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mic, Search, Shield, Heart } from 'lucide-react';
+import { Shield, Sparkles } from 'lucide-react';
+import VoxDeskLogo from './VoxDeskLogo';
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800">
+    <footer className="bg-surface border-t border-border text-secondary-text text-xs">
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-border">
           {/* Brand & Purpose */}
           <div className="md:col-span-5 space-y-3 text-left">
-            <Link to="/" className="flex items-center gap-2.5">
-              <img
-                src="/voxdesk-app-icon-512.png"
-                alt="VoxDesk AI Icon"
-                className="w-7 h-7 rounded-lg object-contain"
-              />
-              <span className="text-white font-extrabold text-base tracking-tight">
-                VoxDesk <span className="text-primary-400 font-medium">AI</span>
-              </span>
+            <Link to="/" className="inline-block">
+              <VoxDeskLogo size="md" />
             </Link>
-            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Intelligent voice grievance automation platform. Speak naturally to file support tickets, get automatic AI classification, and track real-time resolution updates.
+            <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+              Enterprise AI voice customer grievance and automated ticket routing platform. Speak naturally to file support tickets, receive instant structured AI classification, and track real-time resolution updates.
             </p>
             <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 text-[11px] font-semibold text-slate-300 border border-slate-700/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-subtle text-[11px] font-medium text-slate-600 border border-border">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                 VocalLabs Voice AI Hackathon Edition
               </span>
             </div>
@@ -32,64 +26,64 @@ export default function Footer() {
 
           {/* Quick Navigation */}
           <div className="md:col-span-3 space-y-3 text-left">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Navigation
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-primary-text">
+              Platform
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <a href="#how-it-works" className="hover:text-white transition">
+                <a href="#how-it-works" className="hover:text-primary-text transition-colors">
                   How It Works
                 </a>
               </li>
               <li>
-                <a href="#features" className="hover:text-white transition">
-                  Features
+                <a href="#features" className="hover:text-primary-text transition-colors">
+                  Architecture & Features
                 </a>
               </li>
               <li>
-                <Link to="/report" className="hover:text-white transition flex items-center gap-1.5">
-                  <Mic className="w-3.5 h-3.5 text-primary-400" />
-                  <span>Report an Issue</span>
+                <Link to="/report" className="hover:text-primary-text transition-colors">
+                  Report a Grievance
                 </Link>
               </li>
               <li>
-                <Link to="/track" className="hover:text-white transition flex items-center gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-primary-400" />
-                  <span>Track Ticket</span>
+                <Link to="/track" className="hover:text-primary-text transition-colors">
+                  Public Ticket Tracking
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Admin & Security Notice */}
+          {/* Admin & Security */}
           <div className="md:col-span-4 space-y-3 text-left">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-              Privacy & Support
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-primary-text">
+              Administration & Trust
             </h4>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Audio is processed in-memory for live transcription and deleted immediately. VoxDesk AI does not store raw customer audio files or sell customer data.
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Protected operations center with role-based access control, PostgreSQL audit logging, and deterministic routing overrides.
             </p>
-            <div className="pt-1">
+            <div className="pt-1 flex items-center gap-2">
               <Link
                 to="/admin"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-surface-subtle hover:bg-surface-muted text-primary-text border border-border text-xs font-semibold transition shadow-xs"
               >
-                <Shield className="w-3.5 h-3.5 text-slate-400" />
-                <span>Admin Console</span>
+                <Shield className="w-3.5 h-3.5 text-brand" />
+                <span>Admin Operations Console</span>
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Bottom copyright line */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-          <p>© {new Date().getFullYear()} VoxDesk AI. 100% Free-Tier Architecture ($0 Cost Invariant).</p>
-          <p className="flex items-center gap-1">
-            Built with React, Vite & Tailwind CSS
-          </p>
+        {/* Bottom Metadata */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-muted-text">
+          <p>© {new Date().getFullYear()} VoxDesk AI. Built on a strictly $0 free-tier architecture.</p>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1 text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+              All systems operational
+            </span>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
-

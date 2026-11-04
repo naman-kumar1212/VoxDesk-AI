@@ -11,6 +11,9 @@ import {
   Building2,
   AlertCircle,
   HelpCircle,
+  Cpu,
+  Mic,
+  RotateCcw,
 } from 'lucide-react';
 import { api } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
@@ -25,12 +28,6 @@ function generateUUID() {
     return v.toString(16);
   });
 }
-
-const SAMPLE_COMPLAINTS = [
-  'The internet on my home broadband is very slow since yesterday. I have restarted the router but still not working.',
-  'I was charged twice on my credit card for the monthly subscription and request an immediate refund.',
-  'My delivery package #4912 has been delayed for 4 days and tracking has stopped updating.',
-];
 
 export default function ReviewComplaint({ onTicketCreated }) {
   const location = useLocation();
@@ -48,235 +45,186 @@ export default function ReviewComplaint({ onTicketCreated }) {
     : /delivery|package|courier|ship/i.test(transcript)
     ? 'Delivery'
     : /order|purchase/i.test(transcript)
-    ? 'Orders'
+    ? 'Order'
     : /account|login|password/i.test(transcript)
     ? 'Account'
-    : 'Technical Support';
+    : /technical|bug|crash|error|slow|internet|wifi|router/i.test(transcript)
+    ? 'Technical'
+    : 'Service';
 
   const previewDepartment =
     previewCategory === 'Payment'
-      ? 'Billing Support'
+      ? 'Billing'
       : previewCategory === 'Delivery'
       ? 'Logistics'
-      : previewCategory === 'Orders'
-      ? 'Order Management'
-      : 'Technical Support';
+      : previewCategory === 'Account'
+      ? 'Account Support'
+      : previewCategory === 'Technical'
+      ? 'Technical Support'
+      : 'General Support';
 
-  const previewPriority = /twice|unauthorized|fraud|urgent|stolen|multiple times/i.test(transcript)
+  const previewPriority = /urgent|emergency|immediately|stolen|fraud|unauthorized/i.test(transcript)
     ? 'High'
-    : 'Medium';
+    : /slow|delay|wait/i.test(transcript)
+    ? 'Medium'
+    : 'Low';
 
   const handleSubmit = async () => {
     const clean = transcript.trim();
     if (!clean) {
-      setErrorMessage('Please enter or record a complaint description before submitting.');
+      setErrorMessage('Transcript content cannot be empty.');
       return;
     }
 
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    const idempotencyKey = generateUUID();
-
     try {
-      const result = await api.createTicketFromTranscript({
-        transcript: clean,
-        idempotencyKey,
-      });
+      const idempotencyKey = generateUUID();
+      const result = await api.createTicketFromTranscript(clean, idempotencyKey);
 
       if (onTicketCreated) {
         onTicketCreated(result);
       }
+
       navigate('/confirmation', { state: { ticketResult: result } });
     } catch (err) {
-      console.error('Failed to submit ticket:', err);
-      setErrorMessage(err.message || 'Failed to submit complaint to the server. Please check your network and retry.');
-    } finally {
+      console.error('Ticket submission failed:', err);
+      setErrorMessage(err.message || 'Failed to submit grievance. Please verify your connection.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4 text-center">
-      {/* Contextual Back Navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          type="button"
-          onClick={() => navigate('/report')}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Record Again</span>
-        </button>
-
-        <span className="text-[11px] font-medium text-slate-400">Step 2 of 3</span>
-      </div>
-
-      {/* Title & Subtitle matching Screen 3 */}
-      <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-        Review Your Complaint
-      </h1>
-      <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto">
-        Here is what we heard. You can edit it if needed and submit.
-      </p>
-
-      <div className="mt-8 space-y-6 text-left">
-        {/* Card 1: Transcribed Complaint matching reference Screen 3 */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <label
-              htmlFor="complaint-transcript"
-              className="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-primary-600" />
-              <span>Transcribed Complaint</span>
-            </label>
-
-            <button
-              type="button"
-              onClick={() => setIsEditing(!isEditing)}
-              className="inline-flex items-center gap-1 text-xs text-primary-700 hover:text-primary-900 font-bold transition focus:outline-none focus:underline"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              <span>{isEditing ? 'Done' : 'Edit'}</span>
-            </button>
-          </div>
-
-          <div className="pt-4">
-            {isEditing || !transcript ? (
-              <div className="space-y-2">
-                <textarea
-                  id="complaint-transcript"
-                  value={transcript}
-                  onChange={(e) => {
-                    setTranscript(e.target.value);
-                    if (errorMessage) setErrorMessage(null);
-                  }}
-                  disabled={isSubmitting}
-                  rows={4}
-                  className="w-full text-xs text-slate-800 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none leading-relaxed transition resize-y"
-                  placeholder="Describe your issue in detail here..."
-                  autoFocus={isEditing}
-                />
-                {!transcript && (
-                  <div className="pt-2">
-                    <p className="text-[11px] text-slate-400 font-medium mb-1.5 flex items-center gap-1">
-                      <HelpCircle className="w-3 h-3 text-slate-400" />
-                      <span>Or try a quick demo sample complaint:</span>
-                    </p>
-                    <div className="flex flex-col gap-1.5">
-                      {SAMPLE_COMPLAINTS.map((sample, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setTranscript(sample);
-                            setIsEditing(false);
-                          }}
-                          className="text-left text-[11px] p-2 rounded-lg bg-primary-50/50 hover:bg-primary-50 text-primary-800 border border-primary-100 transition truncate"
-                        >
-                          "{sample}"
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p
-                onClick={() => setIsEditing(true)}
-                className="text-xs text-slate-700 leading-relaxed min-h-[50px] p-2 hover:bg-slate-50 rounded-lg cursor-pointer transition"
-                title="Click to edit transcript"
-              >
-                {transcript}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Card 2: Detected Details (by AI) matching reference Screen 3 */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-100 text-xs font-bold text-slate-800">
-            <Sparkles className="w-4 h-4 text-primary-600" />
-            <span>Detected Details (by AI)</span>
-          </div>
-
-          <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Category */}
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1">
-                Category
-              </span>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <Tag className="w-3.5 h-3.5 text-primary-500" />
-                <span>{previewCategory}</span>
-              </div>
-            </div>
-
-            {/* Priority */}
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1">
-                Priority
-              </span>
-              <div>
-                <StatusBadge type="priority" value={previewPriority} />
-              </div>
-            </div>
-
-            {/* Department */}
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-1">
-                Department
-              </span>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <Building2 className="w-3.5 h-3.5 text-primary-500" />
-                <span>{previewDepartment}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Error message alert */}
-        {errorMessage && (
-          <div
-            role="alert"
-            className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium flex items-center gap-2"
-          >
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Bottom Actions matching Screen 3 */}
-        <div className="flex items-center justify-between pt-2">
-          <button
-            type="button"
-            onClick={() => navigate('/report')}
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition shadow-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
+    <div className="bg-app min-h-[calc(100vh-64px)] py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Navigation & Step Progression */}
+        <div className="flex items-center justify-between">
+          <Link
+            to="/report"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-text hover:text-primary-text transition"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Record Again</span>
-          </button>
+          </Link>
+          <span className="text-xs font-medium text-muted-text">Step 2 of 3</span>
+        </div>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !transcript.trim()}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-700 hover:bg-primary-800 text-white rounded-xl text-xs font-bold shadow-md shadow-primary-700/25 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Creating Ticket...</span>
-              </>
+        {/* Main Review Card */}
+        <div className="bg-surface border border-border rounded-card p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="text-center space-y-1 pb-2 border-b border-border">
+            <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+              Review Your Grievance
+            </h1>
+            <p className="text-xs text-secondary-text">
+              Inspect the transcribed text below to ensure order details and descriptions are completely accurate.
+            </p>
+          </div>
+
+          {/* Transcript Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="transcript-editor"
+                className="text-xs font-semibold text-primary-text flex items-center gap-1.5"
+              >
+                <FileText className="w-3.5 h-3.5 text-slate-500" />
+                <span>Transcript Content</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-xs font-semibold text-brand hover:text-brand-hover inline-flex items-center gap-1 cursor-pointer"
+              >
+                <Edit2 className="w-3 h-3" />
+                <span>{isEditing ? 'Finish Editing' : 'Edit Text'}</span>
+              </button>
+            </div>
+
+            {isEditing ? (
+              <textarea
+                id="transcript-editor"
+                rows={5}
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+                className="w-full p-3 text-sm text-primary-text bg-surface border border-border rounded-input focus:border-brand focus:ring-1 focus:ring-brand outline-none transition"
+              />
             ) : (
-              <>
-                <span>Submit Complaint</span>
-                <Check className="w-4 h-4 stroke-[2.5]" />
-              </>
+              <div className="p-4 rounded-xl bg-surface-subtle border border-border text-sm text-primary-text leading-relaxed whitespace-pre-wrap">
+                {transcript || (
+                  <span className="text-muted-text italic">
+                    No transcript content captured. Click edit or return to speak again.
+                  </span>
+                )}
+              </div>
             )}
-          </button>
+          </div>
+
+          {/* Detected Details Preview (AI Heuristics) */}
+          <div className="p-4 rounded-xl bg-surface-muted/60 border border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-primary-text flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-slate-600" />
+                <span>AI Intent Preview</span>
+              </span>
+              <span className="text-[11px] font-medium text-slate-500 bg-surface px-2 py-0.5 rounded-full border border-border">
+                Pre-submission heuristic
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
+              <div className="p-2.5 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Detected Category</span>
+                <span className="font-semibold text-primary-text">{previewCategory}</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Target Department</span>
+                <span className="font-semibold text-brand">{previewDepartment}</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Estimated Priority</span>
+                <StatusBadge type="priority" value={previewPriority} />
+              </div>
+            </div>
+          </div>
+
+          {/* Error Message if submission fails */}
+          {errorMessage && (
+            <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-700">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <p>{errorMessage}</p>
+            </div>
+          )}
+
+          {/* Submission Action Bar */}
+          <div className="pt-2 flex items-center justify-between">
+            <Link
+              to="/report"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-muted transition"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Record Again</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !transcript.trim()}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-300 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Submitting Grievance...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Submit Grievance</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

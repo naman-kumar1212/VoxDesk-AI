@@ -57,32 +57,25 @@ export default function TrackTicket() {
     setHasSearched(true);
 
     try {
-      const result = await api.trackTicket(clean);
-      if (result && result.ticket) {
-        setTicketData(result.ticket);
+      const data = await api.getTicket(clean);
+      if (data && data.ticket) {
+        setTicketData(data.ticket);
+        setTicketNumber(clean);
       } else {
-        throw new Error(`Ticket '${clean}' not found.`);
+        setErrorType('not_found');
+        setErrorMessage(`No grievance ticket found matching "${clean}".`);
+        setTicketData(null);
       }
     } catch (err) {
-      console.error('Failed to track ticket:', err);
-      setTicketData(null);
-
-      if (err.status === 404 || err.code === 'NOT_FOUND') {
+      console.error('Tracking fetch error:', err);
+      if (err.status === 404 || err.message?.includes('not found')) {
         setErrorType('not_found');
-        setErrorMessage(
-          `No active ticket found matching '${clean}'. Please verify your reference number.`
-        );
-      } else if (!navigator.onLine || err.message?.includes('fetch') || err.message?.includes('network')) {
-        setErrorType('network');
-        setErrorMessage(
-          'Network connection error. Unable to reach the tracking server. Please check your connection and retry.'
-        );
+        setErrorMessage(`No grievance ticket found matching "${clean}".`);
       } else {
-        setErrorType('server');
-        setErrorMessage(
-          err.message || `Unable to retrieve status for '${clean}'. Please retry shortly.`
-        );
+        setErrorType('network');
+        setErrorMessage(err.message || 'Unable to connect to the tracking server.');
       }
+      setTicketData(null);
     } finally {
       setIsLoading(false);
     }
@@ -94,389 +87,232 @@ export default function TrackTicket() {
     }
   }, [initialTicketNumber]);
 
-  const handleSubmit = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchTicket();
   };
 
-  const handleDemoFill = (demoId) => {
-    setTicketNumber(demoId);
-    fetchTicket(demoId);
-  };
-
-  // Timeline computation based on backend status and events
-  const currentStatus = ticketData?.status || 'open';
-  const isAssigned = true;
-  const isInProgress = ['in_progress', 'escalated', 'resolved'].includes(currentStatus);
-  const isResolved = currentStatus === 'resolved';
-  const isEscalated = ticketData?.escalated || currentStatus === 'escalated';
-
-  const createdTime = ticketData?.created_at
-    ? new Date(ticketData.created_at).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    : '';
-
-  const updatedTime = ticketData?.updated_at
-    ? new Date(ticketData.updated_at).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    : '';
+  // Progression milestones: open -> in_progress -> (resolved | escalated)
+  const isResolved = ticketData?.status === 'resolved';
+  const isEscalated = ticketData?.status === 'escalated' || ticketData?.escalated;
+  const isInProgress = ticketData?.status === 'in_progress' || isResolved || isEscalated;
 
   return (
-    <div className="max-w-xl mx-auto py-6 sm:py-8 px-4 text-center">
-      {/* Top Contextual Link (Single Home Link, no duplicate CTA) */}
-      <div className="flex items-center justify-between mb-5">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition py-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
-        </Link>
-      </div>
-
-      {/* Page Title & Guidance */}
-      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-        Track Your Ticket
-      </h1>
-      <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-        Enter your ticket ID to check the latest status and updates.
-      </p>
-
-      {/* Ticket Search Form */}
-      <form onSubmit={handleSubmit} className="mt-6 max-w-md mx-auto text-left">
-        <label
-          htmlFor="ticket-track-input"
-          className="block text-xs font-bold text-slate-700 mb-1.5"
-        >
-          Ticket Reference ID
-        </label>
-
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Tag className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-            <input
-              id="ticket-track-input"
-              type="text"
-              value={ticketNumber}
-              onChange={(e) => {
-                setTicketNumber(e.target.value);
-                if (errorMessage) setErrorMessage(null);
-              }}
-              disabled={isLoading}
-              placeholder="e.g. VD-10473"
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-semibold text-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none uppercase transition"
-              autoFocus
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading || !ticketNumber.trim()}
-            className="px-6 py-2.5 bg-primary-700 hover:bg-primary-800 text-white rounded-xl text-xs font-bold shadow-md shadow-primary-700/20 transition flex items-center gap-1.5 shrink-0 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
+    <div className="bg-app min-h-[calc(100vh-64px)] py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header Navigation */}
+        <div className="flex items-center justify-between">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-text hover:text-primary-text transition"
           >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Search className="w-3.5 h-3.5" />
-                <span>Track</span>
-              </>
-            )}
-          </button>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Home</span>
+          </Link>
+          <span className="text-xs font-medium text-muted-text">Public Inquiry Desk</span>
         </div>
-      </form>
 
-      {/* Error Alert States */}
-      {errorMessage && (
-        <div
-          role="alert"
-          className="mt-5 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs text-left max-w-md mx-auto flex items-start gap-3 shadow-sm"
-        >
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-bold">
-              {errorType === 'not_found'
-                ? 'Ticket Not Found'
-                : errorType === 'network'
-                  ? 'Connection Error'
-                  : 'Lookup Notice'}
+        {/* Search Bar Card */}
+        <div className="bg-surface border border-border rounded-card p-6 shadow-xs space-y-4">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary-text tracking-tight">
+              Track Grievance Status
+            </h1>
+            <p className="text-xs text-secondary-text">
+              Enter your ticket reference ID (e.g., VD-10473) to view live status and audit updates.
             </p>
-            <p className="mt-0.5 text-rose-700 leading-relaxed">{errorMessage}</p>
+          </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fetchTicket()}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs transition"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Retry Search</span>
-              </button>
-
-              <Link
-                to="/report"
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-rose-200 text-rose-800 hover:bg-rose-50 font-bold rounded-lg text-xs transition"
-              >
-                <Mic className="w-3 h-3" />
-                <span>Report Issue Instead</span>
-              </Link>
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={ticketNumber}
+                onChange={(e) => setTicketNumber(e.target.value.toUpperCase())}
+                placeholder="VD-XXXXX"
+                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-input text-sm font-mono text-primary-text focus:border-brand focus:ring-1 focus:ring-brand outline-none transition uppercase"
+              />
             </div>
-          </div>
-        </div>
-      )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="px-5 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-xs transition inline-flex items-center gap-2 cursor-pointer disabled:bg-slate-300"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <span>Lookup Ticket</span>
+              )}
+            </button>
+          </form>
 
-      {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="mt-6 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm max-w-md mx-auto animate-pulse text-left space-y-4">
-          <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-            <div className="w-28 h-5 bg-slate-100 rounded" />
-            <div className="w-16 h-5 bg-slate-100 rounded-full" />
-          </div>
-          <div className="space-y-2 py-3 border-b border-slate-100">
-            <div className="w-20 h-3 bg-slate-100 rounded" />
-            <div className="w-full h-8 bg-slate-100 rounded" />
-          </div>
-          <div className="grid grid-cols-2 gap-4 py-3 border-b border-slate-100">
-            <div className="w-24 h-4 bg-slate-100 rounded" />
-            <div className="w-24 h-4 bg-slate-100 rounded" />
-          </div>
-          <div className="space-y-4 pt-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex gap-4 items-center">
-                <div className="w-6 h-6 rounded-full bg-slate-100 shrink-0" />
-                <div className="space-y-1.5 flex-1">
-                  <div className="w-24 h-3 bg-slate-100 rounded" />
-                  <div className="w-40 h-2.5 bg-slate-100 rounded" />
+          {errorMessage && (
+            <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-700">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <p>{errorMessage}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Ticket Result Display */}
+        {ticketData && (
+          <div className="bg-surface border border-border rounded-card p-6 shadow-xs space-y-6 animate-in fade-in duration-150">
+            {/* Header with Reference & Refresh */}
+            <div className="flex items-start justify-between pb-4 border-b border-border">
+              <div>
+                <span className="text-[11px] font-semibold text-muted-text uppercase tracking-wider block">
+                  Ticket Reference
+                </span>
+                <span className="font-mono text-xl font-bold text-primary-text">
+                  {ticketData.ticket_number}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <StatusBadge type="status" value={ticketData.status} />
+                <button
+                  type="button"
+                  onClick={() => fetchTicket(ticketData.ticket_number)}
+                  className="p-1.5 rounded-btn bg-surface border border-border text-slate-500 hover:text-primary-text transition shadow-xs"
+                  title="Refresh live status"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Vertical Lifecycle Progression Timeline */}
+            <div className="p-4 rounded-xl bg-surface-subtle border border-border space-y-4">
+              <span className="text-xs font-semibold text-primary-text block">
+                Investigation Lifecycle Progression
+              </span>
+
+              <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+                {/* Stage 1: Created */}
+                <div className="relative">
+                  <span className="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
+                    <Check className="w-2.5 h-2.5" />
+                  </span>
+                  <div className="text-xs">
+                    <span className="font-semibold text-primary-text block">Grievance Registered</span>
+                    <span className="text-[11px] text-muted-text">
+                      Received and categorized via voice intake
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stage 2: In Progress */}
+                <div className="relative">
+                  <span
+                    className={`absolute -left-6 top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                      isInProgress
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-surface border-2 border-border text-transparent'
+                    }`}
+                  >
+                    {isInProgress && <Check className="w-2.5 h-2.5" />}
+                  </span>
+                  <div className="text-xs">
+                    <span
+                      className={`font-semibold block ${
+                        isInProgress ? 'text-primary-text' : 'text-muted-text'
+                      }`}
+                    >
+                      Under Investigation
+                    </span>
+                    <span className="text-[11px] text-muted-text">
+                      Assigned to {ticketData.department?.name || ticketData.department_name || 'support specialists'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stage 3: Resolved / Final Outcome */}
+                <div className="relative">
+                  <span
+                    className={`absolute -left-6 top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                      isResolved
+                        ? 'bg-emerald-600 text-white'
+                        : isEscalated
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-surface border-2 border-border text-transparent'
+                    }`}
+                  >
+                    {(isResolved || isEscalated) && <Check className="w-2.5 h-2.5" />}
+                  </span>
+                  <div className="text-xs">
+                    <span
+                      className={`font-semibold block ${
+                        isResolved
+                          ? 'text-emerald-700'
+                          : isEscalated
+                          ? 'text-rose-700'
+                          : 'text-muted-text'
+                      }`}
+                    >
+                      {isResolved
+                        ? 'Resolved & Closed'
+                        : isEscalated
+                        ? 'Supervisor Escalation'
+                        : 'Final Resolution'}
+                    </span>
+                    <span className="text-[11px] text-muted-text">
+                      {isResolved
+                        ? 'Investigation verified and completed'
+                        : isEscalated
+                        ? 'Flagged for priority managerial oversight'
+                        : 'Awaiting departmental conclusion'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Initial Empty State before search */}
-      {!isLoading && !ticketData && !errorMessage && !hasSearched && (
-        <div className="mt-6 bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-7 shadow-sm max-w-md mx-auto text-center">
-          <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center mx-auto mb-3">
-            <TicketIcon className="w-5 h-5" />
-          </div>
-          <h2 className="text-sm font-bold text-slate-900">
-            Track Your Support Request
-          </h2>
-          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-            Enter your ticket ID above to check live routing status and resolution updates. You received this reference when filing your complaint or via voice confirmation.
-          </p>
-
-          {/* Realistic Example Hint */}
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <p className="text-[11px] text-slate-400 font-medium mb-2">
-              Have an existing demo ticket? Try searching:
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoFill('VD-10473')}
-                className="px-2.5 py-1 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200 text-xs font-mono font-bold transition"
-              >
-                VD-10473
-              </button>
-            </div>
-          </div>
-
-          {/* Secondary Action */}
-          <div className="mt-5 pt-3 border-t border-slate-100">
-            <Link
-              to="/report"
-              className="inline-flex items-center gap-1.5 text-xs text-primary-700 hover:text-primary-800 font-bold"
-            >
-              <Mic className="w-3.5 h-3.5" />
-              <span>Report a New Issue Instead</span>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Successful Search Result & Visual Status Timeline Card */}
-      {!isLoading && ticketData && (
-        <div className="mt-6 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm text-left max-w-md mx-auto">
-          {/* Card Header: Ticket ID & Status Badge */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-xs font-semibold">Ticket:</span>
-              <span className="font-mono text-sm font-extrabold text-slate-900">
-                {ticketData.ticket_number}
-              </span>
-            </div>
-            <div>
-              <StatusBadge value={ticketData.status} />
-            </div>
-          </div>
-
-          {/* Complaint Summary */}
-          <div className="py-3.5 border-b border-slate-100">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-              Complaint Summary
-            </span>
-            <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-sans">
-              {ticketData.summary || 'Customer grievance recorded and logged in system.'}
-            </p>
-          </div>
-
-          {/* Metadata Grid: Category, Priority, Department, Escalation */}
-          <div className="py-3.5 border-b border-slate-100 grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-0.5">
-                Category
-              </span>
-              <span className="font-bold text-slate-800 uppercase">
-                {ticketData.category}
-              </span>
             </div>
 
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-0.5">
-                Priority
-              </span>
-              <div>
+            {/* Structured Ticket Details Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Target Department</span>
+                <span className="font-semibold text-primary-text">
+                  {ticketData.department?.name || ticketData.department_name || 'General Support'}
+                </span>
+              </div>
+              <div className="p-3 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Severity Priority</span>
                 <StatusBadge type="priority" value={ticketData.priority} />
               </div>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-0.5">
-                Department
-              </span>
-              <span className="font-bold text-slate-800">
-                {ticketData.department || 'Support'}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[11px] font-semibold text-slate-400 block mb-0.5">
-                Escalation
-              </span>
-              {isEscalated ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-                  <ShieldAlert className="w-3 h-3 text-rose-600" />
-                  <span>Escalated</span>
+              <div className="p-3 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Category</span>
+                <span className="font-semibold text-primary-text">{ticketData.category || 'Support'}</span>
+              </div>
+              <div className="p-3 rounded-lg bg-surface border border-border">
+                <span className="text-muted-text block mb-1">Date Logged</span>
+                <span className="font-semibold text-primary-text">
+                  {new Date(ticketData.created_at).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
                 </span>
-              ) : (
-                <span className="text-slate-600 font-medium">Standard</span>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Timestamps: Created and Last Updated */}
-          <div className="py-3 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <div>
-              <span className="font-semibold text-slate-400">Created: </span>
-              <span>{createdTime}</span>
-            </div>
-            {updatedTime && updatedTime !== createdTime && (
-              <div>
-                <span className="font-semibold text-slate-400">Updated: </span>
-                <span>{updatedTime}</span>
+            {/* Transcript Quote */}
+            {ticketData.transcript && (
+              <div className="space-y-1.5 pt-2 border-t border-border">
+                <span className="text-xs font-semibold text-primary-text block">
+                  Original Grievance Transcript
+                </span>
+                <p className="p-3.5 rounded-lg bg-surface-subtle border border-border text-xs text-secondary-text leading-relaxed">
+                  "{ticketData.transcript}"
+                </p>
               </div>
             )}
           </div>
-
-          {/* Visual Status Timeline matching Reference Screen 5 */}
-          <div className="pt-5 relative pl-8 space-y-6 before:absolute before:left-3 before:top-7 before:bottom-3 before:w-0.5 before:bg-slate-200">
-            {/* Step 1: Ticket Created */}
-            <div className="relative">
-              <div className="absolute -left-8 top-0.5 w-6 h-6 rounded-full bg-primary-600 text-white flex items-center justify-center ring-4 ring-white shadow-sm">
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-slate-900">Ticket Created</h3>
-                  {createdTime && (
-                    <span className="text-[10px] text-slate-400 font-medium">{createdTime}</span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">Your complaint has been received.</p>
-              </div>
-            </div>
-
-            {/* Step 2: Assigned to Department */}
-            <div className="relative">
-              <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isAssigned ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
-                  }`}
-              >
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-slate-900">
-                    Assigned to {ticketData.department || 'Support'}
-                  </h3>
-                  {createdTime && (
-                    <span className="text-[10px] text-slate-400 font-medium">{createdTime}</span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">Our team is working on your issue.</p>
-              </div>
-            </div>
-
-            {/* Step 3: In Progress */}
-            <div className="relative">
-              <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isInProgress ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
-                  }`}
-              >
-                {isResolved ? (
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                ) : (
-                  <div className="w-2 h-2 rounded-full bg-white" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-900">
-                  {isEscalated ? 'Escalated Review' : 'In Progress'}
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {isEscalated
-                    ? 'Flagged for priority investigation.'
-                    : 'We are investigating and will update you shortly.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Step 4: Resolved */}
-            <div className="relative">
-              <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isResolved ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'
-                  }`}
-              >
-                {isResolved ? (
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                ) : (
-                  <div className="w-2 h-2 rounded-full bg-slate-400" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-900">Resolved</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {isResolved
-                    ? 'Your issue has been successfully resolved.'
-                    : 'Your issue will be marked as resolved once fixed.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

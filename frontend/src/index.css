@@ -2,11 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  :root {
+    --app-bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --surface-subtle: #F8FAFC;
+    --surface-muted: #EEF2F7;
+    --border: #DCE3EC;
+    --border-strong: #C5D0DD;
+    --primary-text: #111827;
+    --secondary-text: #475569;
+    --muted-text: #64748B;
+    --brand-primary: #5B3CC4;
+    --brand-hover: #4B2FA8;
+    --brand-subtle: #F0EBFF;
+    --voice-accent: #0F766E;
+    --voice-subtle: #E6F5F2;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--app-bg);
+    color: var(--primary-text);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Accessible focus indicator across the application */
+  :focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+
+  /* Support reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
+/* Custom Scrollbar for compact tables & panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
