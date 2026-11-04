@@ -46,6 +46,18 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
     loadData();
   }, [authToken]);
 
+  // Handle both object-based category_distribution and list-based categories
+  const categoryEntries = summary?.category_distribution
+    ? Object.entries(summary.category_distribution)
+    : Array.isArray(summary?.categories)
+    ? summary.categories.map((c) => [c.category || c.name, c.count])
+    : [];
+
+  const maxCatCount = Math.max(1, ...categoryEntries.map(([_, count]) => count || 0));
+
+  // Handle both department_workload and departments list
+  const departmentRows = summary?.department_workload || summary?.departments || [];
+
   return (
     <div className="space-y-6">
       {/* ─────────────────────────────────────────────────────────────────── */}
@@ -74,7 +86,6 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
 
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 2. Structured Responsive 6-KPI Metric Section */}
-      {/* Main 4 core KPIs in top row, 2 critical operational badges in 2nd */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
@@ -140,30 +151,32 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
               <Layers className="w-4 h-4 text-brand" />
               <h2 className="text-sm font-semibold text-primary-text">Grievance Categories</h2>
             </div>
-            <span className="text-xs text-muted-text">
-              {summary?.categories?.length || 0} categories
+            <span className="text-xs text-muted-text font-mono">
+              {categoryEntries.length} categories
             </span>
           </div>
 
           <div className="space-y-3">
-            {summary?.categories && summary.categories.length > 0 ? (
-              summary.categories.map((cat) => {
-                const total = summary.total_tickets || 1;
-                const percentage = Math.round((cat.count / total) * 100);
+            {categoryEntries.length > 0 ? (
+              categoryEntries.map(([category, count]) => {
+                const total = summary?.total_tickets || 1;
+                const percentage = Math.round(((count || 0) / total) * 100);
+                const barWidth = Math.round(((count || 0) / maxCatCount) * 100);
+
                 return (
-                  <div key={cat.category} className="space-y-1">
+                  <div key={category} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-700 capitalize">
-                        {cat.category}
+                      <span className="font-medium text-primary-text capitalize">
+                        {category.replace(/_/g, ' ')}
                       </span>
                       <span className="text-muted-text font-mono">
-                        {cat.count} ({percentage}%)
+                        {count || 0} ({percentage}%)
                       </span>
                     </div>
                     <div className="w-full bg-surface-muted h-1.5 rounded-full overflow-hidden">
                       <div
                         className="bg-brand h-full rounded-full transition-all duration-300"
-                        style={{ width: `${percentage}%` }}
+                        style={{ width: `${barWidth}%` }}
                       />
                     </div>
                   </div>
@@ -200,14 +213,22 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {summary?.departments && summary.departments.length > 0 ? (
-                  summary.departments.map((dept) => (
-                    <tr key={dept.id || dept.name} className="hover:bg-surface-subtle/50 transition">
-                      <td className="py-2.5 px-3 font-medium text-primary-text">{dept.name}</td>
+                {departmentRows.length > 0 ? (
+                  departmentRows.map((dept) => (
+                    <tr key={dept.name || dept.id} className="hover:bg-surface-subtle/50 transition">
+                      <td className="py-2.5 px-3 font-semibold text-primary-text">{dept.name}</td>
                       <td className="py-2.5 px-2 text-center text-slate-600 font-mono">{dept.open || 0}</td>
                       <td className="py-2.5 px-2 text-center text-blue-600 font-mono font-semibold">{dept.in_progress || 0}</td>
                       <td className="py-2.5 px-2 text-center text-emerald-600 font-mono">{dept.resolved || 0}</td>
-                      <td className="py-2.5 px-2 text-center text-rose-600 font-mono font-semibold">{dept.escalated || 0}</td>
+                      <td className="py-2.5 px-2 text-center text-rose-600 font-mono font-semibold">
+                        {dept.escalated > 0 ? (
+                          <span className="text-[#B91C1C] bg-[#FEF2F2] px-1.5 py-0.5 rounded text-[10px] font-bold border border-[#FECACA]">
+                            {dept.escalated}
+                          </span>
+                        ) : (
+                          0
+                        )}
+                      </td>
                       <td className="py-2.5 px-3 text-right font-bold text-primary-text font-mono">{dept.total || 0}</td>
                     </tr>
                   ))
@@ -250,7 +271,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
                   </span>
                   <span className="text-secondary-text line-clamp-1">{act.description || act.event_type}</span>
                 </div>
-                <span className="text-[11px] text-muted-text shrink-0">
+                <span className="text-[11px] text-muted-text shrink-0 font-mono">
                   {act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
                 </span>
               </div>
