@@ -44,28 +44,28 @@ export default function AnalyticsView({ authToken }) {
       title: 'Ticket Volume Over Time',
       subtitle: 'Daily grievance intake rate and volume trajectory',
       icon: TrendingUp,
-      iconColor: 'text-purple-600 bg-purple-50',
+      iconColor: 'text-brand bg-brand-subtle',
     },
     {
       key: 'status_distribution',
       title: 'Tickets by Resolution Status',
       subtitle: 'Current lifecycle distribution across all support stages',
       icon: ShieldCheck,
-      iconColor: 'text-blue-600 bg-blue-50',
+      iconColor: 'text-[#2563EB] bg-[#EFF6FF]',
     },
     {
       key: 'department_workload',
       title: 'Department Active Workload',
       subtitle: 'Ranked ticket allocation and operational capacity across teams',
       icon: Building2,
-      iconColor: 'text-indigo-600 bg-indigo-50',
+      iconColor: 'text-slate-700 bg-surface-muted',
     },
     {
       key: 'resolution_time',
       title: 'Resolution Time Distribution',
       subtitle: 'Duration spread from customer intake to verified resolution',
       icon: Clock,
-      iconColor: 'text-emerald-600 bg-emerald-50',
+      iconColor: 'text-[#15803D] bg-[#ECFDF3]',
     },
   ], []);
 
@@ -76,14 +76,14 @@ export default function AnalyticsView({ authToken }) {
       title: 'Complaint Categories Breakdown',
       subtitle: 'Root causes and complaint categorization taxonomy',
       icon: Layers,
-      iconColor: 'text-amber-600 bg-amber-50',
+      iconColor: 'text-[#B45309] bg-[#FFFBEB]',
     },
     {
       key: 'priority_distribution',
       title: 'Priority Level Allocation',
       subtitle: 'Urgency distribution between High, Medium, and Low tiers',
       icon: PieChart,
-      iconColor: 'text-rose-600 bg-rose-50',
+      iconColor: 'text-[#B91C1C] bg-[#FEF2F2]',
     },
   ], []);
 
@@ -98,146 +98,137 @@ export default function AnalyticsView({ authToken }) {
   };
 
   // Load KPI summary from backend
-  const loadSummary = useCallback(async () => {
+  const loadSummary = useCallback(async (params, bypassCache = false) => {
     if (!authToken) return;
     setIsLoadingSummary(true);
     setGlobalError(null);
-
-    const isCustom = dateRange === 'custom';
-    const startDate = isCustom ? appliedCustomStart : null;
-    const endDate = isCustom ? appliedCustomEnd : null;
-
     try {
-      const data = await api.getAdminAnalytics(authToken, {
-        range: dateRange,
-        startDate,
-        endDate,
-      });
+      const data = await api.getAnalyticsSummary(authToken, { ...params, bypassCache });
       setSummary(data);
-      setLastRefreshed(new Date());
     } catch (err) {
       console.error('Failed to load analytics summary:', err);
-      setGlobalError(err.message || 'Failed to compute analytics summary from database.');
+      setGlobalError(err.message || 'Unable to retrieve analytical summary metrics.');
     } finally {
       setIsLoadingSummary(false);
     }
-  }, [authToken, dateRange, appliedCustomStart, appliedCustomEnd]);
+  }, [authToken]);
 
-  // Load an individual chart PNG
-  const loadSingleChart = useCallback(async (chartKey) => {
+  // Load a single chart image
+  const loadSingleChart = useCallback(async (chartKey, params, bypassCache = false) => {
     if (!authToken) return;
-
     setLoadingCharts((prev) => ({ ...prev, [chartKey]: true }));
     setChartErrors((prev) => ({ ...prev, [chartKey]: null }));
 
-    const isCustom = dateRange === 'custom';
-    const startDate = isCustom ? appliedCustomStart : null;
-    const endDate = isCustom ? appliedCustomEnd : null;
-
     try {
-      const url = await api.fetchChartBlob(authToken, chartKey, {
-        range: dateRange,
-        startDate,
-        endDate,
-      });
-
+      const blob = await api.getAnalyticsChart(authToken, chartKey, { ...params, bypassCache });
+      const objectUrl = URL.createObjectURL(blob);
       setChartUrls((prev) => {
-        // Revoke prior blob URL only if a different one was generated
-        if (prev[chartKey] && prev[chartKey] !== url && prev[chartKey].startsWith('blob:')) {
-          try { URL.revokeObjectURL(prev[chartKey]); } catch {}
+        if (prev[chartKey]) {
+          URL.revokeObjectURL(prev[chartKey]);
         }
-        return { ...prev, [chartKey]: url };
+        return { ...prev, [chartKey]: objectUrl };
       });
     } catch (err) {
-      console.error(`Chart load failed for ${chartKey}:`, err);
+      console.error(`Chart generation failed for ${chartKey}:`, err);
       setChartErrors((prev) => ({
         ...prev,
-        [chartKey]: err.message || 'Chart visualization render failed.',
+        [chartKey]: err.message || 'Failed to render visualization.',
       }));
     } finally {
       setLoadingCharts((prev) => ({ ...prev, [chartKey]: false }));
     }
-  }, [authToken, dateRange, appliedCustomStart, appliedCustomEnd]);
+  }, [authToken]);
 
-  // Load primary charts immediately on tab access
-  const loadPrimaryCharts = useCallback(() => {
-    primaryCharts.forEach((c) => loadSingleChart(c.key));
-  }, [primaryCharts, loadSingleChart]);
-
-  // Lazy-load secondary charts on demand
-  const loadSecondaryCharts = useCallback(() => {
-    secondaryCharts.forEach((c) => loadSingleChart(c.key));
-  }, [secondaryCharts, loadSingleChart]);
-
-  // Master refresh
-  const handleRefresh = useCallback(() => {
-    loadSummary();
-    loadPrimaryCharts();
-    if (showSecondaryCharts) {
-      loadSecondaryCharts();
+  // Synchronized parameters from filter states
+  const getFilterParams = useCallback(() => {
+    const params = { range: dateRange };
+    if (dateRange === 'custom') {
+      if (appliedCustomStart) params.start_date = appliedCustomStart;
+      if (appliedCustomEnd) params.end_date = appliedCustomEnd;
     }
-  }, [loadSummary, loadPrimaryCharts, loadSecondaryCharts, showSecondaryCharts]);
+    return params;
+  }, [dateRange, appliedCustomStart, appliedCustomEnd]);
 
-  // Trigger load on date range change (primary charts only)
+  // Master fetch coordinator
+  const refreshAll = useCallback(async (bypassCache = false) => {
+    const params = getFilterParams();
+    setLastRefreshed(new Date());
+
+    loadSummary(params, bypassCache);
+
+    primaryCharts.forEach((chart) => {
+      loadSingleChart(chart.key, params, bypassCache);
+    });
+
+    if (showSecondaryCharts) {
+      secondaryCharts.forEach((chart) => {
+        loadSingleChart(chart.key, params, bypassCache);
+      });
+    }
+  }, [getFilterParams, loadSummary, loadSingleChart, primaryCharts, secondaryCharts, showSecondaryCharts]);
+
   useEffect(() => {
     if (dateRange !== 'custom') {
-      loadSummary();
-      loadPrimaryCharts();
-      if (showSecondaryCharts) {
-        loadSecondaryCharts();
-      }
+      refreshAll();
     }
-  }, [dateRange, loadSummary, loadPrimaryCharts, showSecondaryCharts, loadSecondaryCharts]);
+  }, [dateRange, refreshAll]);
 
-  // Lazy-load secondary charts when user expands the section
   useEffect(() => {
     if (showSecondaryCharts) {
-      loadSecondaryCharts();
+      const params = getFilterParams();
+      secondaryCharts.forEach((chart) => {
+        if (!chartUrls[chart.key] && !loadingCharts[chart.key]) {
+          loadSingleChart(chart.key, params);
+        }
+      });
     }
-  }, [showSecondaryCharts, loadSecondaryCharts]);
+  }, [showSecondaryCharts, getFilterParams, secondaryCharts, chartUrls, loadingCharts, loadSingleChart]);
 
-  // Apply custom dates
+  // Clean up ObjectURLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(chartUrls).forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, []);
+
   const handleApplyCustomDates = (e) => {
     e.preventDefault();
     if (!customStart) return;
     setAppliedCustomStart(customStart);
     setAppliedCustomEnd(customEnd);
+
+    const params = {
+      range: 'custom',
+      start_date: customStart,
+      end_date: customEnd,
+    };
+    loadSummary(params, true);
+    primaryCharts.forEach((chart) => loadSingleChart(chart.key, params, true));
+    if (showSecondaryCharts) {
+      secondaryCharts.forEach((chart) => loadSingleChart(chart.key, params, true));
+    }
+    setLastRefreshed(new Date());
   };
 
-  useEffect(() => {
-    if (dateRange === 'custom' && appliedCustomStart) {
-      loadSummary();
-      loadPrimaryCharts();
-      if (showSecondaryCharts) {
-        loadSecondaryCharts();
-      }
-    }
-  }, [dateRange, appliedCustomStart, appliedCustomEnd, loadSummary, loadPrimaryCharts, showSecondaryCharts, loadSecondaryCharts]);
-
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(chartUrls).forEach((url) => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, []);
+  const handleRefresh = () => {
+    refreshAll(true);
+  };
 
   const anyLoading = isLoadingSummary || Object.values(loadingCharts).some(Boolean);
 
   return (
     <div className="space-y-6">
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* 1. Header & Business-Oriented Subtitle */}
+      {/* 1. Header & Context */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
             Analytics &amp; Performance
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-secondary-text mt-0.5">
             Operational intelligence, volume trends, resolution velocity, and department capacity across customer grievance workflows.
           </p>
         </div>
@@ -245,10 +236,10 @@ export default function AnalyticsView({ authToken }) {
         {/* Refresh & Last Updated Timestamp */}
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <span className="text-[11px] font-medium text-slate-400 block">
+            <span className="text-[11px] font-medium text-muted-text block">
               Last updated
             </span>
-            <span className="text-xs font-semibold text-slate-700">
+            <span className="text-xs font-semibold text-primary-text font-mono">
               {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
@@ -257,10 +248,10 @@ export default function AnalyticsView({ authToken }) {
             type="button"
             onClick={handleRefresh}
             disabled={anyLoading}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border rounded-btn text-xs font-medium text-slate-700 shadow-xs hover:bg-surface-subtle transition cursor-pointer disabled:opacity-50"
             title="Refresh analytics and charts"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${anyLoading ? 'animate-spin text-primary-600' : 'text-slate-500'}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${anyLoading ? 'animate-spin text-brand' : 'text-slate-500'}`} />
             <span>{anyLoading ? 'Updating...' : 'Refresh'}</span>
           </button>
         </div>
@@ -269,10 +260,10 @@ export default function AnalyticsView({ authToken }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 2. Unified Date Range Filter Bar */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-surface border border-border rounded-card p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-500 px-1">Date Range:</span>
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-semibold text-slate-600">
+          <span className="text-xs font-semibold text-secondary-text px-1">Date Range:</span>
+          <div className="bg-surface-muted p-1 rounded-btn flex items-center text-xs font-medium text-slate-600">
             {[
               { id: '7d', label: 'Last 7 Days' },
               { id: '30d', label: 'Last 30 Days' },
@@ -286,10 +277,10 @@ export default function AnalyticsView({ authToken }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setDateRange(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md text-xs transition cursor-pointer ${
                     active
-                      ? 'bg-primary-600 text-white font-bold shadow-xs'
-                      : 'hover:text-slate-900 text-slate-600'
+                      ? 'bg-brand text-white font-semibold shadow-xs'
+                      : 'hover:text-primary-text text-secondary-text'
                   }`}
                 >
                   {tab.label}
@@ -300,15 +291,15 @@ export default function AnalyticsView({ authToken }) {
         </div>
 
         {/* Synchronized date window indicator */}
-        <div className="text-[11px] text-slate-500 px-1 font-medium">
+        <div className="text-[11px] text-muted-text px-1 font-medium">
           {dateRange === '7d' && 'Showing data from the past 7 days'}
           {dateRange === '30d' && 'Showing data from the past 30 days'}
           {dateRange === '90d' && 'Showing data from the past 90 days'}
           {dateRange === 'all' && 'Showing all historical tickets across the database'}
           {dateRange === 'custom' && appliedCustomStart && (
             <span>
-              Range: <strong className="text-slate-800">{appliedCustomStart}</strong> to{' '}
-              <strong className="text-slate-800">{appliedCustomEnd || 'Present'}</strong>
+              Range: <strong className="text-primary-text font-mono">{appliedCustomStart}</strong> to{' '}
+              <strong className="text-primary-text font-mono">{appliedCustomEnd || 'Present'}</strong>
             </span>
           )}
         </div>
@@ -318,32 +309,32 @@ export default function AnalyticsView({ authToken }) {
       {dateRange === 'custom' && (
         <form
           onSubmit={handleApplyCustomDates}
-          className="p-4 bg-primary-50/50 border border-primary-100 rounded-2xl flex flex-wrap items-center gap-4 text-xs animate-in fade-in slide-in-from-top-1 duration-150"
+          className="p-4 bg-surface border border-border rounded-card flex flex-wrap items-center gap-4 text-xs animate-in fade-in slide-in-from-top-1 duration-150"
         >
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-700">Start Date:</span>
+            <span className="text-xs font-semibold text-primary-text">Start Date:</span>
             <input
               type="date"
               required
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
-              className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-primary-500 outline-none shadow-2xs"
+              className="bg-surface border border-border rounded-input px-3 py-1.5 text-primary-text text-xs focus:ring-1 focus:ring-brand outline-none"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-700">End Date:</span>
+            <span className="text-xs font-semibold text-primary-text">End Date:</span>
             <input
               type="date"
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
-              className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-800 text-xs focus:ring-2 focus:ring-primary-500 outline-none shadow-2xs"
+              className="bg-surface border border-border rounded-input px-3 py-1.5 text-primary-text text-xs focus:ring-1 focus:ring-brand outline-none"
             />
           </div>
 
           <button
             type="submit"
-            className="px-4 py-1.5 bg-primary-600 text-white font-bold rounded-xl text-xs hover:bg-primary-700 transition cursor-pointer shadow-xs"
+            className="px-4 py-1.5 bg-brand text-white font-semibold rounded-btn text-xs hover:bg-brand-hover transition cursor-pointer shadow-xs"
           >
             Apply Range
           </button>
@@ -358,14 +349,14 @@ export default function AnalyticsView({ authToken }) {
 
       {/* Global Error Banner if API Fails */}
       {globalError && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-xs text-rose-800">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-card flex items-center justify-between text-xs text-rose-800">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{globalError}</span>
           </div>
           <button
             onClick={handleRefresh}
-            className="px-2.5 py-1 bg-white border border-rose-200 text-rose-700 font-semibold rounded-lg hover:bg-rose-100 transition cursor-pointer"
+            className="px-2.5 py-1 bg-surface border border-rose-200 text-rose-700 font-semibold rounded-btn hover:bg-rose-100 transition cursor-pointer"
           >
             Retry
           </button>
@@ -377,19 +368,19 @@ export default function AnalyticsView({ authToken }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Period Volume */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-primary-200 transition group relative">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition group relative">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-text">
             <span>Period Volume</span>
-            <div className="p-2 rounded-xl bg-purple-50 text-purple-600 group-hover:scale-105 transition">
+            <div className="p-2 rounded-btn bg-surface-muted text-slate-700">
               <Calendar className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-3xl font-bold text-primary-text font-mono tracking-tight">
               {isLoadingSummary ? '...' : (summary?.total_volume?.toLocaleString() ?? 0)}
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-secondary-text pt-2 border-t border-border">
             <span>Total registered grievances</span>
             <span
               className="text-slate-400 hover:text-slate-600 cursor-help"
@@ -401,19 +392,19 @@ export default function AnalyticsView({ authToken }) {
         </div>
 
         {/* KPI 2: Escalation Rate */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-rose-200 transition group relative">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition group relative">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-text">
             <span>Escalation Rate</span>
-            <div className="p-2 rounded-xl bg-rose-50 text-rose-600 group-hover:scale-105 transition">
+            <div className="p-2 rounded-btn bg-[#FEF2F2] text-[#B91C1C]">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-extrabold text-rose-600 tracking-tight">
+            <div className="text-3xl font-bold text-[#B91C1C] font-mono tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.escalation_rate ?? 0}%`}
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-secondary-text pt-2 border-t border-border">
             <span>
               {summary ? `${summary.escalated_tickets} of ${summary.total_volume} flagged` : 'Supervisor review required'}
             </span>
@@ -427,19 +418,19 @@ export default function AnalyticsView({ authToken }) {
         </div>
 
         {/* KPI 3: Resolution Rate */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-emerald-200 transition group relative">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition group relative">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-text">
             <span>Resolution Rate</span>
-            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-105 transition">
+            <div className="p-2 rounded-btn bg-[#ECFDF3] text-[#15803D]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+            <div className="text-3xl font-bold text-[#15803D] font-mono tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.resolution_rate ?? 0}%`}
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-secondary-text pt-2 border-t border-border">
             <span>
               {summary ? `${summary.resolved_tickets} of ${summary.total_volume} completed` : 'Successfully completed'}
             </span>
@@ -453,19 +444,19 @@ export default function AnalyticsView({ authToken }) {
         </div>
 
         {/* KPI 4: Avg Resolution Time */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-blue-200 transition group relative">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+        <div className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition group relative">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-text">
             <span>Average Resolution Time</span>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 group-hover:scale-105 transition">
+            <div className="p-2 rounded-btn bg-[#EFF6FF] text-[#2563EB]">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-extrabold text-blue-600 tracking-tight">
+            <div className="text-3xl font-bold text-[#2563EB] font-mono tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.avg_resolution_hours ?? 0}h`}
             </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-[11px] text-secondary-text pt-2 border-t border-border">
             <span>
               {summary?.median_resolution_hours !== undefined
                 ? `Median: ${summary.median_resolution_hours}h (${summary.resolved_tickets_count || 0} resolved)`
@@ -495,19 +486,19 @@ export default function AnalyticsView({ authToken }) {
           return (
             <div
               key={chart.key}
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col hover:border-slate-300 transition"
+              className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col hover:border-slate-300 transition"
             >
               {/* Card Header */}
-              <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-start justify-between gap-3 pb-3 border-b border-border">
                 <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-xl shrink-0 ${chart.iconColor}`}>
+                  <div className={`p-2 rounded-btn shrink-0 ${chart.iconColor}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+                    <h3 className="text-sm font-bold text-primary-text tracking-tight">
                       {chart.title}
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-secondary-text mt-0.5">
                       {chart.subtitle}
                     </p>
                   </div>
@@ -517,10 +508,10 @@ export default function AnalyticsView({ authToken }) {
                 <button
                   type="button"
                   onClick={() => toggleTable(chart.key)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition cursor-pointer shrink-0 ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-btn border transition cursor-pointer shrink-0 ${
                     isTableOpen
-                      ? 'bg-primary-50 text-primary-700 border-primary-200'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-brand-subtle text-brand border-brand/30'
+                      : 'bg-surface-subtle text-slate-600 border-border hover:bg-surface-muted hover:text-primary-text'
                   }`}
                   aria-expanded={isTableOpen}
                   title="Toggle accessible raw data table"
@@ -532,25 +523,25 @@ export default function AnalyticsView({ authToken }) {
               </div>
 
               {/* Chart Visual Container */}
-              <div className="my-3 relative min-h-[260px] bg-white rounded-xl overflow-hidden flex items-center justify-center border border-slate-100">
+              <div className="my-3 relative min-h-[300px] bg-surface rounded-xl overflow-hidden flex items-center justify-center border border-border">
                 {isLoading ? (
-                  <div className="w-full h-full min-h-[260px] flex flex-col items-center justify-center gap-3 bg-slate-50/70 p-6 animate-pulse">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
-                    <span className="text-xs font-medium text-slate-500">
+                  <div className="w-full h-full min-h-[300px] flex flex-col items-center justify-center gap-3 bg-surface-subtle/70 p-6 animate-pulse">
+                    <Loader2 className="w-6 h-6 animate-spin text-brand" />
+                    <span className="text-xs font-medium text-muted-text">
                       Generating visualization...
                     </span>
                   </div>
                 ) : errorMsg ? (
                   <div className="flex flex-col items-center justify-center p-6 text-center gap-2">
                     <AlertTriangle className="w-6 h-6 text-rose-500" />
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-rose-700">
                       Visualization failed to render
                     </span>
-                    <p className="text-[11px] text-slate-400 max-w-xs">{errorMsg}</p>
+                    <p className="text-[11px] text-muted-text max-w-xs">{errorMsg}</p>
                     <button
                       type="button"
                       onClick={() => loadSingleChart(chart.key)}
-                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-xs font-semibold text-slate-700 rounded-lg hover:bg-slate-50 shadow-2xs transition"
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-surface border border-border text-xs font-semibold text-slate-700 rounded-btn hover:bg-surface-subtle shadow-xs transition"
                     >
                       <RotateCcw className="w-3 h-3" /> Retry
                     </button>
@@ -563,7 +554,7 @@ export default function AnalyticsView({ authToken }) {
                     loading="lazy"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center p-6 text-center text-xs text-slate-400">
+                  <div className="flex flex-col items-center justify-center p-6 text-center text-xs text-muted-text">
                     <span>No data available for selected period</span>
                   </div>
                 )}
@@ -571,34 +562,34 @@ export default function AnalyticsView({ authToken }) {
 
               {/* Accessible Data Table Dropdown */}
               {isTableOpen && (
-                <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
-                  <div className="text-[11px] font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                    <Table2 className="w-3.5 h-3.5 text-primary-600" />
+                <div className="mt-3 pt-3 border-t border-border animate-in fade-in duration-150">
+                  <div className="text-[11px] font-semibold text-primary-text mb-2 flex items-center gap-1.5">
+                    <Table2 className="w-3.5 h-3.5 text-brand" />
                     <span>Accessible Data Breakdown</span>
                   </div>
 
                   {/* Volume Over Time Table */}
                   {chart.key === 'volume_over_time' && (
-                    <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200">
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-border">
                       <table className="w-full text-[11px] text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0">
+                        <thead className="bg-surface-subtle text-muted-text font-semibold sticky top-0">
                           <tr>
                             <th className="py-1.5 px-3">Date</th>
                             <th className="py-1.5 px-3 text-right">Tickets Ingested</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-border">
                           {summary?.daily_trends && summary.daily_trends.length > 0 ? (
                             summary.daily_trends.map((item) => (
-                              <tr key={item.date} className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-3 font-medium text-slate-700">{item.date}</td>
-                                <td className="py-1.5 px-3 text-right font-bold text-slate-900">{item.count}</td>
+                              <tr key={item.date} className="hover:bg-surface-subtle/50">
+                                <td className="py-1.5 px-3 font-medium text-primary-text font-mono">{item.date}</td>
+                                <td className="py-1.5 px-3 text-right font-bold text-primary-text font-mono">{item.count}</td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={2} className="py-3 px-3 text-center text-slate-400">
-                                No trend data available.
+                              <td colSpan={2} className="py-3 px-3 text-center text-muted-text">
+                                No volume data logged in this timeframe
                               </td>
                             </tr>
                           )}
@@ -609,37 +600,32 @@ export default function AnalyticsView({ authToken }) {
 
                   {/* Status Distribution Table */}
                   {chart.key === 'status_distribution' && (
-                    <div className="rounded-lg border border-slate-200 overflow-hidden">
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-border">
                       <table className="w-full text-[11px] text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-bold">
+                        <thead className="bg-surface-subtle text-muted-text font-semibold sticky top-0">
                           <tr>
-                            <th className="py-2 px-3">Lifecycle Status</th>
-                            <th className="py-2 px-3 text-right">Count</th>
-                            <th className="py-2 px-3 text-right">Percentage</th>
+                            <th className="py-1.5 px-3">Status Lifecycle</th>
+                            <th className="py-1.5 px-3 text-right">Ticket Count</th>
+                            <th className="py-1.5 px-3 text-right">Proportion</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {summary?.status_table ? (
-                            summary.status_table.map((row) => (
-                              <tr key={row.status} className="hover:bg-slate-50/50">
-                                <td className="py-2 px-3 flex items-center gap-2">
-                                  <span
-                                    className="w-2.5 h-2.5 rounded-full inline-block"
-                                    style={{ backgroundColor: row.color }}
-                                  />
-                                  <span className="font-semibold text-slate-800">{row.status}</span>
-                                </td>
-                                <td className="py-2 px-3 text-right font-bold text-slate-900">{row.count}</td>
-                                <td className="py-2 px-3 text-right text-slate-600 font-medium">{row.percentage}%</td>
+                        <tbody className="divide-y divide-border">
+                          {[
+                            { label: 'Open', count: summary?.open_tickets ?? 0, color: 'text-slate-600' },
+                            { label: 'In Progress', count: summary?.in_progress_tickets ?? 0, color: 'text-blue-600' },
+                            { label: 'Resolved', count: summary?.resolved_tickets ?? 0, color: 'text-emerald-600' },
+                            { label: 'Escalated', count: summary?.escalated_tickets ?? 0, color: 'text-rose-600' },
+                          ].map((row) => {
+                            const tot = summary?.total_volume || 1;
+                            const pct = Math.round((row.count / tot) * 100);
+                            return (
+                              <tr key={row.label} className="hover:bg-surface-subtle/50">
+                                <td className="py-1.5 px-3 font-semibold text-primary-text">{row.label}</td>
+                                <td className={`py-1.5 px-3 text-right font-mono font-bold ${row.color}`}>{row.count}</td>
+                                <td className="py-1.5 px-3 text-right text-muted-text font-mono">{pct}%</td>
                               </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={3} className="py-3 px-3 text-center text-slate-400">
-                                No status data.
-                              </td>
-                            </tr>
-                          )}
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -647,28 +633,32 @@ export default function AnalyticsView({ authToken }) {
 
                   {/* Department Workload Table */}
                   {chart.key === 'department_workload' && (
-                    <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200">
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-border">
                       <table className="w-full text-[11px] text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0">
+                        <thead className="bg-surface-subtle text-muted-text font-semibold sticky top-0">
                           <tr>
-                            <th className="py-2 px-3">Department Name</th>
-                            <th className="py-2 px-3 text-right">Assigned Tickets</th>
-                            <th className="py-2 px-3 text-right">% Workload</th>
+                            <th className="py-1.5 px-3">Department Name</th>
+                            <th className="py-1.5 px-3 text-right">Assigned Tickets</th>
+                            <th className="py-1.5 px-3 text-right">% Workload</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {summary?.department_table && summary.department_table.length > 0 ? (
-                            summary.department_table.map((row) => (
-                              <tr key={row.department} className="hover:bg-slate-50/50">
-                                <td className="py-2 px-3 font-semibold text-slate-800">{row.department}</td>
-                                <td className="py-2 px-3 text-right font-bold text-slate-900">{row.count}</td>
-                                <td className="py-2 px-3 text-right text-slate-600 font-medium">{row.percentage}%</td>
-                              </tr>
-                            ))
+                        <tbody className="divide-y divide-border">
+                          {summary?.department_breakdown && summary.department_breakdown.length > 0 ? (
+                            summary.department_breakdown.map((d) => {
+                              const tot = summary.department_breakdown.reduce((acc, curr) => acc + curr.count, 0) || 1;
+                              const pct = ((d.count / tot) * 100).toFixed(1);
+                              return (
+                                <tr key={d.name} className="hover:bg-surface-subtle/50">
+                                  <td className="py-1.5 px-3 font-semibold text-primary-text">{d.name}</td>
+                                  <td className="py-1.5 px-3 text-right font-mono font-bold text-primary-text">{d.count}</td>
+                                  <td className="py-1.5 px-3 text-right font-mono text-muted-text">{pct}%</td>
+                                </tr>
+                              );
+                            })
                           ) : (
                             <tr>
-                              <td colSpan={3} className="py-3 px-3 text-center text-slate-400">
-                                No department data available.
+                              <td colSpan={3} className="py-3 px-3 text-center text-muted-text">
+                                No department workload data available
                               </td>
                             </tr>
                           )}
@@ -679,30 +669,30 @@ export default function AnalyticsView({ authToken }) {
 
                   {/* Resolution Time Distribution Table */}
                   {chart.key === 'resolution_time' && (
-                    <div className="rounded-lg border border-slate-200 overflow-hidden">
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-border">
                       <table className="w-full text-[11px] text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-bold">
+                        <thead className="bg-surface-subtle text-muted-text font-semibold sticky top-0">
                           <tr>
-                            <th className="py-2 px-3">Metric</th>
-                            <th className="py-2 px-3 text-right">Value</th>
-                            <th className="py-2 px-3 text-slate-500 font-normal">Context</th>
+                            <th className="py-1.5 px-3">Metric Parameter</th>
+                            <th className="py-1.5 px-3 text-right">Value (Hours)</th>
+                            <th className="py-1.5 px-3 text-slate-500">Benchmark Note</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          <tr className="hover:bg-slate-50/50">
-                            <td className="py-2 px-3 font-semibold text-slate-800">Mean Duration</td>
-                            <td className="py-2 px-3 text-right font-bold text-rose-600">{summary?.avg_resolution_hours ?? 0} hrs</td>
-                            <td className="py-2 px-3 text-slate-500">Average resolution turnaround</td>
+                        <tbody className="divide-y divide-border">
+                          <tr className="hover:bg-surface-subtle/50">
+                            <td className="py-2 px-3 font-semibold text-primary-text">Mean Duration</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-[#2563EB]">{summary?.avg_resolution_hours ?? 0}h</td>
+                            <td className="py-2 px-3 text-muted-text">Arithmetic average for period</td>
                           </tr>
-                          <tr className="hover:bg-slate-50/50">
-                            <td className="py-2 px-3 font-semibold text-slate-800">Median Duration</td>
-                            <td className="py-2 px-3 text-right font-bold text-blue-600">{summary?.median_resolution_hours ?? 0} hrs</td>
-                            <td className="py-2 px-3 text-slate-500">50th percentile cycle time</td>
+                          <tr className="hover:bg-surface-subtle/50">
+                            <td className="py-2 px-3 font-semibold text-primary-text">Median Duration</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-brand">{summary?.median_resolution_hours ?? 0}h</td>
+                            <td className="py-2 px-3 text-muted-text">50th percentile cycle time</td>
                           </tr>
-                          <tr className="hover:bg-slate-50/50">
-                            <td className="py-2 px-3 font-semibold text-slate-800">Resolved Sample (N)</td>
-                            <td className="py-2 px-3 text-right font-bold text-emerald-600">{summary?.resolved_tickets_count ?? 0}</td>
-                            <td className="py-2 px-3 text-slate-500">Completed tickets evaluated</td>
+                          <tr className="hover:bg-surface-subtle/50">
+                            <td className="py-2 px-3 font-semibold text-primary-text">Resolved Sample (N)</td>
+                            <td className="py-2 px-3 text-right font-mono font-bold text-[#15803D]">{summary?.resolved_tickets_count ?? 0}</td>
+                            <td className="py-2 px-3 text-muted-text">Completed tickets evaluated</td>
                           </tr>
                         </tbody>
                       </table>
@@ -722,13 +712,13 @@ export default function AnalyticsView({ authToken }) {
         <button
           type="button"
           onClick={() => setShowSecondaryCharts((prev) => !prev)}
-          className="w-full py-3 px-4 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition cursor-pointer shadow-xs"
+          className="w-full py-3 px-4 bg-surface border border-border rounded-card flex items-center justify-between text-xs font-semibold text-primary-text hover:bg-surface-subtle transition cursor-pointer shadow-xs"
         >
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary-600" />
+            <Sparkles className="w-4 h-4 text-brand" />
             <span>Additional Demographics (Complaint Category &amp; Priority Allocation)</span>
           </div>
-          <div className="flex items-center gap-1.5 text-primary-600 font-semibold text-[11px]">
+          <div className="flex items-center gap-1.5 text-brand font-semibold text-[11px]">
             <span>{showSecondaryCharts ? 'Hide Additional Charts' : 'View Additional Charts'}</span>
             {showSecondaryCharts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
@@ -745,39 +735,39 @@ export default function AnalyticsView({ authToken }) {
               return (
                 <div
                   key={chart.key}
-                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col"
+                  className="bg-surface border border-border rounded-card p-5 shadow-xs flex flex-col"
                 >
-                  <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-start justify-between pb-3 border-b border-border">
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-xl shrink-0 ${chart.iconColor}`}>
+                      <div className={`p-2 rounded-btn shrink-0 ${chart.iconColor}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+                        <h3 className="text-sm font-bold text-primary-text tracking-tight">
                           {chart.title}
                         </h3>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-secondary-text mt-0.5">
                           {chart.subtitle}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="my-3 relative min-h-[260px] bg-white rounded-xl overflow-hidden flex items-center justify-center border border-slate-100">
+                  <div className="my-3 relative min-h-[300px] bg-surface rounded-xl overflow-hidden flex items-center justify-center border border-border">
                     {isLoading ? (
-                      <div className="w-full h-full min-h-[260px] flex flex-col items-center justify-center gap-3 bg-slate-50/70 p-6 animate-pulse">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
-                        <span className="text-xs font-medium text-slate-500">
+                      <div className="w-full h-full min-h-[300px] flex flex-col items-center justify-center gap-3 bg-surface-subtle/70 p-6 animate-pulse">
+                        <Loader2 className="w-6 h-6 animate-spin text-brand" />
+                        <span className="text-xs font-medium text-muted-text">
                           Rendering visualization...
                         </span>
                       </div>
                     ) : errorMsg ? (
                       <div className="flex flex-col items-center justify-center p-6 text-center gap-2">
                         <AlertTriangle className="w-6 h-6 text-rose-500" />
-                        <span className="text-xs font-semibold text-slate-700">
+                        <span className="text-xs font-semibold text-rose-700">
                           Render notice
                         </span>
-                        <p className="text-[11px] text-slate-400 max-w-xs">{errorMsg}</p>
+                        <p className="text-[11px] text-muted-text max-w-xs">{errorMsg}</p>
                       </div>
                     ) : imgUrl ? (
                       <img
@@ -787,7 +777,7 @@ export default function AnalyticsView({ authToken }) {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="text-xs text-slate-400">No data available</div>
+                      <div className="text-xs text-muted-text">No data available</div>
                     )}
                   </div>
                 </div>
