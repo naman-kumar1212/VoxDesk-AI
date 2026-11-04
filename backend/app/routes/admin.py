@@ -204,12 +204,13 @@ def dashboard_summary():
             func.count(Ticket.id).filter(Ticket.status == "resolved").label("resolved"),
             func.count(Ticket.id).filter(Ticket.escalated == True).label("escalated"),  # noqa: E712
             func.count(Ticket.id).filter(Ticket.priority == "high").label("high_priority"),
-            func.count(Ticket.id).filter(Ticket.category == "BILLING").label("cat_billing"),
-            func.count(Ticket.id).filter(Ticket.category == "TECHNICAL").label("cat_technical"),
-            func.count(Ticket.id).filter(Ticket.category == "ACCOUNT").label("cat_account"),
-            func.count(Ticket.id).filter(Ticket.category == "PRODUCT").label("cat_product"),
-            func.count(Ticket.id).filter(Ticket.category == "SERVICE").label("cat_service"),
-            func.count(Ticket.id).filter(Ticket.category == "OTHER").label("cat_other"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "payment").label("cat_payment"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "orders").label("cat_orders"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "delivery").label("cat_delivery"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "technical").label("cat_technical"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "account").label("cat_account"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "refund").label("cat_refund"),
+            func.count(Ticket.id).filter(func.lower(Ticket.category) == "other").label("cat_other"),
         ).filter(Ticket.organization_id == org_id).one()
 
         total = counts.total or 0
@@ -227,13 +228,25 @@ def dashboard_summary():
         }
 
         cat_dist = {
-            "BILLING": counts.cat_billing or 0,
-            "TECHNICAL": counts.cat_technical or 0,
-            "ACCOUNT": counts.cat_account or 0,
-            "PRODUCT": counts.cat_product or 0,
-            "SERVICE": counts.cat_service or 0,
-            "OTHER": counts.cat_other or 0,
+            "payment": counts.cat_payment or 0,
+            "orders": counts.cat_orders or 0,
+            "delivery": counts.cat_delivery or 0,
+            "technical": counts.cat_technical or 0,
+            "account": counts.cat_account or 0,
+            "refund": counts.cat_refund or 0,
+            "other": counts.cat_other or 0,
         }
+
+        if total > 0 and sum(cat_dist.values()) < total:
+            cat_rows = db.query(
+                func.lower(Ticket.category),
+                func.count(Ticket.id)
+            ).filter(
+                Ticket.organization_id == org_id
+            ).group_by(func.lower(Ticket.category)).all()
+            for cat, c in cat_rows:
+                if cat:
+                    cat_dist[cat] = c
 
         # Consolidated query 2: Department workload
         dept_rows = db.query(
