@@ -159,24 +159,42 @@ export default function AnalyticsView({ authToken }) {
     }
   }, [authToken, dateRange, appliedCustomStart, appliedCustomEnd]);
 
-  // Load all charts concurrently
-  const loadAllCharts = useCallback(() => {
-    allCharts.forEach((c) => loadSingleChart(c.key));
-  }, [allCharts, loadSingleChart]);
+  // Load primary charts immediately on tab access
+  const loadPrimaryCharts = useCallback(() => {
+    primaryCharts.forEach((c) => loadSingleChart(c.key));
+  }, [primaryCharts, loadSingleChart]);
+
+  // Lazy-load secondary charts on demand
+  const loadSecondaryCharts = useCallback(() => {
+    secondaryCharts.forEach((c) => loadSingleChart(c.key));
+  }, [secondaryCharts, loadSingleChart]);
 
   // Master refresh
   const handleRefresh = useCallback(() => {
     loadSummary();
-    loadAllCharts();
-  }, [loadSummary, loadAllCharts]);
+    loadPrimaryCharts();
+    if (showSecondaryCharts) {
+      loadSecondaryCharts();
+    }
+  }, [loadSummary, loadPrimaryCharts, loadSecondaryCharts, showSecondaryCharts]);
 
-  // Trigger load on date range change
+  // Trigger load on date range change (primary charts only)
   useEffect(() => {
     if (dateRange !== 'custom') {
       loadSummary();
-      loadAllCharts();
+      loadPrimaryCharts();
+      if (showSecondaryCharts) {
+        loadSecondaryCharts();
+      }
     }
-  }, [dateRange, loadSummary, loadAllCharts]);
+  }, [dateRange, loadSummary, loadPrimaryCharts, showSecondaryCharts, loadSecondaryCharts]);
+
+  // Lazy-load secondary charts when user expands the section
+  useEffect(() => {
+    if (showSecondaryCharts) {
+      loadSecondaryCharts();
+    }
+  }, [showSecondaryCharts, loadSecondaryCharts]);
 
   // Apply custom dates
   const handleApplyCustomDates = (e) => {
@@ -189,9 +207,12 @@ export default function AnalyticsView({ authToken }) {
   useEffect(() => {
     if (dateRange === 'custom' && appliedCustomStart) {
       loadSummary();
-      loadAllCharts();
+      loadPrimaryCharts();
+      if (showSecondaryCharts) {
+        loadSecondaryCharts();
+      }
     }
-  }, [dateRange, appliedCustomStart, appliedCustomEnd, loadSummary, loadAllCharts]);
+  }, [dateRange, appliedCustomStart, appliedCustomEnd, loadSummary, loadPrimaryCharts, showSecondaryCharts, loadSecondaryCharts]);
 
   // Cleanup blob URLs on unmount
   useEffect(() => {

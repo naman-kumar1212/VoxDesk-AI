@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 # In-memory thread-safe analytics cache
 _CACHE_LOCK = threading.Lock()
+_DF_FETCH_LOCK = threading.Lock()  # Single-flight lock against cache stampedes
 _DF_CACHE: dict[str, tuple[float, pd.DataFrame]] = {}
 _CHART_CACHE: dict[str, tuple[float, bytes]] = {}
 _SUMMARY_CACHE: dict[str, tuple[float, dict]] = {}
@@ -98,6 +99,7 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
     """
     Fetches tickets from PostgreSQL for an organization and returns a normalized Pandas DataFrame.
     Results are cached in memory for up to CACHE_TTL_SECONDS to prevent duplicate queries across charts.
+    Protected with single-flight double-checked locking against cache stampedes.
     """
     cache_key = f"{org_id}:{range_param}:{start_str}:{end_str}"
     now_ts = time.time()
@@ -107,66 +109,86 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
             if now_ts - ts < CACHE_TTL_SECONDS:
                 return cached_df.copy()
 
-    start_dt, end_dt = _parse_date_filter(range_param, start_str, end_str)
-
-    db = next(get_db())
-    try:
-        query = db.query(Ticket).filter(Ticket.organization_id == org_id)
-
-        if start_dt:
-            query = query.filter(Ticket.created_at >= start_dt)
-        if end_dt:
-            query = query.filter(Ticket.created_at <= end_dt)
-
-        tickets = query.all()
-
-        if not tickets:
-            empty_df = pd.DataFrame(columns=[
-                "id", "ticket_number", "created_at", "resolved_at", "status",
-                "priority", "category", "department", "escalated", "resolution_hours"
-            ])
-            with _CACHE_LOCK:
-                _DF_CACHE[cache_key] = (now_ts, empty_df)
-            return empty_df
-
-        records = []
-        for t in tickets:
-            res_hours = None
-            if t.resolved_at and t.created_at:
-                delta = t.resolved_at - t.created_at
-                res_hours = max(0.1, delta.total_seconds() / 3600.0)
-
-            # Department name normalization: clean and ensure "Billing" maps to "Billing Support"
-            dept = (t.department or "General Support").strip()
-            if dept == "Billing":
-                dept = "Billing Support"
-
-            # Consistent lower-cased status & priority
-            status_val = (t.status or "open").lower().strip()
-            priority_val = (t.priority or "medium").lower().strip()
-
-            records.append({
-                "id": str(t.id),
-                "ticket_number": t.ticket_number,
-                "created_at": t.created_at,
-                "resolved_at": t.resolved_at,
-                "status": status_val,
-                "priority": priority_val,
-                "category": (t.category or "OTHER").strip(),
-                "department": dept,
-                "escalated": bool(t.escalated),
-                "resolution_hours": res_hours,
-            })
-
-        df = pd.DataFrame(records)
-        df["created_date"] = pd.to_datetime(df["created_at"]).dt.date
-
+    # Single-flight lock: only 1 thread executes the DB query; concurrent requests wait and hit warm cache
+    with _DF_FETCH_LOCK:
+        now_ts = time.time()
         with _CACHE_LOCK:
-            _DF_CACHE[cache_key] = (now_ts, df)
+            if cache_key in _DF_CACHE:
+                ts, cached_df = _DF_CACHE[cache_key]
+                if now_ts - ts < CACHE_TTL_SECONDS:
+                    return cached_df.copy()
 
-        return df
-    finally:
-        db.close()
+        start_dt, end_dt = _parse_date_filter(range_param, start_str, end_str)
+
+        db = next(get_db())
+        try:
+            # Select ONLY lightweight scalar columns (omits heavy transcript, description, internal_notes)
+            query = db.query(
+                Ticket.id,
+                Ticket.ticket_number,
+                Ticket.created_at,
+                Ticket.resolved_at,
+                Ticket.status,
+                Ticket.priority,
+                Ticket.category,
+                Ticket.department,
+                Ticket.escalated,
+            ).filter(Ticket.organization_id == org_id)
+
+            if start_dt:
+                query = query.filter(Ticket.created_at >= start_dt)
+            if end_dt:
+                query = query.filter(Ticket.created_at <= end_dt)
+
+            tickets = query.all()
+
+            if not tickets:
+                empty_df = pd.DataFrame(columns=[
+                    "id", "ticket_number", "created_at", "resolved_at", "status",
+                    "priority", "category", "department", "escalated", "resolution_hours"
+                ])
+                with _CACHE_LOCK:
+                    _DF_CACHE[cache_key] = (now_ts, empty_df)
+                return empty_df
+    
+            records = []
+            for t in tickets:
+                res_hours = None
+                if t.resolved_at and t.created_at:
+                    delta = t.resolved_at - t.created_at
+                    res_hours = max(0.1, delta.total_seconds() / 3600.0)
+    
+                # Department name normalization: clean and ensure "Billing" maps to "Billing Support"
+                dept = (t.department or "General Support").strip()
+                if dept == "Billing":
+                    dept = "Billing Support"
+    
+                # Consistent lower-cased status & priority
+                status_val = (t.status or "open").lower().strip()
+                priority_val = (t.priority or "medium").lower().strip()
+    
+                records.append({
+                    "id": str(t.id),
+                    "ticket_number": t.ticket_number,
+                    "created_at": t.created_at,
+                    "resolved_at": t.resolved_at,
+                    "status": status_val,
+                    "priority": priority_val,
+                    "category": (t.category or "OTHER").strip(),
+                    "department": dept,
+                    "escalated": bool(t.escalated),
+                    "resolution_hours": res_hours,
+                })
+    
+            df = pd.DataFrame(records)
+            df["created_date"] = pd.to_datetime(df["created_at"]).dt.date
+    
+            with _CACHE_LOCK:
+                _DF_CACHE[cache_key] = (now_ts, df)
+    
+            return df
+        finally:
+            db.close()
 
 
 def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[str] = None, end_str: Optional[str] = None) -> dict:
@@ -611,3 +633,11 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
     with _CACHE_LOCK:
         _CHART_CACHE[cache_key] = (now_ts, final_bytes)
     return final_bytes
+
+# Pre-warm Matplotlib font cache on import to prevent runtime findfont stalls
+try:
+    _fig = plt.figure(figsize=(1, 1))
+    plt.text(0, 0, "warm")
+    plt.close("all")
+except Exception:
+    pass

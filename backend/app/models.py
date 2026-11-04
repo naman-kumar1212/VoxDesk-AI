@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    desc,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
@@ -118,6 +119,11 @@ class Ticket(Base):
         Index("ix_tickets_org_category", "organization_id", "category"),
         Index("ix_tickets_org_dept", "organization_id", "department"),
         Index("ix_tickets_org_escalated", "organization_id", "escalated"),
+        Index("ix_tickets_org_created_desc", "organization_id", desc("created_at")),
+        Index("ix_tickets_org_status_created", "organization_id", "status", desc("created_at")),
+        Index("ix_tickets_org_dept_created", "organization_id", "department", desc("created_at")),
+        Index("ix_tickets_org_priority_created", "organization_id", "priority", desc("created_at")),
+        Index("ix_tickets_org_category_created", "organization_id", "category", desc("created_at")),
     )
 
     organization = relationship("Organization", back_populates="tickets")
@@ -154,6 +160,7 @@ class TicketEvent(Base):
 
     __table_args__ = (
         Index("ix_ticket_events_ticket_created", "ticket_id", "created_at"),
+        Index("ix_ticket_events_created_at_desc", desc("created_at")),
     )
 
     ticket = relationship("Ticket", back_populates="events")

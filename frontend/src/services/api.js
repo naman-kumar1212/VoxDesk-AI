@@ -31,6 +31,8 @@ const CACHE_TTL_MS = 30000; // 30-second client cache TTL for GET queries
 
 const apiCache = new Map();
 const chartBlobCache = new Map();
+const inFlightRequests = new Map();
+const inFlightChartRequests = new Map();
 
 /**
  * Generate a cache key for GET requests based on endpoint + auth context
@@ -47,6 +49,8 @@ function getCacheKey(endpoint, options = {}) {
  * Invalidate cached endpoints (e.g. on mutations)
  */
 export function invalidateApiCache(prefix = '') {
+  inFlightRequests.clear();
+  inFlightChartRequests.clear();
   if (!prefix) {
     apiCache.clear();
     for (const [, entry] of chartBlobCache.entries()) {
@@ -80,6 +84,7 @@ export function invalidateApiCache(prefix = '') {
 async function apiFetch(endpoint, options = {}) {
   const cacheKey = getCacheKey(endpoint, options);
   const bypassCache = Boolean(options.bypassCache);
+  const method = (options.method || 'GET').toUpperCase();
 
   if (cacheKey && !bypassCache) {
     const cached = apiCache.get(cacheKey);
@@ -88,39 +93,57 @@ async function apiFetch(endpoint, options = {}) {
     }
   }
 
-  const url = `${API_BASE}${endpoint}`;
-  const response = await fetch(url, options);
-
-  let data;
-  try {
-    data = await response.json();
-  } catch (err) {
-    throw new Error(`Invalid JSON response from server (${response.status})`);
+  // Deduplicate concurrent in-flight GET requests
+  if (method === 'GET' && cacheKey && !bypassCache && inFlightRequests.has(cacheKey)) {
+    return inFlightRequests.get(cacheKey);
   }
 
-  if (!response.ok || data.success === false) {
-    const errorMsg = data?.error?.message || `Request failed with status ${response.status}`;
-    const err = new Error(errorMsg);
-    err.code = data?.error?.code || 'REQUEST_FAILED';
-    err.status = response.status;
-    err.data = data;
-    throw err;
-  }
+  const fetchPromise = (async () => {
+    try {
+      const url = `${API_BASE}${endpoint}`;
+      const response = await fetch(url, options);
 
-  // Cache successful GET requests
-  if (cacheKey) {
-    apiCache.set(cacheKey, { timestamp: Date.now(), data: data.data });
-  }
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw new Error(`Invalid JSON response from server (${response.status})`);
+      }
 
-  // Automatically invalidate admin caches on mutation methods
-  const method = (options.method || 'GET').toUpperCase();
-  if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
-    if (endpoint.startsWith('/admin') || endpoint.startsWith('/tickets')) {
-      invalidateApiCache('/admin');
+      if (!response.ok || data.success === false) {
+        const errorMsg = data?.error?.message || `Request failed with status ${response.status}`;
+        const err = new Error(errorMsg);
+        err.code = data?.error?.code || 'REQUEST_FAILED';
+        err.status = response.status;
+        err.data = data;
+        throw err;
+      }
+
+      // Cache successful GET requests
+      if (cacheKey) {
+        apiCache.set(cacheKey, { timestamp: Date.now(), data: data.data });
+      }
+
+      // Automatically invalidate admin caches on mutation methods
+      if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+        if (endpoint.startsWith('/admin') || endpoint.startsWith('/tickets')) {
+          invalidateApiCache('/admin');
+        }
+      }
+
+      return data.data;
+    } finally {
+      if (cacheKey) {
+        inFlightRequests.delete(cacheKey);
+      }
     }
+  })();
+
+  if (method === 'GET' && cacheKey && !bypassCache) {
+    inFlightRequests.set(cacheKey, fetchPromise);
   }
 
-  return data.data;
+  return fetchPromise;
 }
 
 export const api = {
@@ -262,19 +285,35 @@ export const api = {
       }
     }
 
-    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
-      ? { Authorization: `Bearer ${tokenOrKey}` }
-      : { 'X-Admin-Key': tokenOrKey };
-
-    const url = `${API_BASE}/admin/analytics/charts/${chartName}?${params.toString()}`;
-    const response = await fetch(url, { headers });
-    if (!response.ok) {
-      throw new Error(`Failed to load chart ${chartName} (${response.status})`);
+    if (!bypassCache && inFlightChartRequests.has(cacheKey)) {
+      return inFlightChartRequests.get(cacheKey);
     }
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    chartBlobCache.set(cacheKey, { timestamp: Date.now(), url: blobUrl });
-    return blobUrl;
+
+    const chartPromise = (async () => {
+      try {
+        const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+          ? { Authorization: `Bearer ${tokenOrKey}` }
+          : { 'X-Admin-Key': tokenOrKey };
+
+        const url = `${API_BASE}/admin/analytics/charts/${chartName}?${params.toString()}`;
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`Failed to load chart ${chartName} (${response.status})`);
+        }
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        chartBlobCache.set(cacheKey, { timestamp: Date.now(), url: blobUrl });
+        return blobUrl;
+      } finally {
+        inFlightChartRequests.delete(cacheKey);
+      }
+    })();
+
+    if (!bypassCache) {
+      inFlightChartRequests.set(cacheKey, chartPromise);
+    }
+
+    return chartPromise;
   },
 
   /**

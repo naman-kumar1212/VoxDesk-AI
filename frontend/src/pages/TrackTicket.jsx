@@ -46,7 +46,7 @@ export default function TrackTicket() {
 
     if (clean.length < 3) {
       setErrorType('validation');
-      setErrorMessage('Please enter a valid ticket reference (e.g. VD-10427).');
+      setErrorMessage('Please enter a valid ticket reference (e.g. VD-10473).');
       setTicketData(null);
       return;
     }
@@ -113,22 +113,22 @@ export default function TrackTicket() {
 
   const createdTime = ticketData?.created_at
     ? new Date(ticketData.created_at).toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : '';
 
   const updatedTime = ticketData?.updated_at
     ? new Date(ticketData.updated_at).toLocaleString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     : '';
 
   return (
@@ -173,7 +173,7 @@ export default function TrackTicket() {
                 if (errorMessage) setErrorMessage(null);
               }}
               disabled={isLoading}
-              placeholder="e.g. VD-10427"
+              placeholder="e.g. VD-10473"
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-semibold text-slate-900 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none uppercase transition"
               autoFocus
             />
@@ -208,8 +208,8 @@ export default function TrackTicket() {
               {errorType === 'not_found'
                 ? 'Ticket Not Found'
                 : errorType === 'network'
-                ? 'Connection Error'
-                : 'Lookup Notice'}
+                  ? 'Connection Error'
+                  : 'Lookup Notice'}
             </p>
             <p className="mt-0.5 text-rose-700 leading-relaxed">{errorMessage}</p>
 
@@ -285,10 +285,10 @@ export default function TrackTicket() {
             <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => handleDemoFill('VD-10427')}
+                onClick={() => handleDemoFill('VD-10473')}
                 className="px-2.5 py-1 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200 text-xs font-mono font-bold transition"
               >
-                VD-10427
+                VD-10473
               </button>
             </div>
           </div>
@@ -411,9 +411,8 @@ export default function TrackTicket() {
             {/* Step 2: Assigned to Department */}
             <div className="relative">
               <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${
-                  isAssigned ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
-                }`}
+                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isAssigned ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
+                  }`}
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
               </div>
@@ -433,9 +432,8 @@ export default function TrackTicket() {
             {/* Step 3: In Progress */}
             <div className="relative">
               <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${
-                  isInProgress ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
-                }`}
+                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isInProgress ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-400'
+                  }`}
               >
                 {isResolved ? (
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -458,9 +456,8 @@ export default function TrackTicket() {
             {/* Step 4: Resolved */}
             <div className="relative">
               <div
-                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${
-                  isResolved ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'
-                }`}
+                className={`absolute -left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white shadow-sm ${isResolved ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'
+                  }`}
               >
                 {isResolved ? (
                   <Check className="w-3.5 h-3.5 stroke-[3]" />

@@ -11,12 +11,36 @@ import hmac
 import io
 import json
 import logging
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
 from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy import desc, func, or_
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IN-MEMORY QUERY & WORKLOAD CACHE (Low-latency navigation with mutation invalidation)
+# ─────────────────────────────────────────────────────────────────────────────
+_ADMIN_CACHE: dict = {}
+_ADMIN_CACHE_LOCK = threading.Lock()
+ADMIN_CACHE_TTL = 30.0  # seconds
+
+
+def invalidate_admin_caches(org_id=None):
+    """
+    Invalidates administrative query caches.
+    Must be called whenever tickets, departments, or users are mutated.
+    """
+    with _ADMIN_CACHE_LOCK:
+        if org_id:
+            prefix = str(org_id)
+            keys_to_del = [k for k in _ADMIN_CACHE if str(k).startswith(prefix)]
+            for k in keys_to_del:
+                _ADMIN_CACHE.pop(k, None)
+        else:
+            _ADMIN_CACHE.clear()
 from app.analytics import get_analytics_summary, render_chart_png, invalidate_analytics_cache
 from app.auth import create_or_update_admin, verify_admin_jwt
 from app.config import settings
@@ -159,9 +183,20 @@ def dashboard_summary():
         return _error("CONFIG_ERROR", "Demo organization not configured.", 503)
 
     org_id = uuid.UUID(settings.DEMO_ORGANIZATION_ID)
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+
+    cache_key = f"{org_id}:dashboard_summary"
+    now_ts = time.time()
+    if not bypass_cache:
+        with _ADMIN_CACHE_LOCK:
+            if cache_key in _ADMIN_CACHE:
+                ts, cached_data = _ADMIN_CACHE[cache_key]
+                if time.time() - ts < ADMIN_CACHE_TTL:
+                    return jsonify({"success": True, "data": cached_data, "error": None}), 200
 
     try:
         db = next(get_db())
+        # Consolidated query 1: All counts, status breakdown, and categories in a single scan
         counts = db.query(
             func.count(Ticket.id).label("total"),
             func.count(Ticket.id).filter(Ticket.status == "open").label("open"),
@@ -169,6 +204,12 @@ def dashboard_summary():
             func.count(Ticket.id).filter(Ticket.status == "resolved").label("resolved"),
             func.count(Ticket.id).filter(Ticket.escalated == True).label("escalated"),  # noqa: E712
             func.count(Ticket.id).filter(Ticket.priority == "high").label("high_priority"),
+            func.count(Ticket.id).filter(Ticket.category == "BILLING").label("cat_billing"),
+            func.count(Ticket.id).filter(Ticket.category == "TECHNICAL").label("cat_technical"),
+            func.count(Ticket.id).filter(Ticket.category == "ACCOUNT").label("cat_account"),
+            func.count(Ticket.id).filter(Ticket.category == "PRODUCT").label("cat_product"),
+            func.count(Ticket.id).filter(Ticket.category == "SERVICE").label("cat_service"),
+            func.count(Ticket.id).filter(Ticket.category == "OTHER").label("cat_other"),
         ).filter(Ticket.organization_id == org_id).one()
 
         total = counts.total or 0
@@ -178,23 +219,23 @@ def dashboard_summary():
         escalated_count = counts.escalated or 0
         high_priority = counts.high_priority or 0
 
-        # Status distribution
-        status_rows = db.query(Ticket.status, func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id
-        ).group_by(Ticket.status).all()
-        status_dist = {s: 0 for s in VALID_STATUSES}
-        for s, c in status_rows:
-            status_dist[s] = c
+        status_dist = {
+            "open": open_count,
+            "in_progress": in_prog_count,
+            "resolved": resolved_count,
+            "escalated": escalated_count,
+        }
 
-        # Category distribution
-        cat_rows = db.query(Ticket.category, func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id
-        ).group_by(Ticket.category).all()
-        cat_dist = {c: 0 for c in VALID_CATEGORIES}
-        for cat, c in cat_rows:
-            cat_dist[cat] = c
+        cat_dist = {
+            "BILLING": counts.cat_billing or 0,
+            "TECHNICAL": counts.cat_technical or 0,
+            "ACCOUNT": counts.cat_account or 0,
+            "PRODUCT": counts.cat_product or 0,
+            "SERVICE": counts.cat_service or 0,
+            "OTHER": counts.cat_other or 0,
+        }
 
-        # Department workload
+        # Consolidated query 2: Department workload
         dept_rows = db.query(
             Ticket.department,
             func.count(Ticket.id).label("total"),
@@ -217,13 +258,8 @@ def dashboard_summary():
         ]
 
         db.close()
-    except Exception as exc:
-        logger.error("Dashboard summary query failed: %s", exc)
-        return _error("DB_ERROR", "Failed to fetch dashboard summary.", 503)
 
-    return jsonify({
-        "success": True,
-        "data": {
+        payload = {
             "total_tickets": total,
             "open_tickets": open_count,
             "in_progress_tickets": in_prog_count,
@@ -233,7 +269,18 @@ def dashboard_summary():
             "status_distribution": status_dist,
             "category_distribution": cat_dist,
             "department_workload": dept_workload,
-        },
+        }
+
+        with _ADMIN_CACHE_LOCK:
+            _ADMIN_CACHE[cache_key] = (time.time(), payload)
+
+    except Exception as exc:
+        logger.error("Dashboard summary query failed: %s", exc)
+        return _error("DB_ERROR", "Failed to fetch dashboard summary.", 503)
+
+    return jsonify({
+        "success": True,
+        "data": payload,
         "error": None,
     }), 200
 
@@ -248,11 +295,33 @@ def dashboard_recent_activity():
         return _error("CONFIG_ERROR", "Demo organization not configured.", 503)
 
     org_id = uuid.UUID(settings.DEMO_ORGANIZATION_ID)
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+
+    cache_key = f"{org_id}:dashboard_recent_activity"
+    now_ts = time.time()
+    if not bypass_cache:
+        with _ADMIN_CACHE_LOCK:
+            if cache_key in _ADMIN_CACHE:
+                ts, cached_data = _ADMIN_CACHE[cache_key]
+                if time.time() - ts < ADMIN_CACHE_TTL:
+                    return jsonify({"success": True, "data": cached_data, "error": None}), 200
 
     try:
         db = next(get_db())
         results = (
-            db.query(TicketEvent, Ticket)
+            db.query(
+                TicketEvent.id,
+                TicketEvent.event_type,
+                TicketEvent.details,
+                TicketEvent.created_at,
+                Ticket.id.label("ticket_id"),
+                Ticket.ticket_number,
+                Ticket.category,
+                Ticket.priority,
+                Ticket.department,
+                Ticket.customer_name,
+                Ticket.summary,
+            )
             .join(Ticket, TicketEvent.ticket_id == Ticket.id)
             .filter(Ticket.organization_id == org_id)
             .order_by(desc(TicketEvent.created_at))
@@ -260,29 +329,35 @@ def dashboard_recent_activity():
             .all()
         )
 
-        activities = []
-        for event, ticket in results:
-            activities.append({
-                "id": str(event.id),
-                "event_type": event.event_type,
-                "details": event.details,
-                "created_at": event.created_at.isoformat(),
-                "ticket_id": str(ticket.id),
-                "ticket_number": ticket.ticket_number,
-                "category": ticket.category,
-                "priority": ticket.priority,
-                "department": ticket.department,
-                "customer_name": ticket.customer_name or "Customer",
-                "summary": ticket.summary,
-            })
+        activities = [
+            {
+                "id": str(r.id),
+                "event_type": r.event_type,
+                "details": r.details,
+                "created_at": r.created_at.isoformat(),
+                "ticket_id": str(r.ticket_id),
+                "ticket_number": r.ticket_number,
+                "category": r.category,
+                "priority": r.priority,
+                "department": r.department,
+                "customer_name": r.customer_name or "Customer",
+                "summary": r.summary,
+            }
+            for r in results
+        ]
         db.close()
+
+        payload = {"activities": activities}
+        with _ADMIN_CACHE_LOCK:
+            _ADMIN_CACHE[cache_key] = (time.time(), payload)
+
     except Exception as exc:
         logger.error("Recent activity query failed: %s", exc)
         return _error("DB_ERROR", "Failed to fetch recent activity.", 503)
 
     return jsonify({
         "success": True,
-        "data": {"activities": activities},
+        "data": payload,
         "error": None,
     }), 200
 
@@ -316,6 +391,16 @@ def list_tickets():
         page_size = min(100, max(1, int(request.args.get("page_size", 50))))
     except ValueError:
         return _error("INVALID_PARAMS", "page and page_size must be integers.", 400)
+
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+    cache_key = f"{org_id}:tickets:{status_filter}:{priority_filter}:{category_filter}:{dept_filter}:{search_q}:{sort_by}:{sort_dir}:{page}:{page_size}"
+    now_ts = time.time()
+    if not bypass_cache and not search_q:
+        with _ADMIN_CACHE_LOCK:
+            if cache_key in _ADMIN_CACHE:
+                ts, cached_data = _ADMIN_CACHE[cache_key]
+                if time.time() - ts < ADMIN_CACHE_TTL:
+                    return jsonify({"success": True, "data": cached_data, "error": None}), 200
 
     try:
         db = next(get_db())
@@ -357,13 +442,8 @@ def list_tickets():
 
         result = [_ticket_to_dict(t) for t in tickets]
         db.close()
-    except Exception as exc:
-        logger.error("Ticket list query failed: %s", exc)
-        return _error("DB_ERROR", "Failed to fetch tickets.", 503)
 
-    return jsonify({
-        "success": True,
-        "data": {
+        payload = {
             "tickets": result,
             "pagination": {
                 "total": total,
@@ -371,7 +451,18 @@ def list_tickets():
                 "page_size": page_size,
                 "total_pages": (total + page_size - 1) // page_size if page_size else 1,
             },
-        },
+        }
+        if not search_q:
+            with _ADMIN_CACHE_LOCK:
+                _ADMIN_CACHE[cache_key] = (time.time(), payload)
+
+    except Exception as exc:
+        logger.error("Ticket list query failed: %s", exc)
+        return _error("DB_ERROR", "Failed to fetch tickets.", 503)
+
+    return jsonify({
+        "success": True,
+        "data": payload,
         "error": None,
     }), 200
 
@@ -537,6 +628,7 @@ def update_ticket(ticket_uuid: str):
         db.commit()
         db.refresh(ticket)
         invalidate_analytics_cache(org_id)
+        invalidate_admin_caches(org_id)
         ticket_data = _ticket_to_dict(ticket)
         db.close()
     except Exception as exc:
@@ -617,6 +709,16 @@ def list_departments():
         return _error("CONFIG_ERROR", "Demo organization not configured.", 503)
 
     org_id = uuid.UUID(settings.DEMO_ORGANIZATION_ID)
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+
+    cache_key = f"{org_id}:departments_list"
+    now_ts = time.time()
+    if not bypass_cache:
+        with _ADMIN_CACHE_LOCK:
+            if cache_key in _ADMIN_CACHE:
+                ts, cached_data = _ADMIN_CACHE[cache_key]
+                if time.time() - ts < 30.0:
+                    return jsonify({"success": True, "data": cached_data, "error": None}), 200
 
     try:
         db = next(get_db())
@@ -654,11 +756,16 @@ def list_departments():
             for d in depts
         ]
         db.close()
+
+        payload = {"departments": result}
+        with _ADMIN_CACHE_LOCK:
+            _ADMIN_CACHE[cache_key] = (time.time(), payload)
+
     except Exception as exc:
         logger.error("List departments failed: %s", exc)
         return _error("DB_ERROR", "Failed to fetch departments.", 503)
 
-    return jsonify({"success": True, "data": {"departments": result}, "error": None}), 200
+    return jsonify({"success": True, "data": payload, "error": None}), 200
 
 
 @admin_bp.post("/admin/departments")
@@ -700,6 +807,7 @@ def create_department():
         db.add(dept)
         db.commit()
         db.refresh(dept)
+        invalidate_admin_caches(org_id)
         data = _department_to_dict(dept)
         db.close()
     except Exception as exc:
@@ -758,6 +866,7 @@ def update_department(dept_uuid: str):
         dept.updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(dept)
+        invalidate_admin_caches(org_id)
         data = _department_to_dict(dept)
         db.close()
     except Exception as exc:
@@ -808,6 +917,7 @@ def delete_department(dept_uuid: str):
 
         db.delete(dept)
         db.commit()
+        invalidate_admin_caches(org_id)
         db.close()
     except Exception as exc:
         logger.error("Delete department failed: %s", exc)
@@ -830,10 +940,21 @@ def list_users():
         return _error("CONFIG_ERROR", "Demo organization not configured.", 503)
 
     org_id = uuid.UUID(settings.DEMO_ORGANIZATION_ID)
+
     role_filter = request.args.get("role")
     dept_filter = request.args.get("department")
     status_filter = request.args.get("status")
     search_q = request.args.get("q", "").strip()
+    bypass_cache = request.args.get("bypass_cache", "").lower() in ("1", "true", "yes")
+
+    cache_key = f"{org_id}:users:{role_filter}:{dept_filter}:{status_filter}:{search_q}"
+    now_ts = time.time()
+    if not bypass_cache and not search_q:
+        with _ADMIN_CACHE_LOCK:
+            if cache_key in _ADMIN_CACHE:
+                ts, cached_data = _ADMIN_CACHE[cache_key]
+                if time.time() - ts < ADMIN_CACHE_TTL:
+                    return jsonify({"success": True, "data": cached_data, "error": None}), 200
 
     try:
         db = next(get_db())
@@ -858,11 +979,17 @@ def list_users():
         users = query.order_by(AdminUser.name).all()
         result = [_user_to_dict(u) for u in users]
         db.close()
+
+        payload = {"users": result}
+        if not search_q:
+            with _ADMIN_CACHE_LOCK:
+                _ADMIN_CACHE[cache_key] = (time.time(), payload)
+
     except Exception as exc:
         logger.error("List users failed: %s", exc)
         return _error("DB_ERROR", "Failed to fetch users.", 503)
 
-    return jsonify({"success": True, "data": {"users": result}, "error": None}), 200
+    return jsonify({"success": True, "data": payload, "error": None}), 200
 
 
 @admin_bp.post("/admin/users")
@@ -922,6 +1049,7 @@ def create_user():
         db.add(user)
         db.commit()
         db.refresh(user)
+        invalidate_admin_caches(org_id)
         data = _user_to_dict(user)
         db.close()
     except Exception as exc:
@@ -969,6 +1097,7 @@ def update_user(user_uuid: str):
 
         db.commit()
         db.refresh(user)
+        invalidate_admin_caches(org_id)
         data = _user_to_dict(user)
         db.close()
     except Exception as exc:
