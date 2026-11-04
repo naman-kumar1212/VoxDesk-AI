@@ -255,7 +255,7 @@ export default function AdminDashboard() {
             <button
               type="submit"
               disabled={isSubmittingLogin || !loginEmail.trim() || !loginPassword.trim()}
-              className="w-full py-2.5 px-4 bg-brand hover:bg-brand-hover text-white rounded-btn text-xs font-semibold shadow-xs transition flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="w-full py-2.5 px-4 bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-btn text-xs font-semibold shadow-xs transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               {isSubmittingLogin ? (
                 <>

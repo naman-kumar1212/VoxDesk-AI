@@ -134,8 +134,8 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
             title="High Priority"
             value={summary?.high_priority_tickets}
             icon={ShieldAlert}
-            iconBgClass="bg-[#FFFBEB]"
-            colorClass="text-[#B45309]"
+            iconBgClass="bg-[#FEF2F2]"
+            colorClass="text-[#B91C1C]"
           />
         </div>
       )}
@@ -148,7 +148,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
         <div className="lg:col-span-5 bg-surface border border-border rounded-card p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-brand" />
+              <Layers className="w-4 h-4 text-slate-700" />
               <h2 className="text-sm font-semibold text-primary-text">Grievance Categories</h2>
             </div>
             <span className="text-xs text-muted-text font-mono">

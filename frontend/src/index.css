@@ -18,6 +18,13 @@
     --brand-subtle: #F0EBFF;
     --voice-accent: #0F766E;
     --voice-subtle: #E6F5F2;
+    --status-open: #64748B;
+    --status-in-progress: #2563EB;
+    --status-resolved: #15803D;
+    --status-escalated: #B91C1C;
+    --priority-low: #64748B;
+    --priority-medium: #B45309;
+    --priority-high: #B91C1C;
   }
 
   body {

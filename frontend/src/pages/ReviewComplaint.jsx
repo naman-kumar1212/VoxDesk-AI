@@ -213,7 +213,7 @@ export default function ReviewComplaint({ onTicketCreated }) {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !transcript.trim()}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-300 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-xs transition cursor-pointer"
             >
               {isSubmitting ? (
                 <>

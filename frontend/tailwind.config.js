@@ -35,6 +35,11 @@ export default {
           active: '#26344B',
           indicator: '#8B6CF0',
         },
+        danger: {
+          DEFAULT: '#B91C1C',
+          hover: '#991B1B',
+          subtle: '#FEF2F2',
+        },
         primary: {
           50: '#F0EBFF',
           100: '#E4DCFE',

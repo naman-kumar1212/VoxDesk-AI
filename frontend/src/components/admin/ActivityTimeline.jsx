@@ -57,9 +57,9 @@ function getEventConfig(eventType, details = {}) {
       const { category, channel, department, priority } = details;
       return {
         icon: Plus,
-        iconBg: 'bg-primary-100',
-        iconColor: 'text-primary-600',
-        connectorColor: 'border-primary-200',
+        iconBg: 'bg-brand-subtle',
+        iconColor: 'text-brand',
+        connectorColor: 'border-border',
         title: 'Ticket Created',
         description: [
           channel && `Received via ${friendlyChannel(channel)}.`,
@@ -79,9 +79,9 @@ function getEventConfig(eventType, details = {}) {
       if (operator) parts.push(`By: ${operator}.`);
       return {
         icon: RefreshCw,
-        iconBg: 'bg-slate-100',
-        iconColor: 'text-slate-500',
-        connectorColor: 'border-slate-200',
+        iconBg: 'bg-surface-subtle',
+        iconColor: 'text-slate-600',
+        connectorColor: 'border-border',
         title: 'Status Updated',
         description: parts.join(' '),
       };
@@ -96,9 +96,9 @@ function getEventConfig(eventType, details = {}) {
       if (operator) parts.push(`By: ${operator}.`);
       return {
         icon: AlertTriangle,
-        iconBg: 'bg-red-50',
-        iconColor: 'text-red-600',
-        connectorColor: 'border-red-200',
+        iconBg: 'bg-[#FEF2F2]',
+        iconColor: 'text-[#B91C1C]',
+        connectorColor: 'border-[#FECACA]',
         title: 'Ticket Escalated',
         description: parts.join(' '),
       };
@@ -116,9 +116,9 @@ function getEventConfig(eventType, details = {}) {
       if (reason) parts.push(`Reason: ${reason}.`);
       return {
         icon: Building2,
-        iconBg: 'bg-slate-100',
-        iconColor: 'text-slate-500',
-        connectorColor: 'border-slate-200',
+        iconBg: 'bg-surface-subtle',
+        iconColor: 'text-slate-600',
+        connectorColor: 'border-border',
         title: 'Department Reassigned',
         description: parts.join(' '),
       };
@@ -128,9 +128,9 @@ function getEventConfig(eventType, details = {}) {
       const { preview } = details;
       return {
         icon: StickyNote,
-        iconBg: 'bg-amber-50',
-        iconColor: 'text-amber-600',
-        connectorColor: 'border-amber-200',
+        iconBg: 'bg-[#FFFBEB]',
+        iconColor: 'text-[#B45309]',
+        connectorColor: 'border-[#FDE68A]',
         title: 'Admin Note Added',
         description: preview ? `Note: "${preview}"` : 'Internal note updated.',
       };
@@ -140,9 +140,9 @@ function getEventConfig(eventType, details = {}) {
       const { from_priority, to_priority } = details;
       return {
         icon: ArrowUpDown,
-        iconBg: 'bg-slate-100',
-        iconColor: 'text-slate-500',
-        connectorColor: 'border-slate-200',
+        iconBg: 'bg-surface-subtle',
+        iconColor: 'text-slate-600',
+        connectorColor: 'border-border',
         title: 'Priority Changed',
         description:
           from_priority && to_priority
@@ -156,9 +156,9 @@ function getEventConfig(eventType, details = {}) {
     default:
       return {
         icon: Activity,
-        iconBg: 'bg-slate-100',
-        iconColor: 'text-slate-400',
-        connectorColor: 'border-slate-200',
+        iconBg: 'bg-surface-subtle',
+        iconColor: 'text-slate-500',
+        connectorColor: 'border-border',
         title: humanize(eventType) || 'Activity Logged',
         description: 'Administrative action recorded.',
       };

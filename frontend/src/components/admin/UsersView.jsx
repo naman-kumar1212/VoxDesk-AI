@@ -354,7 +354,7 @@ export default function UsersView({ authToken, currentUser }) {
       {/* 4. Add / Edit User Modal */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
           <div className="bg-surface border border-border rounded-card p-6 shadow-elevated w-full max-w-md space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h2 className="text-base font-bold text-primary-text">
@@ -458,7 +458,7 @@ export default function UsersView({ authToken, currentUser }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white font-semibold disabled:bg-slate-300"
+                  className="px-5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white font-semibold disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Saving...' : editingUser ? 'Save Changes' : 'Register User'}
                 </button>

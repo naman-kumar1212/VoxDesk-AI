@@ -142,7 +142,7 @@ export default function TrackTicket() {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-300"
+              className="px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               {isLoading ? (
                 <>

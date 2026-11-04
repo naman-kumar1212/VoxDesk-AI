@@ -84,7 +84,7 @@ export default function AdminLayout({
         >
           {/* Backdrop Blur Overlay */}
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"
+            className="fixed inset-0 bg-slate-900/60 transition-opacity cursor-pointer"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />

@@ -42,7 +42,7 @@ export default function TicketDetail({ ticketData, adminKey, onClose, onStatusUp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 transition-opacity">
       <div className="w-full max-w-2xl bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">

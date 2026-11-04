@@ -250,7 +250,7 @@ export default function DepartmentsView({ authToken }) {
                   </div>
                   <div>
                     <span className="text-[10px] font-medium text-muted-text block">Escalated</span>
-                    <span className="font-mono font-bold text-rose-600">{dept.escalated_tickets || 0}</span>
+                    <span className="font-mono font-bold text-[#B91C1C]">{dept.escalated_tickets || 0}</span>
                   </div>
                 </div>
 
@@ -295,7 +295,7 @@ export default function DepartmentsView({ authToken }) {
       {/* 3. Add / Edit Department Modal */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
           <div className="bg-surface border border-border rounded-card p-6 shadow-elevated w-full max-w-md space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h2 className="text-base font-bold text-primary-text">
@@ -367,7 +367,7 @@ export default function DepartmentsView({ authToken }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white font-semibold disabled:bg-slate-300"
+                  className="px-5 py-2 rounded-btn bg-brand hover:bg-brand-hover text-white font-semibold disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Saving...' : editingDept ? 'Save Changes' : 'Create Department'}
                 </button>
@@ -406,7 +406,7 @@ export default function DepartmentsView({ authToken }) {
                 type="button"
                 onClick={handleDeleteDepartment}
                 disabled={isDeleting}
-                className="px-5 py-2 rounded-btn bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold disabled:bg-rose-300"
+                className="px-5 py-2 rounded-btn bg-[#B91C1C] hover:bg-[#991B1B] text-white text-xs font-semibold disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed"
               >
                 {isDeleting ? 'Deleting...' : 'Confirm Delete'}
               </button>

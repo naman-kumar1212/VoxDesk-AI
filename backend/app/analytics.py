@@ -47,14 +47,15 @@ def invalidate_analytics_cache(org_id=None):
     logger.debug("Analytics cache invalidated.")
 
 
-# Primary brand colors matching VoxDesk AI design system
-VOX_PURPLE = "#7c3aed"
-VOX_LAVENDER = "#8b5cf6"
-VOX_BLUE = "#3b82f6"
-VOX_EMERALD = "#10b981"
-VOX_AMBER = "#f59e0b"
-VOX_ROSE = "#ef4444"
-VOX_SLATE = "#64748b"
+# Primary brand & semantic colors matching VoxDesk AI Signal Slate design tokens
+VOX_PURPLE = "#5B3CC4"
+VOX_LAVENDER = "#8B6CF0"
+VOX_BLUE = "#2563EB"
+VOX_EMERALD = "#15803D"
+VOX_AMBER = "#B45309"
+VOX_DANGER = "#B91C1C"
+VOX_ROSE = "#B91C1C"
+VOX_SLATE = "#64748B"
 
 
 def _parse_date_filter(range_param: str, start_str: Optional[str] = None, end_str: Optional[str] = None) -> Tuple[Optional[datetime], Optional[datetime]]:
@@ -609,7 +610,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
     # ─────────────────────────────────────────────────────────────────────────
     elif chart_name == "priority_distribution":
         prio_counts = df["priority"].value_counts()
-        prio_palette = {"high": VOX_ROSE, "medium": VOX_AMBER, "low": VOX_EMERALD}
+        prio_palette = {"high": VOX_DANGER, "medium": VOX_AMBER, "low": VOX_SLATE}
         colors = [prio_palette.get(p, VOX_SLATE) for p in prio_counts.index]
 
         wedges, texts, autotexts = ax.pie(
