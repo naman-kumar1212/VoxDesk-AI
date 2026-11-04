@@ -484,7 +484,7 @@ export default function AnalyticsView({ authToken }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 4. The 4 Primary Visualizations (2x2 Grid) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {primaryCharts.map((chart) => {
           const Icon = chart.icon;
           const imgUrl = chartUrls[chart.key];
@@ -495,7 +495,7 @@ export default function AnalyticsView({ authToken }) {
           return (
             <div
               key={chart.key}
-              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition"
+              className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col hover:border-slate-300 transition"
             >
               {/* Card Header */}
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
@@ -735,7 +735,7 @@ export default function AnalyticsView({ authToken }) {
         </button>
 
         {showSecondaryCharts && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4 animate-in fade-in duration-200">
             {secondaryCharts.map((chart) => {
               const Icon = chart.icon;
               const imgUrl = chartUrls[chart.key];
@@ -745,7 +745,7 @@ export default function AnalyticsView({ authToken }) {
               return (
                 <div
                   key={chart.key}
-                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+                  className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col"
                 >
                   <div className="flex items-start justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-start gap-3">

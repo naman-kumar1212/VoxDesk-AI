@@ -35,10 +35,10 @@ export default function Navbar() {
             aria-label="VoxDesk AI Home"
           >
             <img
-              src="/voxdesk-logo-compact.png"
+              src="/voxdesk-logo.png"
               alt="VoxDesk AI"
-              className="h-8 w-auto object-contain"
-              height="32"
+              className="h-10 w-auto object-contain block"
+              height="40"
             />
           </Link>
         </div>
@@ -61,11 +61,10 @@ export default function Navbar() {
           </button>
           <Link
             to="/report"
-            className={`transition font-semibold py-1 relative ${
-              isCustomerFlow
+            className={`transition font-semibold py-1 relative ${isCustomerFlow
                 ? 'text-primary-700 font-bold'
                 : 'hover:text-primary-700'
-            }`}
+              }`}
           >
             Report an Issue
             {isCustomerFlow && (
@@ -74,11 +73,10 @@ export default function Navbar() {
           </Link>
           <Link
             to="/track"
-            className={`transition font-semibold py-1 relative ${
-              isTrack
+            className={`transition font-semibold py-1 relative ${isTrack
                 ? 'text-primary-700 font-bold'
                 : 'hover:text-primary-700'
-            }`}
+              }`}
           >
             Track Ticket
             {isTrack && (
@@ -148,9 +146,8 @@ export default function Navbar() {
             <Link
               to="/report"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${
-                isCustomerFlow ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
-              }`}
+              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${isCustomerFlow ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-primary-600" />
@@ -161,9 +158,8 @@ export default function Navbar() {
             <Link
               to="/track"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${
-                isTrack ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
-              }`}
+              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${isTrack ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-primary-600" />
