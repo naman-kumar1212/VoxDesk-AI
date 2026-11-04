@@ -28,9 +28,17 @@ export default function UsersView({ authToken, currentUser }) {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [deptFilter, setDeptFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,7 +70,7 @@ export default function UsersView({ authToken, currentUser }) {
         role: roleFilter,
         department: deptFilter,
         status: statusFilter,
-        q: searchQuery,
+        q: debouncedSearch,
       });
       setUsers(data?.users || []);
     } catch (err) {
@@ -71,7 +79,7 @@ export default function UsersView({ authToken, currentUser }) {
     } finally {
       setIsLoading(false);
     }
-  }, [authToken, roleFilter, deptFilter, statusFilter, searchQuery]);
+  }, [authToken, roleFilter, deptFilter, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     loadUsers();

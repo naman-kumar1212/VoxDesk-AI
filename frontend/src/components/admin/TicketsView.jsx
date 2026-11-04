@@ -50,14 +50,23 @@ export default function TicketsView({ authToken }) {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   /* ── Filter & Search states ────────────────────────────────────────── */
-  const [searchQuery, setSearchQuery]       = useState('');
-  const [statusFilter, setStatusFilter]     = useState('ALL');
-  const [priorityFilter, setPriorityFilter] = useState('ALL');
-  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery]           = useState('');
+  const [debouncedSearch, setDebouncedSearch]   = useState('');
+  const [statusFilter, setStatusFilter]         = useState('ALL');
+  const [priorityFilter, setPriorityFilter]     = useState('ALL');
+  const [categoryFilter, setCategoryFilter]     = useState('ALL');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
   const [sortBy, setSortBy]   = useState('created_at');
   const [sortDir, setSortDir] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Debounce search input to prevent firing requests on every keystroke
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   /* ── Departments list for filter & reassignment ────────────────────── */
   const [departments, setDepartments] = useState([]);
@@ -84,7 +93,7 @@ export default function TicketsView({ authToken }) {
   }, [authToken]);
 
   /* ── Load tickets list ─────────────────────────────────────────────── */
-  const loadTickets = useCallback(async () => {
+  const loadTickets = useCallback(async (bypassCache = false) => {
     if (!authToken) return;
     setIsLoading(true);
     try {
@@ -93,11 +102,12 @@ export default function TicketsView({ authToken }) {
         priority: priorityFilter,
         category: categoryFilter,
         department: departmentFilter,
-        q: searchQuery,
+        q: debouncedSearch,
         sortBy,
         sortDir,
         page: currentPage,
         pageSize: 25,
+        bypassCache,
       });
 
       const list = data?.tickets || [];
@@ -119,7 +129,7 @@ export default function TicketsView({ authToken }) {
     } finally {
       setIsLoading(false);
     }
-  }, [authToken, statusFilter, priorityFilter, categoryFilter, departmentFilter, searchQuery, sortBy, sortDir, currentPage]);
+  }, [authToken, statusFilter, priorityFilter, categoryFilter, departmentFilter, debouncedSearch, sortBy, sortDir, currentPage]);
 
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
@@ -264,7 +274,7 @@ export default function TicketsView({ authToken }) {
         </div>
 
         <button
-          onClick={loadTickets}
+          onClick={() => loadTickets(true)}
           disabled={isLoading}
           className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
                      text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl
@@ -284,7 +294,7 @@ export default function TicketsView({ authToken }) {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ticket ID, customer name/email, complaint…"
               className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl
                          outline-none focus:bg-white focus:border-primary-500 transition

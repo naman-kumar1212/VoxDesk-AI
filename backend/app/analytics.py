@@ -2,10 +2,13 @@
 VoxDesk AI — In-Memory Analytics & Visualization Engine
 Uses Pandas for data aggregation and Matplotlib/Seaborn for chart generation.
 Returns charts directly as in-memory PNG bytes (io.BytesIO) with zero disk I/O.
+Includes lightweight in-memory caching with automatic invalidation on ticket mutations.
 Strictly $0 / free tier compliant.
 """
 import io
 import logging
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
@@ -20,6 +23,23 @@ from app.database import get_db
 from app.models import Ticket
 
 logger = logging.getLogger(__name__)
+
+# In-memory thread-safe analytics cache
+_CACHE_LOCK = threading.Lock()
+_DF_CACHE: dict[str, tuple[float, pd.DataFrame]] = {}
+_CHART_CACHE: dict[str, tuple[float, bytes]] = {}
+_SUMMARY_CACHE: dict[str, tuple[float, dict]] = {}
+CACHE_TTL_SECONDS = 60.0  # 60s fallback TTL, explicitly invalidated on ticket mutations
+
+
+def invalidate_analytics_cache(org_id=None):
+    """Invalidates all cached dataframes, summaries, and charts."""
+    with _CACHE_LOCK:
+        _DF_CACHE.clear()
+        _CHART_CACHE.clear()
+        _SUMMARY_CACHE.clear()
+    logger.debug("Analytics cache invalidated.")
+
 
 # Primary brand colors matching VoxDesk AI design system
 VOX_PURPLE = "#7c3aed"
@@ -72,7 +92,16 @@ def _parse_date_filter(range_param: str, start_str: Optional[str] = None, end_st
 def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[str] = None, end_str: Optional[str] = None) -> pd.DataFrame:
     """
     Fetches tickets from PostgreSQL for an organization and returns a normalized Pandas DataFrame.
+    Results are cached in memory for up to CACHE_TTL_SECONDS to prevent duplicate queries across charts.
     """
+    cache_key = f"{org_id}:{range_param}:{start_str}:{end_str}"
+    now_ts = time.time()
+    with _CACHE_LOCK:
+        if cache_key in _DF_CACHE:
+            ts, cached_df = _DF_CACHE[cache_key]
+            if now_ts - ts < CACHE_TTL_SECONDS:
+                return cached_df.copy()
+
     start_dt, end_dt = _parse_date_filter(range_param, start_str, end_str)
 
     db = next(get_db())
@@ -87,10 +116,13 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
         tickets = query.all()
 
         if not tickets:
-            return pd.DataFrame(columns=[
+            empty_df = pd.DataFrame(columns=[
                 "id", "ticket_number", "created_at", "resolved_at", "status",
                 "priority", "category", "department", "escalated", "resolution_hours"
             ])
+            with _CACHE_LOCK:
+                _DF_CACHE[cache_key] = (now_ts, empty_df)
+            return empty_df
 
         records = []
         for t in tickets:
@@ -123,6 +155,10 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
 
         df = pd.DataFrame(records)
         df["created_date"] = pd.to_datetime(df["created_at"]).dt.date
+
+        with _CACHE_LOCK:
+            _DF_CACHE[cache_key] = (now_ts, df)
+
         return df
     finally:
         db.close()
@@ -131,7 +167,16 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
 def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[str] = None, end_str: Optional[str] = None) -> dict:
     """
     Computes statistical KPIs and aggregations using Pandas from actual database records.
+    Cached in-memory to prevent repeated calculations.
     """
+    cache_key = f"{org_id}:{range_param}:{start_str}:{end_str}"
+    now_ts = time.time()
+    with _CACHE_LOCK:
+        if cache_key in _SUMMARY_CACHE:
+            ts, cached_summary = _SUMMARY_CACHE[cache_key]
+            if now_ts - ts < CACHE_TTL_SECONDS:
+                return cached_summary
+
     df = get_tickets_dataframe(org_id, range_param, start_str, end_str)
     total_volume = len(df)
 
@@ -229,7 +274,7 @@ def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[
         },
     ]
 
-    return {
+    res_dict = {
         "total_volume": total_volume,
         "open_tickets": open_count,
         "in_progress_tickets": in_prog_count,
@@ -249,12 +294,26 @@ def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[
         "status_table": status_table,
     }
 
+    with _CACHE_LOCK:
+        _SUMMARY_CACHE[cache_key] = (now_ts, res_dict)
+
+    return res_dict
+
 
 def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_str: Optional[str] = None, end_str: Optional[str] = None) -> bytes:
     """
     Renders high-resolution visualization using Matplotlib & Seaborn.
     Returns in-memory PNG bytes via io.BytesIO buffer with zero disk I/O.
+    Cached in memory to avoid repeating expensive Matplotlib renders for identical params.
     """
+    cache_key = f"{org_id}:{chart_name}:{range_param}:{start_str}:{end_str}"
+    now_ts = time.time()
+    with _CACHE_LOCK:
+        if cache_key in _CHART_CACHE:
+            ts, png_bytes = _CHART_CACHE[cache_key]
+            if now_ts - ts < CACHE_TTL_SECONDS:
+                return png_bytes
+
     df = get_tickets_dataframe(org_id, range_param, start_str, end_str)
 
     # Style configuration
@@ -291,7 +350,10 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
         plt.savefig(buf, format="png", bbox_inches="tight", transparent=False, facecolor="#ffffff", dpi=140)
         plt.close("all")
         buf.seek(0)
-        return buf.getvalue()
+        raw_val = buf.getvalue()
+        with _CACHE_LOCK:
+            _CHART_CACHE[cache_key] = (now_ts, raw_val)
+        return raw_val
 
     total_tickets = len(df)
 
@@ -540,4 +602,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
     plt.savefig(buf, format="png", bbox_inches="tight", transparent=False, facecolor="#ffffff", dpi=140)
     plt.close("all")
     buf.seek(0)
-    return buf.getvalue()
+    final_bytes = buf.getvalue()
+    with _CACHE_LOCK:
+        _CHART_CACHE[cache_key] = (now_ts, final_bytes)
+    return final_bytes

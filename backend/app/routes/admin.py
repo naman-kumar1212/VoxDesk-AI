@@ -17,7 +17,7 @@ from typing import Optional
 
 from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy import desc, func, or_
-from app.analytics import get_analytics_summary, render_chart_png
+from app.analytics import get_analytics_summary, render_chart_png, invalidate_analytics_cache
 from app.auth import create_or_update_admin, verify_admin_jwt
 from app.config import settings
 from app.database import get_db
@@ -162,22 +162,21 @@ def dashboard_summary():
 
     try:
         db = next(get_db())
-        total = db.query(func.count(Ticket.id)).filter(Ticket.organization_id == org_id).scalar() or 0
-        open_count = db.query(func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id, Ticket.status == "open"
-        ).scalar() or 0
-        in_prog_count = db.query(func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id, Ticket.status == "in_progress"
-        ).scalar() or 0
-        resolved_count = db.query(func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id, Ticket.status == "resolved"
-        ).scalar() or 0
-        escalated_count = db.query(func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id, Ticket.escalated == True  # noqa: E712
-        ).scalar() or 0
-        high_priority = db.query(func.count(Ticket.id)).filter(
-            Ticket.organization_id == org_id, Ticket.priority == "high"
-        ).scalar() or 0
+        counts = db.query(
+            func.count(Ticket.id).label("total"),
+            func.count(Ticket.id).filter(Ticket.status == "open").label("open"),
+            func.count(Ticket.id).filter(Ticket.status == "in_progress").label("in_progress"),
+            func.count(Ticket.id).filter(Ticket.status == "resolved").label("resolved"),
+            func.count(Ticket.id).filter(Ticket.escalated == True).label("escalated"),  # noqa: E712
+            func.count(Ticket.id).filter(Ticket.priority == "high").label("high_priority"),
+        ).filter(Ticket.organization_id == org_id).one()
+
+        total = counts.total or 0
+        open_count = counts.open or 0
+        in_prog_count = counts.in_progress or 0
+        resolved_count = counts.resolved or 0
+        escalated_count = counts.escalated or 0
+        high_priority = counts.high_priority or 0
 
         # Status distribution
         status_rows = db.query(Ticket.status, func.count(Ticket.id)).filter(
@@ -537,6 +536,7 @@ def update_ticket(ticket_uuid: str):
         ticket.updated_at = now
         db.commit()
         db.refresh(ticket)
+        invalidate_analytics_cache(org_id)
         ticket_data = _ticket_to_dict(ticket)
         db.close()
     except Exception as exc:

@@ -25,14 +25,14 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadData = async () => {
+  const loadData = async (bypassCache = false) => {
     if (!authToken) return;
     setIsLoading(true);
     setError(null);
     try {
       const [sumData, actData] = await Promise.all([
-        api.getDashboardSummary(authToken),
-        api.getRecentActivity(authToken),
+        api.getDashboardSummary(authToken, { bypassCache }),
+        api.getRecentActivity(authToken, { bypassCache }),
       ]);
       setSummary(sumData);
       setActivities(actData?.activities || []);
@@ -93,7 +93,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
         </div>
 
         <button
-          onClick={loadData}
+          onClick={() => loadData(true)}
           disabled={isLoading}
           className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition"
         >

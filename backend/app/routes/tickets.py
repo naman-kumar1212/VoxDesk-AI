@@ -122,6 +122,8 @@ def create_from_transcript():
             analysis=final_analysis,
             analysis_status=analysis_status,
         )
+        from app.analytics import invalidate_analytics_cache
+        invalidate_analytics_cache(org_id)
         db.close()
     except Exception as exc:
         logger.error("Ticket creation failed: %s", exc)

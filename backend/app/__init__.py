@@ -2,7 +2,8 @@
 VoxDesk AI — Application Factory
 """
 import logging
-from flask import Flask, jsonify
+import time
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from app.config import settings
@@ -30,6 +31,25 @@ def create_app(test_config=None) -> Flask:
     else:
         app.config["SECRET_KEY"] = settings.SECRET_KEY
         app.config["MAX_CONTENT_LENGTH"] = settings.MAX_AUDIO_BYTES
+
+    # Structured Request Performance Middleware
+    @app.before_request
+    def _record_request_start():
+        request._start_time = time.perf_counter()
+        request._db_time = 0.0
+        request._db_queries = 0
+
+    @app.after_request
+    def _record_request_end(response):
+        if hasattr(request, "_start_time"):
+            total_ms = (time.perf_counter() - request._start_time) * 1000.0
+            db_ms = getattr(request, "_db_time", 0.0)
+            proc_ms = max(0.0, total_ms - db_ms)
+            queries = getattr(request, "_db_queries", 0)
+            logger.info(
+                f"[PERFORMANCE] {request.method} {request.path} | DB: {db_ms:.1f}ms ({queries} queries) | Processing: {proc_ms:.1f}ms | Total: {total_ms:.1f}ms"
+            )
+        return response
 
     # Restrict CORS to configured frontend origin
     # Supports comma-separated origins if needed

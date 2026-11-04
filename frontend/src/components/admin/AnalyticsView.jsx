@@ -142,9 +142,9 @@ export default function AnalyticsView({ authToken }) {
       });
 
       setChartUrls((prev) => {
-        // Revoke prior blob URL if existing to prevent memory leak
-        if (prev[chartKey] && prev[chartKey].startsWith('blob:')) {
-          URL.revokeObjectURL(prev[chartKey]);
+        // Revoke prior blob URL only if a different one was generated
+        if (prev[chartKey] && prev[chartKey] !== url && prev[chartKey].startsWith('blob:')) {
+          try { URL.revokeObjectURL(prev[chartKey]); } catch {}
         }
         return { ...prev, [chartKey]: url };
       });

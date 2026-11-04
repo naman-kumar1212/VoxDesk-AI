@@ -1,15 +1,72 @@
 /**
  * VoxDesk AI — API Service Layer
- * Uses native fetch for zero external bloat.
+ * Uses native fetch with client-side memory caching (30s TTL, Stale-While-Revalidate).
+ * Automatically invalidates admin caches upon mutations.
  * Never handles secrets or server-side keys.
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const CACHE_TTL_MS = 30000; // 30-second client cache TTL for GET queries
+
+const apiCache = new Map();
+const chartBlobCache = new Map();
 
 /**
- * Helper to execute fetch and parse standard JSON envelope
+ * Generate a cache key for GET requests based on endpoint + auth context
+ */
+function getCacheKey(endpoint, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  if (method !== 'GET') return null;
+  const headers = options.headers || {};
+  const auth = headers.Authorization || headers['X-Admin-Key'] || '';
+  return `${endpoint}::${auth}`;
+}
+
+/**
+ * Invalidate cached endpoints (e.g. on mutations)
+ */
+export function invalidateApiCache(prefix = '') {
+  if (!prefix) {
+    apiCache.clear();
+    for (const [, entry] of chartBlobCache.entries()) {
+      try {
+        URL.revokeObjectURL(entry.url);
+      } catch {}
+    }
+    chartBlobCache.clear();
+    return;
+  }
+
+  for (const key of apiCache.keys()) {
+    if (key.includes(prefix)) {
+      apiCache.delete(key);
+    }
+  }
+
+  for (const [key, entry] of chartBlobCache.entries()) {
+    if (key.includes(prefix)) {
+      try {
+        URL.revokeObjectURL(entry.url);
+      } catch {}
+      chartBlobCache.delete(key);
+    }
+  }
+}
+
+/**
+ * Helper to execute fetch and parse standard JSON envelope with client-side caching
  */
 async function apiFetch(endpoint, options = {}) {
+  const cacheKey = getCacheKey(endpoint, options);
+  const bypassCache = Boolean(options.bypassCache);
+
+  if (cacheKey && !bypassCache) {
+    const cached = apiCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
   const url = `${API_BASE}${endpoint}`;
   const response = await fetch(url, options);
 
@@ -29,10 +86,25 @@ async function apiFetch(endpoint, options = {}) {
     throw err;
   }
 
+  // Cache successful GET requests
+  if (cacheKey) {
+    apiCache.set(cacheKey, { timestamp: Date.now(), data: data.data });
+  }
+
+  // Automatically invalidate admin caches on mutation methods
+  const method = (options.method || 'GET').toUpperCase();
+  if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+    if (endpoint.startsWith('/admin') || endpoint.startsWith('/tickets')) {
+      invalidateApiCache('/admin');
+    }
+  }
+
   return data.data;
 }
 
 export const api = {
+  invalidateCache: invalidateApiCache,
+
   /**
    * Health Check
    */
@@ -53,7 +125,6 @@ export const api = {
 
   /**
    * Upload audio for Whisper STT
-   * Note: Do NOT set Content-Type header on FormData fetch
    */
   async transcribeAudio(audioBlob, filename = 'complaint.webm', sessionId = null) {
     const formData = new FormData();
@@ -110,13 +181,13 @@ export const api = {
   },
 
   async logout(token) {
+    invalidateApiCache();
     try {
       return await apiFetch('/auth/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch (err) {
-      // Local clean up continues even if backend logout is best-effort
+    } catch {
       return { success: true };
     }
   },
@@ -124,24 +195,24 @@ export const api = {
   /**
    * Admin Dashboard summary & recent activity
    */
-  async getDashboardSummary(tokenOrKey) {
+  async getDashboardSummary(tokenOrKey, { bypassCache = false } = {}) {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch('/admin/dashboard/summary', { headers });
+    return apiFetch('/admin/dashboard/summary', { headers, bypassCache });
   },
 
-  async getRecentActivity(tokenOrKey) {
+  async getRecentActivity(tokenOrKey, { bypassCache = false } = {}) {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch('/admin/dashboard/recent-activity', { headers });
+    return apiFetch('/admin/dashboard/recent-activity', { headers, bypassCache });
   },
 
   /**
    * Admin analytics summary (with date filters)
    */
-  async getAdminAnalytics(tokenOrKey, { range = 'all', startDate = null, endDate = null } = {}) {
+  async getAdminAnalytics(tokenOrKey, { range = 'all', startDate = null, endDate = null, bypassCache = false } = {}) {
     const params = new URLSearchParams();
     if (range) params.append('range', range);
     if (startDate) params.append('start_date', startDate);
@@ -150,17 +221,25 @@ export const api = {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch(`/admin/analytics/summary?${params.toString()}`, { headers });
+    return apiFetch(`/admin/analytics/summary?${params.toString()}`, { headers, bypassCache });
   },
 
   /**
-   * Admin chart image blob fetcher (in-memory PNG bytes)
+   * Admin chart image blob fetcher (cached in-memory ObjectURL)
    */
-  async fetchChartBlob(tokenOrKey, chartName, { range = 'all', startDate = null, endDate = null } = {}) {
+  async fetchChartBlob(tokenOrKey, chartName, { range = 'all', startDate = null, endDate = null, bypassCache = false } = {}) {
     const params = new URLSearchParams();
     if (range) params.append('range', range);
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
+
+    const cacheKey = `/admin/analytics/charts/${chartName}?${params.toString()}`;
+    if (!bypassCache && chartBlobCache.has(cacheKey)) {
+      const entry = chartBlobCache.get(cacheKey);
+      if (Date.now() - entry.timestamp < CACHE_TTL_MS) {
+        return entry.url;
+      }
+    }
 
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
@@ -172,7 +251,9 @@ export const api = {
       throw new Error(`Failed to load chart ${chartName} (${response.status})`);
     }
     const blob = await response.blob();
-    return URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
+    chartBlobCache.set(cacheKey, { timestamp: Date.now(), url: blobUrl });
+    return blobUrl;
   },
 
   /**
@@ -188,6 +269,7 @@ export const api = {
     sortDir = 'desc',
     page = 1,
     pageSize = 50,
+    bypassCache = false,
   } = {}) {
     const params = new URLSearchParams();
     if (status && status !== 'ALL') params.append('status', status);
@@ -204,17 +286,17 @@ export const api = {
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
 
-    return apiFetch(`/admin/tickets?${params.toString()}`, { headers });
+    return apiFetch(`/admin/tickets?${params.toString()}`, { headers, bypassCache });
   },
 
   /**
    * Admin ticket detail with event timeline
    */
-  async getAdminTicketDetail(tokenOrKey, ticketId) {
+  async getAdminTicketDetail(tokenOrKey, ticketId, { bypassCache = false } = {}) {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch(`/admin/tickets/${ticketId}`, { headers });
+    return apiFetch(`/admin/tickets/${ticketId}`, { headers, bypassCache });
   },
 
   /**
@@ -239,9 +321,6 @@ export const api = {
     });
   },
 
-  /**
-   * Backwards-compatible status update alias
-   */
   async updateTicketStatus(tokenOrKey, ticketId, { status, reason }) {
     return this.updateTicket(tokenOrKey, ticketId, { status, reason });
   },
@@ -249,11 +328,11 @@ export const api = {
   /**
    * Departments Management
    */
-  async getDepartments(tokenOrKey) {
+  async getDepartments(tokenOrKey, { bypassCache = false } = {}) {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch('/admin/departments', { headers });
+    return apiFetch('/admin/departments', { headers, bypassCache });
   },
 
   async createDepartment(tokenOrKey, { name, description, status = 'active' }) {
@@ -297,7 +376,7 @@ export const api = {
   /**
    * Users Management
    */
-  async getUsers(tokenOrKey, { role, department, status, q } = {}) {
+  async getUsers(tokenOrKey, { role, department, status, q, bypassCache = false } = {}) {
     const params = new URLSearchParams();
     if (role && role !== 'ALL') params.append('role', role);
     if (department && department !== 'ALL') params.append('department', department);
@@ -307,7 +386,7 @@ export const api = {
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
       : { 'X-Admin-Key': tokenOrKey };
-    return apiFetch(`/admin/users?${params.toString()}`, { headers });
+    return apiFetch(`/admin/users?${params.toString()}`, { headers, bypassCache });
   },
 
   async createUser(tokenOrKey, { name, email, role, department, password }) {
@@ -338,4 +417,3 @@ export const api = {
     });
   },
 };
-

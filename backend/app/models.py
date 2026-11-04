@@ -116,6 +116,8 @@ class Ticket(Base):
         Index("ix_tickets_org_status", "organization_id", "status"),
         Index("ix_tickets_org_priority", "organization_id", "priority"),
         Index("ix_tickets_org_category", "organization_id", "category"),
+        Index("ix_tickets_org_dept", "organization_id", "department"),
+        Index("ix_tickets_org_escalated", "organization_id", "escalated"),
     )
 
     organization = relationship("Organization", back_populates="tickets")
@@ -196,6 +198,11 @@ class AdminUser(Base):
     status = Column(String(24), nullable=False, default="active")  # active, inactive
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
     last_active_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_admin_users_org_status", "organization_id", "status"),
+        Index("ix_admin_users_org_dept", "organization_id", "department"),
+    )
 
     organization = relationship("Organization")
 
