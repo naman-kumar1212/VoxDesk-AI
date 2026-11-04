@@ -180,7 +180,7 @@ async function main() {
           console.log(`  ✓ Generated Ticket Number: ${createdTicketNumber}`);
         }
       }
-    } catch {}
+    } catch { }
     await sleep(3000);
 
     // SCENE 5: PUBLIC TICKET TRACKING
@@ -256,7 +256,7 @@ async function main() {
 
     const prioritySelect = page.locator('select').nth(1);
     if (await prioritySelect.isVisible()) {
-      await prioritySelect.selectOption('high').catch(() => {});
+      await prioritySelect.selectOption('high').catch(() => { });
       await sleep(1500);
     }
 
@@ -325,7 +325,7 @@ async function main() {
     console.error('[Error during recording flow]:', err);
   } finally {
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`\n[Finished] Total recorded walkthrough time: ${elapsedSeconds} seconds (~${(elapsedSeconds/60).toFixed(1)} minutes)`);
+    console.log(`\n[Finished] Total recorded walkthrough time: ${elapsedSeconds} seconds (~${(elapsedSeconds / 60).toFixed(1)} minutes)`);
 
     const videoObj = page.video();
     await page.close();
@@ -340,7 +340,7 @@ async function main() {
       console.log(`  ✓ Walkthrough video saved: ${targetPath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
       try {
         fs.rmSync(TEMP_VIDEO_DIR, { recursive: true, force: true });
-      } catch {}
+      } catch { }
     }
   }
 
