@@ -456,3 +456,111 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 
 
 
+
+---
+
+## Phase 11: Ticket Management UX & Activity History Refinement (Completed)
+
+**Commit:** `811bd60` — `feat(admin): tickets UX refinement, simplified badge colors, ActivityTimeline component`
+
+### Files Created / Modified:
+| File | Change |
+|------|--------|
+| `frontend/src/components/StatusBadge.jsx` | Full rewrite — simplified color system, `whitespace-nowrap`, priority dots |
+| `frontend/src/components/admin/ActivityTimeline.jsx` | **New** — human-readable event timeline component |
+| `frontend/src/components/admin/TicketsView.jsx` | Full rewrite — table fixes, detail panel hierarchy, per-action feedback |
+
+### Scope of Changes:
+
+#### 1. Simplified Badge Color System (`StatusBadge.jsx`)
+- **Escalated only** → `bg-red-50 text-red-700 border-red-200` (sole danger signal)
+- **Open / In Progress / Resolved** → uniform `bg-slate-100 text-slate-600 border-slate-200` (neutral)
+- **All priorities** (High / Medium / Low) → uniform neutral slate badges with a subtle dot indicator (dark, medium, light grey) for visual differentiation without color semantics
+- Added `whitespace-nowrap` on all badge `<span>` elements — "In Progress" cannot wrap anymore
+- Purple branding strictly reserved for navigation, selections, and primary actions
+
+#### 2. ActivityTimeline Component (`ActivityTimeline.jsx`)
+- Accepts `events[]` prop and `isLoading` boolean
+- **Never renders raw JSON or `JSON.stringify()` output**
+- Event type → human-readable title and description mapping:
+  - `TICKET_CREATED` → "Ticket Created" / channel, category, department, priority details
+  - `STATUS_CHANGED` → "Status Updated" / from→to with optional reason and operator
+  - `TICKET_ESCALATED` → "Ticket Escalated" / red icon, reason and operator if present
+  - `DEPARTMENT_REASSIGNED` → "Department Reassigned" / from→to with optional reason
+  - `NOTE_ADDED` → "Admin Note Added" / note preview text
+  - `PRIORITY_CHANGED` → "Priority Changed" / from→to priority values
+  - Unknown events → "Activity Logged" / generic fallback
+- Vertical timeline spine: circular icon node (`w-7 h-7 rounded-full`) → connector line `border-l-2 border-slate-200` → next event
+- Escalated events use red icon background for visual prominence
+- Timestamps: medium date + short time via `toLocaleString()` — no raw UTC strings
+- Empty state: Activity icon + "No activity recorded yet."
+- Loading state: pulse icon + "Loading activity history…"
+- ARIA: `role="list"` on `<ol>`, `role="listitem"` on each event
+
+#### 3. Ticket Table Improvements (`TicketsView.jsx`)
+- Wrapped table in `<div className="overflow-x-auto">` for responsive horizontal scroll
+- Added `whitespace-nowrap` to all `<th>` elements
+- Status column: `min-w-[110px]` — badges never overflow cell boundaries
+- Priority column: `min-w-[80px]` with dot indicators
+- Customer name: `max-w-[130px] truncate` with `title` tooltip
+- Customer email: `max-w-[130px] truncate` with `title` tooltip
+- Department: `max-w-[110px] truncate` with `title` tooltip
+- Complaint summary: `max-w-[140px] truncate` with `title` tooltip
+- Fallback values: "Anonymous Customer" / "Email not provided" only when field is null/empty
+- Standardized row height via `align-middle` on all rows
+- Selected-row highlight preserved: `bg-primary-50/70 border-l-4 border-l-primary-600`
+- Table has `role="table"` and `aria-label="Ticket list"` for accessibility
+- Pagination buttons have `aria-label` for screen readers
+
+#### 4. Ticket Detail Panel — Information Hierarchy
+Reordered from top to bottom:
+1. ① Ticket ID + status badge + escalation badge + filed date
+2. ② Customer name (with User icon) + email (with Mail icon) — both with `break-all`
+3. ③ Voice Transcript — scrollable box (`max-h-28 overflow-y-auto`)
+4. ④ AI Extracted Summary — purple-tinted card
+5. ⑤ Priority / Category / Department — 3-column metadata row
+6. ⑥ Update Status — select + Apply button + inline `FeedbackPill`
+7. ⑦ Reassign Department — select + Reassign button + inline `FeedbackPill`
+8. ⑧ Internal Admin Notes — textarea + Save Notes button + inline `FeedbackPill`
+9. ⑨ Activity History — `<ActivityTimeline events={...} isLoading={...} />`
+
+#### 5. Per-Action Feedback States
+- Separated into `statusFeedback`, `deptFeedback`, `notesFeedback` — no collisions
+- Each auto-clears after 3 seconds via `useEffect` timeout
+- Loading states: spinner + "Updating…" / "Moving…" / "Saving…" text
+- Disabled states: `opacity-50 cursor-not-allowed` when no change is pending or request in flight
+- Success: emerald pill with CheckCircle2 icon
+- Error: rose pill with AlertCircle icon
+- `FeedbackPill` renders inline below each action section (not a shared banner)
+
+#### 6. Accessibility
+- All action buttons: `focus-visible:ring-2 focus-visible:ring-primary-500`
+- Table: `role="table"`, `aria-label`
+- Pagination: `aria-label="Previous/Next page"` on controls
+- ActivityTimeline: `role="list"` / `role="listitem"`
+
+### Verification:
+- [x] `npm run build` → **1619 modules, 0 errors** (10.30s)
+- [x] `pytest -v` → **34/34 passed** (44.19s)
+- [x] Committed and pushed → `811bd60` on `develop`
+
+### Acceptance Checklist:
+- [x] "In Progress" badge never wraps across two lines
+- [x] Escalated status badge is the only red badge in the table
+- [x] Priority badges (High/Medium/Low) are all neutral slate (no red/amber/green)
+- [x] Purple is reserved for branding, active nav, selections only
+- [x] Activity history shows human-readable descriptions for all event types
+- [x] No raw JSON rendered in activity timeline
+- [x] Ticket table scrolls horizontally without clipping on narrow screens
+- [x] Customer "Anonymous" / "Email not provided" shown only when genuinely null
+- [x] Selected ticket row highlighted with purple left border
+- [x] Detail panel information hierarchy follows ①–⑨ order
+- [x] Update Status / Reassign Dept / Save Notes each have independent feedback
+- [x] Loading spinners show correctly during requests
+- [x] Buttons disabled when no change pending
+- [x] Success clears after 3 seconds
+- [x] Error messages shown inline per-action
+- [x] Focus rings on all interactive controls
+- [x] No paid services used. All changes are frontend/presentation layer only.
+
+---
