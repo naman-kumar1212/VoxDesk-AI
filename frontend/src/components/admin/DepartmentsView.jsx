@@ -433,3 +433,4 @@ export default function DepartmentsView({ authToken }) {
     </div>
   );
 }
+

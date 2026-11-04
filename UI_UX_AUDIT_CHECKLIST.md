@@ -364,4 +364,54 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 - [x] Frontend production build passes with 0 errors
 - [x] Backend test suite passes 34/34 tests (100%)
 
+---
+
+## Phase 9: Analytics Page UI/UX Refinement (Completed)
+
+### Scope of Changes:
+1. **Header & Contextual Messaging:**
+   - Renamed "Statistical Analytics" to **"Analytics & Performance"**.
+   - Replaced technical backend implementation descriptions with business-oriented operational messaging.
+   - Removed technical library badges ("Pandas + Seaborn") and raster labels ("PNG 140DPI").
+   - Added live "Last updated" timestamp with localized display (`HH:MM:SS`).
+   - Integrated top-level manual refresh action with loading animation.
+2. **Unified Date Filtering:**
+   - Synchronized all 4 KPI cards and chart endpoints across: **Last 7 Days**, **Last 30 Days**, **Last 90 Days**, **All Time**, and **Custom Range**.
+   - Custom range drawer with Start Date and End Date datepickers, validation, and explicit "Apply Range" submission.
+   - Normalized end-date parsing in Python backend to include the full final day (23:59:59.999999 UTC).
+3. **Core KPI Cards Redesign:**
+   - **Period Volume:** Real database count of complaints registered in the selected window, with helper tooltip.
+   - **Escalation Rate:** Mathematically accurate ratio of escalated tickets against total window tickets (`N / Total * 100`), styled in rose accent.
+   - **Resolution Rate:** Ratio of resolved tickets against total window tickets, styled in emerald accent.
+   - **Average Resolution Time:** True mean resolution hours calculated on tickets with `resolved_at` timestamps, displaying median cycle time and resolved ticket count `(N)`.
+4. **The Four Primary Chart Visualizations:**
+   - **Ticket Volume Over Time (`volume_over_time`):**
+     - Full daily continuity reindexing so days with 0 volume show realistic trends without breaking slopes.
+     - Horizontal date labels without diagonal text collision or overlap.
+     - VoxDesk signature purple line (`#7c3aed`), subtle horizontal-only grid lines (`#cbd5e1`), and soft fill shading.
+   - **Tickets by Resolution Status (`status_distribution`):**
+     - Fixed blank rendering root cause by lowercasing and trimming status tokens and setting explicit `ylim` headroom.
+     - Displays two-line annotations on each bar showing both exact ticket count and percentage: e.g. `61\n(39.9%)`.
+     - Standardized lifecycle colors: Open (Slate `#64748b`), In Progress (Blue `#3b82f6`), Escalated (Rose `#ef4444`), Resolved (Emerald `#10b981`).
+     - Added an **Accessible Data Table Fallback** toggle underneath the chart rendering raw counts and percentages.
+   - **Department Active Workload (`department_workload`):**
+     - Redesigned as a ranked horizontal bar chart (`barh`) with highest volume department at the top.
+     - Normalized legacy `"Billing"` naming to `"Billing Support"` to prevent duplicate bars.
+     - High-contrast counts and percentages annotated directly beside each bar.
+     - Generous left margin spacing (`0.28`) preventing label truncation on any display width.
+     - Added an **Accessible Data Table Fallback** toggle.
+   - **Resolution Time Distribution (`resolution_time`):**
+     - Histogram showing cycle time spread from intake to resolution with dynamically sized bins.
+     - Vertical dashed reference lines for **Mean** (Rose `#ef4444`) and **Median** (Blue `#3b82f6`) with legend.
+     - Displays sample size in title: `Resolution Time Distribution (N = X Resolved)`.
+     - Suppresses misleading KDE smoothing curves when resolved count is sparse (`N < 15`).
+     - Added an **Accessible Data Table Fallback** toggle with cycle metrics.
+5. **Secondary Demographics Drawer:**
+   - Collapsible drawer for Complaint Categories breakdown and Priority Level allocation donut chart.
+6. **Robust UX & Error States:**
+   - Shimmer skeleton animation while charts render in memory.
+   - Informative error banners with per-chart retry buttons.
+   - Graceful empty states when custom date ranges contain no matching records.
+
+
 

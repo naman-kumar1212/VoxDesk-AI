@@ -81,3 +81,4 @@ def test_analytics_summary_and_charts(client, admin_headers):
     assert chart_res.status_code == 200
     assert chart_res.mimetype == "image/png"
     assert len(chart_res.data) > 1000  # valid PNG binary
+
