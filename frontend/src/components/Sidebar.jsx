@@ -23,12 +23,9 @@ export default function Sidebar({
   onToggleCollapse,
   currentUser = null,
 }) {
-  const primaryMenuItems = [
+  const menuItems = [
     { id: 'Dashboard', name: 'Dashboard', icon: LayoutDashboard },
     { id: 'Tickets', name: 'Tickets', icon: Ticket },
-  ];
-
-  const placeholderMenuItems = [
     { id: 'Analytics', name: 'Analytics', icon: BarChart3 },
     { id: 'Departments', name: 'Departments', icon: Building2 },
     { id: 'Users', name: 'Users', icon: Users },
@@ -97,16 +94,16 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Primary Active Navigation */}
+        {/* Primary Navigation: All 5 functional sections */}
         <div className="space-y-1">
           {!isCollapsed && (
             <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-              Workspace
+              Navigation
             </div>
           )}
 
-          <nav className="space-y-1" aria-label="Admin Primary Navigation">
-            {primaryMenuItems.map((item) => {
+          <nav className="space-y-1" aria-label="Admin Navigation">
+            {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
 
@@ -135,41 +132,6 @@ export default function Sidebar({
             })}
           </nav>
         </div>
-
-        {/* Non-MVP Placeholders (disabled, preventing misleading placeholder pages) */}
-        <div className="mt-6 space-y-1">
-          {!isCollapsed && (
-            <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-              Platform Features
-            </div>
-          )}
-
-          <div className="space-y-1">
-            {placeholderMenuItems.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.id}
-                  title={`${item.name} (Upcoming Feature)`}
-                  className={`w-full flex items-center ${
-                    isCollapsed ? 'justify-center px-2' : 'gap-3 px-3.5'
-                  } py-2.5 rounded-xl text-xs font-medium text-slate-600 cursor-not-allowed opacity-60`}
-                >
-                  <Icon className="w-4 h-4 shrink-0 text-slate-600" />
-                  {!isCollapsed && (
-                    <>
-                      <span>{item.name}</span>
-                      <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-800/90 px-1.5 py-0.5 rounded">
-                        Soon
-                      </span>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* Footer: User profile info, Public Home link & Logout */}
@@ -182,7 +144,7 @@ export default function Sidebar({
             </div>
             <div className="min-w-0 flex-1">
               <div className="font-bold text-white truncate">
-                {currentUser.name || 'Admin'}
+                {currentUser.name || 'Admin User'}
               </div>
               <div className="text-[10px] text-slate-400 truncate">
                 {currentUser.email}
@@ -208,7 +170,7 @@ export default function Sidebar({
           title="Sign Out"
           className={`w-full flex items-center ${
             isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-3'
-          } py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-xl transition`}
+          } py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-xl transition cursor-pointer`}
         >
           <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
           {!isCollapsed && <span>Sign Out</span>}

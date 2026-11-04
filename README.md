@@ -77,8 +77,11 @@ uv pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your GROQ_API_KEY, GEMINI_API_KEY, and DATABASE_URL
 
-# Run migration & demo organization seeder
-python seed.py
+# Run migration & schema extensions
+python migrate_admin_features.py
+
+# Seed 150 realistic support tickets, departments, and staff users (idempotent)
+python scripts/seed_demo_data.py --count 150
 
 # Create administrator account in Supabase auth.users
 python create_admin.py --email admin@voxdesk.ai --password "AdminVoxDesk2026!" --name "Demo Admin"
@@ -104,7 +107,7 @@ Run the full backend test suite:
 cd backend
 .venv\Scripts\python -m pytest -v
 ```
-All 29 automated unit tests verify:
+All 34 automated unit tests verify:
 - Audio validation (missing file, empty audio, unsupported MIME, payload limits)
 - Gemini schema validation with Pydantic
 - Deterministic business rules (priority overrides, fraud pattern detection, repeated contact escalation)
@@ -113,6 +116,10 @@ All 29 automated unit tests verify:
 - Supabase Auth integration & cryptographic HMAC-SHA256 JWT validation
 - Server-side role authorization (`admin` role required) and token tamper rejection
 - Admin key authentication gate (`X-Admin-Key` legacy fallback)
+- Dashboard overview summary and real-time activity stream
+- Departments CRUD operations & safe deletion guards (preventing deletion when tickets are assigned)
+- Users directory & authorization management
+- In-memory Pandas aggregation and Matplotlib/Seaborn binary PNG streaming charts
 
 ---
 
