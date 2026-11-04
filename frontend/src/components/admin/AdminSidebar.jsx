@@ -119,6 +119,7 @@ export default function AdminSidebar({
             <button
               key={item.id}
               type="button"
+              aria-label={item.name}
               onClick={() => {
                 if (onTabChange) onTabChange(item.id);
                 if (isMobile && onCloseMobile) onCloseMobile();

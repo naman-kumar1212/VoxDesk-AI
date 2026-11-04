@@ -1,4 +1,4 @@
-/**
+﻿/**
  * VoxDesk AI — API Service Layer
  * Uses native fetch with client-side memory caching (30s TTL, Stale-While-Revalidate).
  * Automatically invalidates admin caches upon mutations.
@@ -184,6 +184,22 @@ export const api = {
   },
 
   /**
+   * Alias for VoiceComplaint.jsx — transcribeVoice(blob) maps to transcribeAudio(blob).
+   * Uses direct apiFetch (not this.*) to avoid context loss in minified/bundled builds.
+   */
+  async transcribeVoice(audioBlob, filename = 'complaint.webm', sessionId = null) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, filename);
+    if (sessionId) {
+      formData.append('session_id', sessionId);
+    }
+    return apiFetch('/voice/transcribe', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  /**
    * Submit confirmed transcript to Gemini AI and create ticket
    */
   async createTicketFromTranscript({ sessionId, transcript, idempotencyKey }) {
@@ -271,10 +287,21 @@ export const api = {
   },
 
   /**
-   * Alias for AnalyticsView component compatibility
+   * Alias for AnalyticsView component compatibility.
+   * Uses direct apiFetch (not this.*) to avoid context loss in minified builds.
    */
   async getAnalyticsSummary(tokenOrKey, options = {}) {
-    return this.getAdminAnalytics(tokenOrKey, options);
+    const { range = 'all', startDate = null, endDate = null, start_date = null, end_date = null, bypassCache = false } = options;
+    const sDate = startDate || start_date;
+    const eDate = endDate || end_date;
+    const params = new URLSearchParams();
+    if (range) params.append('range', range);
+    if (sDate) params.append('start_date', sDate);
+    if (eDate) params.append('end_date', eDate);
+    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+      ? { Authorization: `Bearer ${tokenOrKey}` }
+      : { 'X-Admin-Key': tokenOrKey };
+    return apiFetch(`/admin/analytics/summary?${params.toString()}`, { headers, bypassCache });
   },
 
   /**
