@@ -446,7 +446,7 @@ export default function TicketsView({ authToken }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       {selectedTicket && (
         <div
-          className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs z-40 transition-opacity"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-xs z-20 md:z-20 transition-opacity"
           onClick={() => setSelectedTicket(null)}
           aria-hidden="true"
         />

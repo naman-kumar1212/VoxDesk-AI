@@ -306,6 +306,13 @@ async function main() {
       if (await inspector.isVisible()) {
         await sleep(2000);
       }
+      // Close inspector drawer cleanly before leaving Scene 8
+      const closeBtn = page.locator('button[aria-label="Close Inspector"]').first();
+      if (await closeBtn.isVisible().catch(() => false)) {
+        console.log('  -> Closing Ticket Inspector drawer...');
+        await closeBtn.click();
+        await sleep(600);
+      }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -313,7 +320,11 @@ async function main() {
     // ─────────────────────────────────────────────────────────────────────────
     console.log('[Scene 9] Navigating to Analytics & Performance...');
     const analyticsTab = page.locator('button[aria-label="Analytics"], button:has-text("Analytics"), button[title="Analytics"]').first();
-    await analyticsTab.click();
+    try {
+      await analyticsTab.click({ timeout: 5000, force: true });
+    } catch {
+      await page.goto(`${BASE_URL}/admin/analytics`);
+    }
     await sleep(3500);
 
     // Switch date filters to showcase reactivity

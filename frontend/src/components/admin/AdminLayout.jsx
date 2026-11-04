@@ -57,7 +57,7 @@ export default function AdminLayout({
       {/* 1. Permanent Desktop Sidebar (Full Viewport Height 100dvh) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div
-        className={`hidden md:flex flex-col h-full shrink-0 z-30 transition-[width] duration-200 ease-in-out ${
+        className={`hidden md:flex flex-col h-full shrink-0 z-40 transition-[width] duration-200 ease-in-out ${
           isCollapsed ? 'w-[76px]' : 'w-[280px]'
         }`}
       >
