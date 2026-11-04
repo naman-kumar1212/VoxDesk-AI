@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Menu, X, Shield, Mic, Search } from 'lucide-react';
+import { ArrowLeft, Menu, X, Shield, Mic, Search, ChevronRight } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isLanding = location.pathname === '';
-  const isCustomerFlow = ['/report', '/review', '/confirmation', '/track'].includes(location.pathname);
+  const isHome = location.pathname === '/';
+  const isCustomerFlow = ['/report', '/review', '/confirmation'].includes(location.pathname);
+  const isTrack = location.pathname === '/track';
+
+  const handleNavAnchor = (anchor) => {
+    setMobileMenuOpen(false);
+    if (!isHome) {
+      navigate(`/${anchor}`);
+    } else {
+      const element = document.querySelector(anchor);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
-    <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Brand Logo with actual official logo asset */}
+        {/* Brand Logo & Contextual Back */}
         <div className="flex items-center gap-3">
-          {/* Contextual back button if inside report/review flow and not landing */}
-          {isCustomerFlow && location.pathname !== '/report' && (
+          {isCustomerFlow && (
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -42,118 +54,137 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Navigation for Landing Page */}
-        {isLanding ? (
-          <>
-            <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
-              <Link to="/" className="text-primary-700 font-bold">
-                Home
-              </Link>
-              <a href="#how-it-works" className="hover:text-primary-700 transition">
-                How it Works
-              </a>
-              <a href="#features" className="hover:text-primary-700 transition">
-                Features
-              </a>
-            </nav>
-
-            <div className="hidden sm:flex items-center gap-3">
-              <Link
-                to="/report"
-                className="px-4 py-2 rounded-full border border-primary-200 text-primary-700 hover:bg-primary-50 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                Customer Support
-              </Link>
-              <Link
-                to="/admin"
-                className="px-4 py-2 rounded-xl bg-primary-700 hover:bg-primary-800 text-white text-xs font-bold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                Admin Login
-              </Link>
-            </div>
-
-            {/* Mobile menu toggle */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="sm:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </>
-        ) : isCustomerFlow ? (
-          /* Customer Flow Tabs matching Screens 2-5 in reference image */
-          <div className="flex items-center gap-6">
-            <Link
-              to="/report"
-              className={`text-xs font-bold pb-1 transition relative flex items-center gap-1.5 ${
-                ['/report', '/review', '/confirmation'].includes(location.pathname)
-                  ? 'text-primary-700'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Mic className="w-3.5 h-3.5 sm:hidden" />
-              <span>Report Issue</span>
-              {['/report', '/review', '/confirmation'].includes(location.pathname) && (
-                <span className="absolute bottom-[-18px] left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-              )}
-            </Link>
-
-            <Link
-              to="/track"
-              className={`text-xs font-bold pb-1 transition relative flex items-center gap-1.5 ${
-                location.pathname === '/track'
-                  ? 'text-primary-700'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5 sm:hidden" />
-              <span>Track Ticket</span>
-              {location.pathname === '/track' && (
-                <span className="absolute bottom-[-18px] left-0 right-0 h-0.5 bg-primary-600 rounded-full" />
-              )}
-            </Link>
-
-            <Link
-              to="/admin"
-              className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-700 ml-4 pl-4 border-l border-slate-200 transition"
-              title="Admin Portal"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Admin</span>
-            </Link>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Mobile dropdown for Landing */}
-      {isLanding && mobileMenuOpen && (
-        <div className="sm:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-3 shadow-lg">
+        {/* Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-600" aria-label="Main Navigation">
+          <button
+            type="button"
+            onClick={() => handleNavAnchor('#how-it-works')}
+            className="hover:text-primary-700 transition font-medium"
+          >
+            How It Works
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNavAnchor('#features')}
+            className="hover:text-primary-700 transition font-medium"
+          >
+            Features
+          </button>
           <Link
             to="/report"
-            onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-700 text-white text-xs font-bold"
+            className={`transition font-semibold pb-0.5 ${
+              isCustomerFlow
+                ? 'text-primary-700 border-b-2 border-primary-600'
+                : 'hover:text-primary-700'
+            }`}
           >
-            <Mic className="w-4 h-4" />
-            <span>Report an Issue</span>
+            Report an Issue
           </Link>
           <Link
             to="/track"
-            onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold"
+            className={`transition font-semibold pb-0.5 ${
+              isTrack
+                ? 'text-primary-700 border-b-2 border-primary-600'
+                : 'hover:text-primary-700'
+            }`}
           >
-            <Search className="w-4 h-4" />
-            <span>Track a Ticket</span>
+            Track Ticket
           </Link>
+        </nav>
+
+        {/* Right Actions: Admin Login (visually secondary) & CTA */}
+        <div className="hidden sm:flex items-center gap-3">
           <Link
             to="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-primary-700 bg-primary-50 text-xs font-bold"
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3 py-2 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200"
           >
-            <Shield className="w-4 h-4" />
-            <span>Admin Console</span>
+            Admin Login
           </Link>
+          <Link
+            to="/report"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-700 hover:bg-primary-800 text-white text-xs font-bold shadow-sm shadow-primary-700/20 transition transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>Report an Issue</span>
+          </Link>
+        </div>
+
+        {/* Mobile menu toggle */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition"
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Slide-down Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white px-4 py-5 space-y-3 shadow-lg">
+          <nav className="flex flex-col space-y-2 text-xs font-semibold text-slate-700">
+            <button
+              type="button"
+              onClick={() => handleNavAnchor('#how-it-works')}
+              className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 hover:text-primary-700 transition"
+            >
+              How It Works
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavAnchor('#features')}
+              className="text-left py-2 px-3 rounded-lg hover:bg-slate-50 hover:text-primary-700 transition"
+            >
+              Features
+            </button>
+            <Link
+              to="/report"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${
+                isCustomerFlow ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-primary-600" />
+                <span>Report an Issue</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+            <Link
+              to="/track"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${
+                isTrack ? 'bg-primary-50 text-primary-700 font-bold' : 'hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-primary-600" />
+                <span>Track Ticket</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+          </nav>
+
+          <div className="pt-3 border-t border-slate-100 space-y-2">
+            <Link
+              to="/report"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-700 text-white text-xs font-bold shadow-sm"
+            >
+              <Mic className="w-4 h-4" />
+              <span>Report an Issue</span>
+            </Link>
+            <Link
+              to="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-50 text-xs font-semibold"
+            >
+              <Shield className="w-3.5 h-3.5 text-slate-400" />
+              <span>Admin Login</span>
+            </Link>
+          </div>
         </div>
       )}
     </header>

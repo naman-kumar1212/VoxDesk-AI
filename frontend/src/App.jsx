@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import VoiceComplaint from './pages/VoiceComplaint';
 import ReviewComplaint from './pages/ReviewComplaint';
@@ -59,6 +60,9 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+
+      {/* Public Footer */}
+      {!isAdmin && <Footer />}
     </div>
   );
 }

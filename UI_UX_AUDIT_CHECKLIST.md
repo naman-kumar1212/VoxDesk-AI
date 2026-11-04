@@ -88,16 +88,65 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 
 | Screen | Reference Spec | Completed Implementation | Verified |
 |---|---|---|:---:|
-| **Screen 1: Landing / Home** | VoxDesk AI logo, "Resolve Issues with Your Voice", [Report an Issue 🎙️], [Admin Dashboard →], Mic soundwave illustration, 3 feature cards | `frontend/src/pages/Home.jsx` |  Yes |
-| **Screen 2: Voice Complaint** | "Tell Us Your Issue", concentric purple halos, central mic button, audio waveform, "00:00 / 00:45", bottom info pill | `frontend/src/pages/VoiceComplaint.jsx` |  Yes |
-| **Screen 3: Review Complaint** | "Review Your Complaint", Transcribed Complaint card with [Edit], Detected Details card (Category, Priority, Department), [Record Again], [Submit Complaint ✓] | `frontend/src/pages/ReviewComplaint.jsx` |  Yes |
-| **Screen 4: Ticket Confirmation** | Green checkmark, "Your Ticket Has Been Created!", Ticket ID, Category, Priority, Department, [Listen to Confirmation] with TTS, bottom info pill | `frontend/src/pages/TicketConfirmation.jsx` |  Yes |
-| **Screen 5: Track Ticket** | "Track Your Ticket", ticket input with [Track] button, Ticket ID card with status pill, 4-step vertical progress timeline | `frontend/src/pages/TrackTicket.jsx` |  Yes |
-| **Screen 6: Admin Dashboard** | Dark sidebar (`#0F172A`), VoxDesk Control Center header, 4 stat cards (Total, In Progress, Resolved, Escalated), Recent Tickets list, Ticket Details with status dropdown & [Update Status] | `frontend/src/pages/AdminDashboard.jsx` |  Yes |
+| **Screen 1: Landing / Home** | VoxDesk AI logo, "Resolve Issues with Your Voice", [Report an Issue 🎙️], [Track My Ticket 🔍], Mic soundwave illustration, 3 feature cards, 4-step workflow, final CTA, footer | `frontend/src/pages/Home.jsx` | Yes |
+| **Screen 2: Voice Complaint** | "Tell Us Your Issue", concentric purple halos, central mic button, audio waveform, "00:00 / 00:45", bottom info pill | `frontend/src/pages/VoiceComplaint.jsx` | Yes |
+| **Screen 3: Review Complaint** | "Review Your Complaint", Transcribed Complaint card with [Edit], Detected Details card (Category, Priority, Department), [Record Again], [Submit Complaint ✓] | `frontend/src/pages/ReviewComplaint.jsx` | Yes |
+| **Screen 4: Ticket Confirmation** | Green checkmark, "Your Ticket Has Been Created!", Ticket ID, Category, Priority, Department, [Listen to Confirmation] with TTS, bottom info pill | `frontend/src/pages/TicketConfirmation.jsx` | Yes |
+| **Screen 5: Track Ticket** | "Track Your Ticket", ticket input with [Track] button, Ticket ID card with status pill, 4-step vertical progress timeline | `frontend/src/pages/TrackTicket.jsx` | Yes |
+| **Screen 6: Admin Dashboard** | Dark sidebar (`#0F172A`), VoxDesk Control Center header, 4 stat cards (Total, In Progress, Resolved, Escalated), Recent Tickets list, Ticket Details with status dropdown & [Update Status] | `frontend/src/pages/AdminDashboard.jsx` | Yes |
 
 ---
 
-## 5. Technical & Cost Compliance
+## 5. Landing Page UX Improvement Pass (Screenshots Audit)
+
+### Identified Deficiencies from User Screenshots:
+1. **Empty Header Navigation on Landing Route:** The route condition checked for `pathname === ''` instead of `pathname === '/'`, causing the desktop navigation links (`How It Works`, `Features`, `Customer Support`, `Admin Login`) not to render in the header.
+2. **Hero Call to Action Mismatch:** The secondary button pointed to `Admin Dashboard`, which was not customer-oriented.
+3. **Hero Description Technical Tone:** The description lacked specific customer benefit copy.
+4. **How It Works Technical Jargon:** Step descriptions exposed internal model names (`Whisper Large V3 Turbo`, `Google Gemini`, `Supabase PostgreSQL`).
+5. **Missing Page Completion & Footer:** The page ended abruptly after the 4 step cards without a final action CTA or minimal footer.
+
+### Completed Refinements:
+1. **Sticky Header & Comprehensive Navigation (`Navbar.jsx`):**
+   - Active links: `How It Works`, `Features`, `Report an Issue` (active on customer routes), `Track Ticket` (active on `/track`), and `Admin Login` (visually secondary ghost link).
+   - Responsive mobile hamburger drawer displaying all navigation items and primary CTA.
+2. **Customer Benefit Hero (`Home.jsx`):**
+   - Retained: "Resolve Issues with Your Voice".
+   - Customer benefit: *"Skip tedious support forms and confusing phone menus. Speak your issue naturally in your own words, and our voice AI will capture, categorize, and route your support ticket in seconds."*
+   - Replaced Admin button with `Track My Ticket` secondary button pointing to `/track`.
+   - Customer trust highlights: *"No typing required"*, *"Instant ticket ID"*, *"Live resolution updates"*.
+3. **Refined Feature Cards:**
+   - **Voice to Ticket:** *"Report problems naturally without lengthy forms."*
+   - **AI Understanding:** *"Automatically categorize and route complaints."*
+   - **Ticket Tracking:** *"Follow progress and receive resolution updates."*
+4. **Simplified Four-Step Customer Workflow:**
+   - Step 1: **Speak Your Complaint** — *"Describe your issue using your voice."*
+   - Step 2: **Automatic Transcription** — *"Your speech is converted into text."*
+   - Step 3: **AI Complaint Analysis** — *"Your complaint is categorized and routed."*
+   - Step 4: **Track Your Resolution** — *"Receive your ticket ID and monitor progress."*
+   - Removed all internal model checkpoints and provider names.
+5. **Final Action CTA & Responsive Footer (`Footer.jsx`):**
+   - Added *"Ready to Resolve Your Issue?"* action card with dual buttons (`Report an Issue Now` and `Track an Existing Ticket`).
+   - Added minimal dark navy (`#0F172A`) footer with VoxDesk branding, navigation links, hackathon attribution, and data privacy notice (audio processed in-memory and discarded).
+
+---
+
+## 6. Acceptance Checklist
+
+- [x] Functional navigation header
+- [x] Report Issue navigation works (`/report`)
+- [x] Track Ticket navigation works (`/track`)
+- [x] Responsive mobile menu
+- [x] Improved hero CTA hierarchy (Primary: Report an Issue, Secondary: Track My Ticket)
+- [x] Customer-friendly feature descriptions
+- [x] Simplified four-step workflow (no internal technical names)
+- [x] Final CTA and minimal footer
+- [x] No broken links or console errors
+- [x] Responsive desktop and mobile layouts
+
+---
+
+## 7. Technical & Cost Compliance
 
 1. **Strict $0 Cost Policy:**
    - Speech-to-Text: Groq Free Plan API (`whisper-large-v3-turbo`).
@@ -107,6 +156,3 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 2. **Build and Test Verification:**
    - Production Vite frontend build: **Passed (0 errors)**.
    - Backend unit and API tests: **26/26 Passed (100%)**.
-3. **Known Limitations & Next Actions:**
-   - Browser `speechSynthesis` voices vary by client OS (e.g. Windows David/Zira vs macOS Samantha). The implementation safely selects English/Indian English when available and falls back gracefully.
-   - Microphone access requires HTTPS in remote deployment or `localhost` during development.
