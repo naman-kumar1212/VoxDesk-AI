@@ -80,6 +80,9 @@ cp .env.example .env
 # Run migration & demo organization seeder
 python seed.py
 
+# Create administrator account in Supabase auth.users
+python create_admin.py --email admin@voxdesk.ai --password "AdminVoxDesk2026!" --name "Demo Admin"
+
 # Start Flask server (port 5000)
 python wsgi.py
 ```
@@ -101,13 +104,15 @@ Run the full backend test suite:
 cd backend
 .venv\Scripts\python -m pytest -v
 ```
-All 24 automated unit tests verify:
+All 29 automated unit tests verify:
 - Audio validation (missing file, empty audio, unsupported MIME, payload limits)
 - Gemini schema validation with Pydantic
 - Deterministic business rules (priority overrides, fraud pattern detection, repeated contact escalation)
 - Status transition state machine & terminal `resolved` state
 - Ticket reference generation (`VD-XXXXXXXX`) and uniqueness
-- Admin key authentication gate (`X-Admin-Key`)
+- Supabase Auth integration & cryptographic HMAC-SHA256 JWT validation
+- Server-side role authorization (`admin` role required) and token tamper rejection
+- Admin key authentication gate (`X-Admin-Key` legacy fallback)
 
 ---
 

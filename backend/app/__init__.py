@@ -11,6 +11,7 @@ from app.routes.sessions import sessions_bp
 from app.routes.voice import voice_bp
 from app.routes.tickets import tickets_bp
 from app.routes.admin import admin_bp
+from app.routes.auth import auth_bp
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(voice_bp, url_prefix="/api")
     app.register_blueprint(tickets_bp, url_prefix="/api")
     app.register_blueprint(admin_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp, url_prefix="/api")
 
     # Global error handlers for consistent JSON envelope
     @app.errorhandler(404)

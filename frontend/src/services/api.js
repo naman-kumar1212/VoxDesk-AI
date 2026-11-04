@@ -93,18 +93,48 @@ export const api = {
   },
 
   /**
+   * Admin Authentication (Supabase Auth via Flask backend)
+   */
+  async login({ email, password }) {
+    return apiFetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  async getMe(token) {
+    return apiFetch('/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async logout(token) {
+    try {
+      return await apiFetch('/auth/logout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      // Local clean up continues even if backend logout is best-effort
+      return { success: true };
+    }
+  },
+
+  /**
    * Admin analytics summary
    */
-  async getAdminAnalytics(adminKey) {
-    return apiFetch('/admin/analytics/summary', {
-      headers: { 'X-Admin-Key': adminKey },
-    });
+  async getAdminAnalytics(tokenOrKey) {
+    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+      ? { Authorization: `Bearer ${tokenOrKey}` }
+      : { 'X-Admin-Key': tokenOrKey };
+    return apiFetch('/admin/analytics/summary', { headers });
   },
 
   /**
    * Admin tickets list with filters
    */
-  async getAdminTickets(adminKey, { status, priority, category, page = 1, pageSize = 50 } = {}) {
+  async getAdminTickets(tokenOrKey, { status, priority, category, page = 1, pageSize = 50 } = {}) {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (priority) params.append('priority', priority);
@@ -112,30 +142,36 @@ export const api = {
     params.append('page', page.toString());
     params.append('page_size', pageSize.toString());
 
-    return apiFetch(`/admin/tickets?${params.toString()}`, {
-      headers: { 'X-Admin-Key': adminKey },
-    });
+    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+      ? { Authorization: `Bearer ${tokenOrKey}` }
+      : { 'X-Admin-Key': tokenOrKey };
+
+    return apiFetch(`/admin/tickets?${params.toString()}`, { headers });
   },
 
   /**
    * Admin ticket detail with event timeline
    */
-  async getAdminTicketDetail(adminKey, ticketId) {
-    return apiFetch(`/admin/tickets/${ticketId}`, {
-      headers: { 'X-Admin-Key': adminKey },
-    });
+  async getAdminTicketDetail(tokenOrKey, ticketId) {
+    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+      ? { Authorization: `Bearer ${tokenOrKey}` }
+      : { 'X-Admin-Key': tokenOrKey };
+    return apiFetch(`/admin/tickets/${ticketId}`, { headers });
   },
 
   /**
    * Admin status update
    */
-  async updateTicketStatus(adminKey, ticketId, { status, reason }) {
+  async updateTicketStatus(tokenOrKey, ticketId, { status, reason }) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+        ? { Authorization: `Bearer ${tokenOrKey}` }
+        : { 'X-Admin-Key': tokenOrKey }),
+    };
     return apiFetch(`/admin/tickets/${ticketId}/status`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Key': adminKey,
-      },
+      headers,
       body: JSON.stringify({ status, reason }),
     });
   },

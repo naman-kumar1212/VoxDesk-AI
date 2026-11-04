@@ -263,3 +263,42 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 - [x] Responsive mobile layout
 - [x] Secure ticket lookup using existing Flask endpoint
 - [x] No broken routes or console errors
+
+---
+
+## 12. Admin Authentication & Dashboard UX Refinement (Phase 7 Overhaul)
+
+### Audit Findings & Gaps Addressed:
+1. **Demo Key Vulnerability Replaced:** Replaced the legacy single demo key authentication gate with proper administrator email/password authentication using Supabase `auth.users` with bcrypt password verification (`extensions.crypt`) and server-side role enforcement (`raw_app_meta_data->>'role' = 'admin'`).
+2. **Stuck UI Login State Fixed:** The previous login screen could freeze on "Verifying Key...". Replaced with interactive inputs (Admin Email / ID, Password, Show/Hide Password visibility toggle) and three distinct button states: "Sign In", "Signing In...", and "Sign In" on retry.
+3. **Controlled Admin Account Management:** Created `backend/create_admin.py` CLI utility for controlled, offline admin provisioning. Public admin registration is strictly disabled.
+4. **JWT Session Management:** Issuing cryptographically signed HMAC-SHA256 JWTs with 24-hour expiration. Frontend stores token in `localStorage` and validates validity on boot via `GET /api/auth/me`. Expired sessions cleanly redirect to login.
+5. **Dashboard Sidebar Navigation:** Refined sidebar to focus exclusively on MVP routes (`Dashboard` and `Tickets`), cleanly disabling non-MVP items (`Analytics`, `Departments`, `Users`) with "Soon" badges to prevent misleading blank views. Added desktop collapse toggle, mobile navigation drawer with `X` button, and persistent logged-in admin identity with "Sign Out" and "Exit to Public Home".
+6. **Ticket Detail Panel (9 Structured Sections):**
+   - Ticket identification (`VD-XXXXXXXX`) and status badge.
+   - **Explicit AI Fallback Warning Alert:** Dedicated warning banner when `analysis_status === 'fallback'` informing the admin: *"AI analysis unavailable. Manual review required."*
+   - Original customer complaint transcript from audio recording.
+   - Structured AI complaint summary.
+   - Category and priority badges.
+   - Assigned department.
+   - Formatted Created At and Updated At timestamps.
+   - Escalation reason badge when escalated.
+   - Real-time activity timeline from backend events.
+   - Status management dropdown and "Update Status" button (disabled when unchanged or resolved).
+
+### Acceptance Checklist:
+- [x] Email/ID and Password authentication interface with Show/Hide toggle
+- [x] Button states: "Sign In" (idle), "Signing In..." (submitting), "Sign In" (retry)
+- [x] Server-side Supabase `auth.users` authentication with bcrypt hashing
+- [x] Server-side role authorization (`admin` role enforcement)
+- [x] Session tokens passed via `Authorization: Bearer <token>`
+- [x] Session persistence and auto-invalidation on expiration (401)
+- [x] Sidebar streamlined to Dashboard & Tickets with non-MVP features cleanly disabled
+- [x] Collapsible sidebar and responsive mobile drawer
+- [x] Real database stat cards (Total, In Progress, Resolved, Escalated)
+- [x] Ticket search and status filter (`ALL`, `open`, `in_progress`, `escalated`, `resolved`)
+- [x] 9-section ticket detail view with activity timeline
+- [x] Explicit AI fallback warning banner when automated analysis triggers fallback
+- [x] Protected endpoints with comprehensive unit test coverage (29/29 passed)
+- [x] Frontend production build verified (`npm run build` passed)
+

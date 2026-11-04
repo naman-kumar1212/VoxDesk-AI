@@ -10,6 +10,7 @@ from flask import Blueprint, jsonify, request
 from app.config import settings
 from app.database import get_db
 from app.models import Ticket, TicketEvent
+from app.auth import verify_admin_jwt
 from sqlalchemy import func, desc
 
 logger = logging.getLogger(__name__)
@@ -30,15 +31,30 @@ def _error(code: str, message: str, status: int):
 
 
 def _require_admin():
-    """Returns None if authorized, or an error response tuple."""
+    """
+    Validates admin identity via Supabase Auth Bearer token or legacy admin key.
+    Enforces server-side that the user possesses the admin role.
+    """
+    # 1. Check Authorization Bearer token (Primary)
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "").strip()
+        payload = verify_admin_jwt(token)
+        if not payload:
+            return _error("UNAUTHORIZED", "Invalid or expired admin session token.", 401)
+        if payload.get("role") != "admin":
+            return _error("FORBIDDEN", "Administrator privileges required.", 403)
+        return None
+
+    # 2. Check X-Admin-Key (Backwards compatibility for existing test suite / CLI)
     provided_key = request.headers.get("X-Admin-Key", "")
     expected_key = settings.ADMIN_API_KEY
-    if not expected_key or not provided_key:
-        return _error("UNAUTHORIZED", "Admin key is required.", 401)
-    # Constant-time comparison
-    if not hmac.compare_digest(provided_key.encode(), expected_key.encode()):
+    if expected_key and provided_key:
+        if hmac.compare_digest(provided_key.encode(), expected_key.encode()):
+            return None
         return _error("UNAUTHORIZED", "Invalid admin key.", 401)
-    return None
+
+    return _error("UNAUTHORIZED", "Admin authentication token required.", 401)
 
 
 def _ticket_to_dict(ticket: Ticket) -> dict:
