@@ -156,3 +156,54 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 2. **Build and Test Verification:**
    - Production Vite frontend build: **Passed (0 errors)**.
    - Backend unit and API tests: **26/26 Passed (100%)**.
+
+
+---
+
+## 8. Customer Voice Recording Page Refinements (`VoiceComplaint.jsx`)
+
+### Identified Issues from Screenshots:
+1. **Redundant Duplicate Navigation Elements:** Header had an extra back arrow next to the logo AND a floating `← Home` link below the header. The header also displayed both an active underline on `Report an Issue` and a duplicate purple `Report an Issue` button on the far right.
+2. **Excessive Vertical Whitespace & Scroll Overflow:** The recording card had oversized padding (`py-10`), and the heavy multi-column dark footer forced vertical scrolling just to see the bottom info pill.
+3. **Missing Waveform Inactive State Discipline:** The waveform was constantly pulsing even when no audio was being recorded.
+4. **Lack of In-Flight Recording Controls:** When recording was in progress, user had no way to cancel/discard audio without submitting.
+5. **Secondary Manual Text Integration:** "Type instead" was a loose text link without an accessible integrated text entry interface and demo shortcuts.
+
+### Completed Refinements:
+1. **Streamlined Navigation (`Navbar.jsx` & `VoiceComplaint.jsx`):**
+   - Removed duplicate back arrows in header. Provided a single, clean `← Back to Home` link on the top-left of the recording view.
+   - Suppressed the duplicate `Report an Issue` button on the `/report` route in the header, replacing it with `Track Ticket`.
+2. **Compact, Above-the-Fold Layout:**
+   - Reduced excessive vertical padding to `py-6 sm:py-8` and standardized card padding to `p-6 sm:p-8`.
+   - All primary controls, waveform, timer, and privacy statements are visible within standard desktop and laptop viewports without scrolling.
+   - Substituted the heavy multi-column footer with a lightweight 1-line footer on `/report` in `App.jsx`.
+3. **Comprehensive Visual Recording States:**
+   - **Idle:** Central purple mic, subtle static waveform bars (`bg-slate-200`, no animation), time limit indicator, and clear start instructions.
+   - **Requesting Permission:** Animated loader and badge: *"Waiting for microphone permission..."*.
+   - **Recording:** Active red badge (`● Recording in progress`), live countdown (`Xs left`), dynamic animated waveform, and dual controls (**Done & Submit** and **Cancel**).
+   - **Uploading / Transcribing:** Dedicated loader: *"Whisper is processing your audio..."*.
+   - **Error:** Clear actionable banner with **Retry Voice** and **Type Complaint Instead** options.
+4. **Integrated Manual Text Entry Option:**
+   - Clean tabbed toggle between **Voice** and **Type Text**.
+   - Textarea with character count, meaningful placeholder, validation, and 1-click sample complaint buttons.
+   - Seamless transition into the existing review and submission pipeline.
+5. **Verified Privacy Notice:**
+   - Accurate statement directly below recording controls: *"Audio is processed in-memory for transcription and discarded immediately. No raw audio is stored."* (Guaranteed by Flask backend temporary file cleanup).
+
+---
+
+## 9. Customer Voice Recording Acceptance Checklist
+
+- [x] One clear back navigation (`← Back to Home`)
+- [x] No duplicate active navigation actions in header
+- [x] Microphone starts and stops recording correctly
+- [x] Recording status and timer update correctly
+- [x] Waveform reflects actual recording state (static when idle, animated when recording)
+- [x] Stop and Cancel actions work
+- [x] 45-second recording limit enforced
+- [x] Whisper transcription works
+- [x] Manual text entry works with instant demo complaint samples
+- [x] Loading, success and error states implemented
+- [x] Privacy messaging is accurate and matches backend implementation
+- [x] Responsive layout verified on desktop, tablet, and mobile
+- [x] No broken navigation or console errors

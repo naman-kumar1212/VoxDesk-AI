@@ -13,6 +13,7 @@ import NotFound from './pages/NotFound';
 export default function App() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isReport = location.pathname === '/report';
 
   const [activeTranscript, setActiveTranscript] = useState('');
   const [createdTicketResult, setCreatedTicketResult] = useState(null);
@@ -61,8 +62,13 @@ export default function App() {
         </Routes>
       </main>
 
-      {/* Public Footer */}
-      {!isAdmin && <Footer />}
+      {/* Main Footer on standard pages; minimal footer on recording page to prevent scroll overflow */}
+      {!isAdmin && !isReport && <Footer />}
+      {!isAdmin && isReport && (
+        <footer className="py-3 text-center text-[11px] text-slate-400 border-t border-slate-100 bg-white">
+          VoxDesk AI • Privacy Protected In-Memory Transcription • VocalLabs Hackathon Edition
+        </footer>
+      )}
     </div>
   );
 }
