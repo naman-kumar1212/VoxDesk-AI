@@ -40,6 +40,8 @@ node_modules/
 frontend/dist/
 frontend/build/
 .npm
+.vite/
+frontend/.vite/
 
 # Vercel
 .vercel/
