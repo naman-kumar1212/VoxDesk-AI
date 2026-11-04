@@ -45,3 +45,4 @@ def test_analyze_complaint_quota_error(monkeypatch):
     with patch("google.genai.Client", return_value=mock_client):
         with pytest.raises(AIQuotaError):
             analyze_complaint("Quota test.")
+

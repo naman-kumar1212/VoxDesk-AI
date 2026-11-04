@@ -19,3 +19,4 @@ def test_valid_transitions_map():
 
     # resolved is terminal
     assert len(VALID_TRANSITIONS["resolved"]) == 0
+

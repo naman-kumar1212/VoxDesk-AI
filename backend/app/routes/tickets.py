@@ -122,6 +122,8 @@ def create_from_transcript():
             analysis=final_analysis,
             analysis_status=analysis_status,
         )
+        from app.analytics import invalidate_analytics_cache
+        invalidate_analytics_cache(org_id)
         db.close()
     except Exception as exc:
         logger.error("Ticket creation failed: %s", exc)
@@ -133,4 +135,58 @@ def create_from_transcript():
         "data": _ticket_response(ticket, analysis_status),
         "error": None,
     }), 201
+
+
+@tickets_bp.get("/tickets/track/<ticket_number>")
+def track_ticket(ticket_number: str):
+    """
+    Public ticket tracking endpoint for customers.
+    Returns ticket status, details, and event timeline by ticket number.
+    """
+    clean_number = ticket_number.strip().upper()
+    if not clean_number:
+        return _error("INVALID_TICKET_NUMBER", "Ticket number is required.", 400)
+
+    from app.models import Ticket, TicketEvent
+
+    try:
+        db = next(get_db())
+        ticket = db.query(Ticket).filter(Ticket.ticket_number == clean_number).first()
+        if not ticket:
+            db.close()
+            return _error("NOT_FOUND", f"Ticket '{clean_number}' not found.", 404)
+
+        events_data = [
+            {
+                "id": str(e.id),
+                "event_type": e.event_type,
+                "details": e.details,
+                "created_at": e.created_at.isoformat(),
+            }
+            for e in ticket.events
+        ]
+
+        ticket_data = {
+            "id": str(ticket.id),
+            "ticket_number": ticket.ticket_number,
+            "category": ticket.category,
+            "priority": ticket.priority,
+            "department": ticket.department,
+            "status": ticket.status,
+            "escalated": ticket.escalated,
+            "summary": ticket.summary,
+            "created_at": ticket.created_at.isoformat(),
+            "updated_at": ticket.updated_at.isoformat(),
+            "events": events_data,
+        }
+        db.close()
+        return jsonify({
+            "success": True,
+            "data": {"ticket": ticket_data},
+            "error": None,
+        }), 200
+    except Exception as exc:
+        logger.error("Ticket tracking query failed: %s", exc)
+        return _error("DB_ERROR", "Failed to retrieve ticket tracking details.", 503)
+
 

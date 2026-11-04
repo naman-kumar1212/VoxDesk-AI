@@ -12,3 +12,4 @@ def test_ticket_number_format():
 def test_ticket_number_uniqueness():
     numbers = {_generate_ticket_number() for _ in range(100)}
     assert len(numbers) == 100
+

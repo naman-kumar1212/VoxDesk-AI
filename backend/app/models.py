@@ -86,6 +86,11 @@ class Ticket(Base):
     escalated = Column(Boolean, nullable=False, default=False)
     escalation_reason = Column(Text, nullable=True)
     analysis_status = Column(String(24), nullable=False, default="completed")
+    customer_name = Column(String(120), nullable=True)
+    customer_email = Column(String(255), nullable=True)
+    internal_notes = Column(Text, nullable=True)
+    is_demo = Column(Boolean, nullable=False, default=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_now, onupdate=_now)
 
@@ -111,6 +116,8 @@ class Ticket(Base):
         Index("ix_tickets_org_status", "organization_id", "status"),
         Index("ix_tickets_org_priority", "organization_id", "priority"),
         Index("ix_tickets_org_category", "organization_id", "category"),
+        Index("ix_tickets_org_dept", "organization_id", "department"),
+        Index("ix_tickets_org_escalated", "organization_id", "escalated"),
     )
 
     organization = relationship("Organization", back_populates="tickets")
@@ -123,7 +130,13 @@ class Ticket(Base):
     )
 
 
-EVENT_TYPES = ("TICKET_CREATED", "TICKET_ESCALATED", "STATUS_CHANGED")
+EVENT_TYPES = (
+    "TICKET_CREATED",
+    "TICKET_ESCALATED",
+    "STATUS_CHANGED",
+    "NOTE_ADDED",
+    "DEPARTMENT_REASSIGNED",
+)
 
 
 class TicketEvent(Base):
@@ -144,4 +157,53 @@ class TicketEvent(Base):
     )
 
     ticket = relationship("Ticket", back_populates="events")
+
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    name = Column(String(64), nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(24), nullable=False, default="active")  # active, inactive
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now, onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint("organization_id", "name", name="uq_department_org_name"),
+    )
+
+    organization = relationship("Organization")
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    auth_user_id = Column(UUID(as_uuid=True), nullable=True)
+    name = Column(String(120), nullable=False)
+    email = Column(String(255), nullable=False, unique=True)
+    role = Column(String(32), nullable=False, default="staff")  # admin, staff
+    department = Column(String(64), nullable=True)
+    status = Column(String(24), nullable=False, default="active")  # active, inactive
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    last_active_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_admin_users_org_status", "organization_id", "status"),
+        Index("ix_admin_users_org_dept", "organization_id", "department"),
+    )
+
+    organization = relationship("Organization")
+
 

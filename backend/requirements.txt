@@ -6,5 +6,12 @@ pydantic==2.11.4
 groq==0.29.0
 google-genai==1.19.0
 python-dotenv==1.1.0
+
+# Analytics and data processing
+pandas
+matplotlib
+seaborn
+
+# Testing
 pytest==8.3.5
 pytest-mock==3.14.0
