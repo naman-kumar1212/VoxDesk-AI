@@ -7,6 +7,7 @@ import ReviewComplaint from './pages/ReviewComplaint';
 import TicketConfirmation from './pages/TicketConfirmation';
 import TrackTicket from './pages/TrackTicket';
 import AdminDashboard from './pages/AdminDashboard';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   const location = useLocation();
@@ -16,8 +17,8 @@ export default function App() {
   const [createdTicketResult, setCreatedTicketResult] = useState(null);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 flex flex-col">
-      {/* Hide customer navbar on admin dashboard to match reference screen 6 */}
+    <div className="min-h-screen bg-white font-sans text-slate-900 flex flex-col selection:bg-primary-100 selection:text-primary-900">
+      {/* Hide customer navbar on admin dashboard to match reference Screen 6 */}
       {!isAdmin && <Navbar />}
 
       <main className="flex-1">
@@ -53,6 +54,9 @@ export default function App() {
 
           {/* Screen 6: Admin Dashboard (Ticket Management) */}
           <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* 404 Catch-All Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>
