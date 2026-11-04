@@ -207,3 +207,59 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
 - [x] Privacy messaging is accurate and matches backend implementation
 - [x] Responsive layout verified on desktop, tablet, and mobile
 - [x] No broken navigation or console errors
+
+
+---
+
+## 10. Customer Ticket Tracking Page Refinements (`TrackTicket.jsx`)
+
+### Identified Issues from Screenshot:
+1. **Missing Persistent Label:** The search input used an accessible `sr-only` tag, but lacked a visible, persistent label for customers.
+2. **Duplicate Contextual CTA:** Below the header, a `🎙️ Report New Issue` link was rendered next to `← Home`, duplicating the prominent `Report an Issue` button on the navigation bar.
+3. **Generic & Tall Empty State:** The previous "Ready to Track" empty state had excessive height and lacked actionable customer guidance on where to find their ticket ID.
+4. **Input Loss & Insufficient Error Distinction:** User input was not consistently retained across error states, and network errors looked identical to 404 Not Found errors.
+5. **Timeline and Detail Completeness:** The result card needed explicit escalation indicators, full complaint summaries, and created/updated timestamps.
+
+### Completed Refinements:
+1. **Persistent Input Label & Form Hierarchy:**
+   - Added persistent, high-contrast label: `<label htmlFor="ticket-track-input">Ticket Reference ID</label>`.
+   - Updated placeholder to clear example: `"e.g. VD-10427"`.
+   - Enhanced search button contrast and disabled states (`bg-primary-700 hover:bg-primary-800 disabled:bg-slate-300`).
+   - Supports Enter-key submission and trims whitespace.
+   - Input validation: detects empty input or invalid lengths (`< 3` chars) before sending network requests.
+   - Preserves user input across loading, error, and success states.
+2. **Helpful Customer-Centric Empty State:**
+   - Heading: **"Track Your Support Request"**.
+   - Copy explains where customers can locate their ticket ID (confirmation screen, voice reply, or support email).
+   - Realistic example with 1-click test button: `VD-10427`.
+   - Reduced card padding and height to maintain comfortable vertical rhythm.
+   - Single contextual `← Back to Home` link; removed duplicate `Report New Issue` top link.
+3. **Comprehensive Search Result & Metadata Display:**
+   - Displays Ticket ID, Category, Priority, Department, Escalation status (`Escalated to Supervisor` badge), and localized Created and Last Updated timestamps.
+   - Displays full customer complaint summary in a clean, high-contrast box.
+   - 4-step vertical status timeline: Ticket Created → Assigned to Department → In Progress / Escalated Review → Resolved.
+   - Accurately renders actual events from backend without fabricating dates.
+4. **Distinct Error and Recovery States:**
+   - **404 Not Found:** Informs user no ticket exists for the entered ID, with quick Retry Search and Report Issue CTAs.
+   - **Network Failure:** Detects offline / network errors and offers direct connection retry.
+   - **Validation Error:** Highlights requirement before querying.
+   - User-entered ticket ID is never wiped out on errors.
+
+---
+
+## 11. Customer Ticket Tracking Acceptance Checklist
+
+- [x] Clear ticket ID input label ("Ticket Reference ID")
+- [x] Improved search button contrast and disabled state
+- [x] Enter-key submission supported via `<form>`
+- [x] Input validation (whitespace trimming, minimum length, empty check)
+- [x] Helpful initial empty state ("Track Your Support Request" with demo ID)
+- [x] Loading skeleton indicator during queries
+- [x] Successful ticket result displaying ID, summary, category, priority, department, timestamps
+- [x] Ticket status timeline with real backend states
+- [x] Not-found (404) and invalid-ID states with actionable guidance
+- [x] Network error and retry handling
+- [x] Duplicate CTA removed from top contextual bar
+- [x] Responsive mobile layout
+- [x] Secure ticket lookup using existing Flask endpoint
+- [x] No broken routes or console errors
