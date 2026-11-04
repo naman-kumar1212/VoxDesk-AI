@@ -37,3 +37,4 @@ export default function StatusBadge({ type = 'status', value }) {
     </span>
   );
 }
+

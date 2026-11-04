@@ -151,3 +151,4 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
     </div>
   );
 }
+

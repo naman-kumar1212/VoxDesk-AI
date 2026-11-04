@@ -20,3 +20,4 @@ def test_track_ticket_empty_number(client):
     data = response.get_json()
     assert data["success"] is False
     assert data["error"]["code"] == "INVALID_TICKET_NUMBER"
+

@@ -18,3 +18,4 @@ export default function StatCard({ title, value, icon: Icon, colorClass, iconBgC
     </div>
   );
 }
+

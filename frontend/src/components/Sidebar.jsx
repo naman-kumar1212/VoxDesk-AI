@@ -65,3 +65,4 @@ export default function Sidebar({ activeTab = 'Dashboard', onTabChange, onLogout
     </aside>
   );
 }
+
