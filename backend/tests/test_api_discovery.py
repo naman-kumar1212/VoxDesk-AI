@@ -82,3 +82,4 @@ def test_vercel_wsgi_wrapper_path_recovery():
     response = wrapped_app(environ, mock_start_response)
     assert "200 OK" in captured["status"]
     assert environ["PATH_INFO"] == "/api/health"
+
