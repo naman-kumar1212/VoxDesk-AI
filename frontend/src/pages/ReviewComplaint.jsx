@@ -81,7 +81,7 @@ export default function ReviewComplaint({ onTicketCreated }) {
 
     try {
       const idempotencyKey = generateUUID();
-      const result = await api.createTicketFromTranscript(clean, idempotencyKey);
+      const result = await api.createTicketFromTranscript({ transcript: clean, idempotencyKey });
 
       if (onTicketCreated) {
         onTicketCreated(result);
