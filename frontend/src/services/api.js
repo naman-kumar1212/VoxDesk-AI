@@ -256,11 +256,13 @@ export const api = {
   /**
    * Admin analytics summary (with date filters)
    */
-  async getAdminAnalytics(tokenOrKey, { range = 'all', startDate = null, endDate = null, bypassCache = false } = {}) {
+  async getAdminAnalytics(tokenOrKey, { range = 'all', startDate = null, endDate = null, start_date = null, end_date = null, bypassCache = false } = {}) {
+    const sDate = startDate || start_date;
+    const eDate = endDate || end_date;
     const params = new URLSearchParams();
     if (range) params.append('range', range);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    if (sDate) params.append('start_date', sDate);
+    if (eDate) params.append('end_date', eDate);
 
     const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
       ? { Authorization: `Bearer ${tokenOrKey}` }
@@ -269,13 +271,22 @@ export const api = {
   },
 
   /**
+   * Alias for AnalyticsView component compatibility
+   */
+  async getAnalyticsSummary(tokenOrKey, options = {}) {
+    return this.getAdminAnalytics(tokenOrKey, options);
+  },
+
+  /**
    * Admin chart image blob fetcher (cached in-memory ObjectURL)
    */
-  async fetchChartBlob(tokenOrKey, chartName, { range = 'all', startDate = null, endDate = null, bypassCache = false } = {}) {
+  async fetchChartBlob(tokenOrKey, chartName, { range = 'all', startDate = null, endDate = null, start_date = null, end_date = null, bypassCache = false } = {}) {
+    const sDate = startDate || start_date;
+    const eDate = endDate || end_date;
     const params = new URLSearchParams();
     if (range) params.append('range', range);
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
+    if (sDate) params.append('start_date', sDate);
+    if (eDate) params.append('end_date', eDate);
 
     const cacheKey = `/admin/analytics/charts/${chartName}?${params.toString()}`;
     if (!bypassCache && chartBlobCache.has(cacheKey)) {
@@ -314,6 +325,29 @@ export const api = {
     }
 
     return chartPromise;
+  },
+
+  /**
+   * Raw blob fetcher for AnalyticsView (used with URL.createObjectURL)
+   */
+  async getAnalyticsChart(tokenOrKey, chartName, { range = 'all', startDate = null, endDate = null, start_date = null, end_date = null, bypassCache = false } = {}) {
+    const sDate = startDate || start_date;
+    const eDate = endDate || end_date;
+    const params = new URLSearchParams();
+    if (range) params.append('range', range);
+    if (sDate) params.append('start_date', sDate);
+    if (eDate) params.append('end_date', eDate);
+
+    const headers = tokenOrKey && (tokenOrKey.includes('.') || tokenOrKey.startsWith('ey'))
+      ? { Authorization: `Bearer ${tokenOrKey}` }
+      : { 'X-Admin-Key': tokenOrKey };
+
+    const url = `${API_BASE}/admin/analytics/charts/${chartName}?${params.toString()}`;
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+      throw new Error(`Failed to load chart ${chartName} (${response.status})`);
+    }
+    return response.blob();
   },
 
   /**

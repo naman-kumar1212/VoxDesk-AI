@@ -420,7 +420,7 @@ export default function TicketsView({ authToken }) {
 
         {/* Selected Ticket Details Drawer (5 cols on large screens) */}
         {selectedTicket && (
-          <div className="lg:col-span-5 xl:col-span-4 bg-surface border border-border rounded-card p-5 shadow-xs space-y-5 animate-in fade-in duration-150 sticky top-20">
+          <div className="lg:col-span-5 xl:col-span-4 bg-surface border border-border rounded-card p-5 shadow-xs space-y-5 animate-in fade-in duration-150 sticky top-0 self-start">
             {/* Drawer Header */}
             <div className="flex items-start justify-between pb-3 border-b border-border">
               <div>
