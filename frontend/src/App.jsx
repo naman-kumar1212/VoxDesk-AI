@@ -54,8 +54,9 @@ export default function App() {
           {/* Screen 5: Track Ticket (Customer) */}
           <Route path="/track" element={<TrackTicket />} />
 
-          {/* Screen 6: Admin Dashboard (Ticket Management) */}
+          {/* Screen 6: Admin Dashboard & All 5 Sections via shared layout */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/:tab" element={<AdminDashboard />} />
 
           {/* 404 Catch-All Route */}
           <Route path="*" element={<NotFound />} />

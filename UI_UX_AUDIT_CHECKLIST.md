@@ -413,5 +413,46 @@ This audit and refinement pass brings VoxDesk AI into strict visual and interact
    - Informative error banners with per-chart retry buttons.
    - Graceful empty states when custom date ranges contain no matching records.
 
+---
+
+## Phase 10: Global Admin Sidebar and Layout Refactor (Completed)
+
+### Scope of Changes:
+1. **Unified `AdminLayout` Architecture:**
+   - Created modular, enterprise-grade `AdminLayout` component composed of `AdminSidebar`, `AdminTopbar`, and `AdminMainContent`.
+   - Replaced fragmented, duplicate layout markup across individual routes with a single source of truth.
+   - Enabled deep-linking and browser navigation for all 5 tabs (`/admin`, `/admin/dashboard`, `/admin/tickets`, `/admin/analytics`, `/admin/departments`, `/admin/users`).
+2. **Fixed Desktop Viewport-Height Sidebar (`100dvh`):**
+   - Eliminated document scrolling moving the sidebar by structuring layout with `fixed inset-0 flex overflow-hidden`.
+   - Sidebar maintains full viewport height on all screen resolutions (1920×1080, 1440×900, 1280×720).
+   - Fixed width of 280px in expanded mode and 76px in collapsed mode.
+   - Logo, app icon, and brand typography permanently pinned at the top header.
+   - Middle navigation area allows independent internal scrolling if screen height is constrained.
+   - Bottom footer (admin profile details, role badge, Exit to Public Home, and Sign Out) permanently anchored at the bottom of the viewport.
+3. **Sticky Topbar & Independent Main Content Scrolling:**
+   - Sticky `h-16` admin header bar with breadcrumbs (`VoxDesk Control Center / [Tab]`) and user avatar dropdown menu.
+   - Only the inner `AdminMainContent` container has `overflow-y-auto`. When users scroll through long ticket lists or analytics charts, the sidebar and topbar stay 100% stationary.
+   - Avoids double scrollbars and prevents horizontal overflow with `overflow-x-hidden`.
+4. **Desktop Collapse/Expand & Mobile Navigation Drawer:**
+   - Desktop sidebar toggle collapses cleanly to 76px with accessible tooltips for icons.
+   - Mobile and tablet (< 768px): Replaces permanent sidebar with slide-out drawer triggered by topbar hamburger button.
+   - Features backdrop blur overlay (`bg-slate-900/60 backdrop-blur-xs`), body scroll lock when open, auto-close on route selection, and `Escape` key dismiss listener.
+5. **Acceptance Verification:**
+   - [x] One shared `AdminLayout` across all routes.
+   - [x] Sidebar remains visible during scrolling on all 5 admin views.
+   - [x] Sidebar occupies full viewport height (`100dvh`).
+   - [x] Logo remains positioned at top.
+   - [x] Navigation remains accessible with active tab indicators.
+   - [x] Admin profile remains anchored at bottom.
+   - [x] Exit to Public Home works.
+   - [x] Sign Out works.
+   - [x] Topbar remains sticky.
+   - [x] Main content scrolls independently without double scrollbars.
+   - [x] Collapse/expand works with persisted preference.
+   - [x] Mobile drawer works with backdrop overlay, Escape listener, and body scroll lock.
+   - [x] No sidebar clipping or horizontal overflow.
+   - [x] All five admin pages use identical layout behaviour.
+
+
 
 
