@@ -16,7 +16,34 @@ from app import create_app
 
 app = create_app()
 
-# Vercel serverless function entrypoint compatibility
+
+class VercelWSGIWrapper:
+    """
+    WSGI wrapper ensuring clean PATH_INFO resolution behind Vercel edge proxy.
+    """
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        if path in ("/api/index", "/index", "/api/index.py", "/index.py"):
+            orig_uri = (
+                environ.get("HTTP_X_FORWARDED_URI")
+                or environ.get("HTTP_X_REAL_PATH")
+                or environ.get("HTTP_X_MATCHED_PATH")
+                or environ.get("HTTP_X_ORIGINAL_URL")
+                or ""
+            )
+            clean_orig = orig_uri.split("?")[0] if orig_uri else ""
+            if clean_orig and clean_orig not in ("/api/index", "/index", "/api/index.py", "/index.py"):
+                environ["PATH_INFO"] = clean_orig
+            else:
+                environ["PATH_INFO"] = "/"
+
+        return self.wsgi_app(environ, start_response)
+
+
+app.wsgi_app = VercelWSGIWrapper(app.wsgi_app)
 handler = app
 
 if __name__ == "__main__":

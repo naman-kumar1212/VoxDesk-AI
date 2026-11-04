@@ -106,6 +106,82 @@ def create_app(test_config=None) -> Flask:
             "error": None,
         }), 200
 
+    # API Discovery endpoint — lists all available endpoint groups without creating fake routes
+    @app.route("/api")
+    @app.route("/api/")
+    def api_discovery():
+        return jsonify({
+            "success": True,
+            "service": "VoxDesk AI API Discovery",
+            "version": "1.0.0",
+            "status": "operational",
+            "endpoint_groups": {
+                "health": {
+                    "path": "/api/health",
+                    "method": "GET",
+                    "description": "API status and database connectivity check"
+                },
+                "voice": {
+                    "transcribe": {
+                        "path": "/api/voice/transcribe",
+                        "method": "POST",
+                        "description": "Speech-to-text audio transcription via Groq Whisper"
+                    }
+                },
+                "tickets": {
+                    "create": {
+                        "path": "/api/tickets/from-transcript",
+                        "method": "POST",
+                        "description": "Create ticket from verified customer transcript"
+                    },
+                    "track": {
+                        "path": "/api/tickets/<ticket_number>",
+                        "method": "GET",
+                        "description": "Retrieve ticket details and status timeline"
+                    }
+                },
+                "auth": {
+                    "login": {
+                        "path": "/api/auth/login",
+                        "method": "POST",
+                        "description": "Admin email & password authentication"
+                    },
+                    "me": {
+                        "path": "/api/auth/me",
+                        "method": "GET",
+                        "description": "Current authenticated admin profile"
+                    }
+                },
+                "admin": {
+                    "dashboard": {
+                        "path": "/api/admin/dashboard/summary",
+                        "method": "GET",
+                        "description": "Operational KPIs and queue metrics"
+                    },
+                    "tickets": {
+                        "path": "/api/admin/tickets",
+                        "method": "GET",
+                        "description": "Paginated ticket management list"
+                    },
+                    "analytics": {
+                        "path": "/api/admin/analytics/summary",
+                        "method": "GET",
+                        "description": "Performance analytics and KPI summary"
+                    },
+                    "departments": {
+                        "path": "/api/admin/departments",
+                        "method": "GET",
+                        "description": "Department roster and workload counts"
+                    },
+                    "users": {
+                        "path": "/api/admin/users",
+                        "method": "GET",
+                        "description": "Administrative users management"
+                    }
+                }
+            }
+        }), 200
+
     # Global error handlers for consistent JSON envelope
     @app.errorhandler(404)
     def handle_not_found(e):

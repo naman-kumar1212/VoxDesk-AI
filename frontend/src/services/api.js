@@ -5,7 +5,28 @@
  * Never handles secrets or server-side keys.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+/**
+ * Normalizes and sanitizes the API base URL:
+ * - Strips any unintended '/index' or '/index.py' suffix
+ * - Strips trailing slashes
+ * - Guarantees the base ends with '/api' for consistent endpoint routing
+ */
+function normalizeApiBase(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '/api';
+  let clean = rawUrl.trim();
+  // Strip trailing slashes
+  clean = clean.replace(/\/+$/, '');
+  // Strip unintended /index or /index.py
+  clean = clean.replace(/\/(index(\.py)?)?$/, '');
+  clean = clean.replace(/\/+$/, '');
+  // If user provided origin without /api (e.g. https://voxdesk-api.vercel.app), append /api
+  if (!clean.endsWith('/api')) {
+    clean = `${clean}/api`;
+  }
+  return clean;
+}
+
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
 const CACHE_TTL_MS = 30000; // 30-second client cache TTL for GET queries
 
 const apiCache = new Map();
