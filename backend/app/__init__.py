@@ -1,6 +1,12 @@
 """
 VoxDesk AI — Application Factory
 """
+import os
+import tempfile
+
+# Serverless environment compatibility: point Matplotlib/font cache to writable /tmp
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib"))
+
 import logging
 import time
 from flask import Flask, jsonify, request
@@ -13,6 +19,7 @@ from app.routes.voice import voice_bp
 from app.routes.tickets import tickets_bp
 from app.routes.admin import admin_bp
 from app.routes.auth import auth_bp
+from app.database import check_db_connection
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +76,35 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(tickets_bp, url_prefix="/api")
     app.register_blueprint(admin_bp, url_prefix="/api")
     app.register_blueprint(auth_bp, url_prefix="/api")
+
+    # Root welcome & health endpoints for Vercel and browser testing
+    @app.route("/")
+    def index():
+        return jsonify({
+            "success": True,
+            "service": "VoxDesk AI Backend API",
+            "status": "online",
+            "version": "1.0.0",
+            "database": "connected" if check_db_connection() else "unavailable",
+            "endpoints": {
+                "health": "/api/health",
+                "voice": "/api/voice",
+                "tickets": "/api/tickets",
+                "admin": "/api/admin",
+                "auth": "/api/auth"
+            }
+        }), 200
+
+    @app.route("/health")
+    def root_health():
+        return jsonify({
+            "success": True,
+            "data": {
+                "api": "ok",
+                "database": "ok" if check_db_connection() else "unavailable",
+            },
+            "error": None,
+        }), 200
 
     # Global error handlers for consistent JSON envelope
     @app.errorhandler(404)

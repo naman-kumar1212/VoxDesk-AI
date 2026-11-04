@@ -139,3 +139,21 @@ The test suite validates:
 4. **In-Memory Analytics Caching:** Matplotlib/Seaborn charts and statistical metrics are cached in memory with automatic cache invalidation upon ticket mutations, reducing chart rendering from 2.3 seconds to **~4.5 milliseconds**.
 5. **Structured Performance Middleware:** Request middleware logs exact database query counts and millisecond timings for full transparency:
    `[PERFORMANCE] GET /api/admin/dashboard/summary | DB: 1993.4ms (4 queries) | Processing: 803.7ms | Total: 2797.1ms`
+
+
+---
+
+## ☁️ Vercel Serverless Deployment Checklist
+
+When deploying the backend to Vercel:
+1. **Root Directory:** Set to `backend` in the Vercel Project Settings.
+2. **Serverless Entrypoint:** Automatically routes all traffic to `api/index.py` via `vercel.json` rewrites.
+3. **Environment Variables:** Configure in Vercel Project Settings:
+   - `DATABASE_URL` (Supabase connection string with `postgresql://` or `postgresql+psycopg://`)
+   - `SECRET_KEY`
+   - `GROQ_API_KEY`
+   - `GEMINI_API_KEY`
+   - `ADMIN_API_KEY`
+   - `DEMO_ORGANIZATION_ID`
+   - `FRONTEND_ORIGIN` (e.g. `https://voxdesk.vercel.app` or `*`)
+4. **Writable Temp Directory:** `MPLCONFIGDIR` is automatically directed to `/tmp/matplotlib` so Matplotlib font caches never trigger `[Errno 30] Read-only file system` errors on AWS Lambda / Vercel containers.

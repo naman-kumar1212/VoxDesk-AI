@@ -39,9 +39,9 @@ class Config:
     DEMO_ORGANIZATION_ID: str = os.environ.get("DEMO_ORGANIZATION_ID", "")
 
     # Audio limits
-    MAX_AUDIO_MB: int = int(os.environ.get("MAX_AUDIO_MB", "4"))
+    MAX_AUDIO_MB: int = int(os.environ.get("MAX_AUDIO_MB") or "4")
     MAX_AUDIO_BYTES: int = MAX_AUDIO_MB * 1024 * 1024
-    MAX_RECORDING_SECONDS: int = int(os.environ.get("MAX_RECORDING_SECONDS", "45"))
+    MAX_RECORDING_SECONDS: int = int(os.environ.get("MAX_RECORDING_SECONDS") or "45")
 
 
 settings = Config()

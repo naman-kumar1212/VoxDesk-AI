@@ -22,7 +22,15 @@ def _make_engine():
         logger.warning("DATABASE_URL is not set — database features will not work.")
         return None
     return create_engine(
-        settings.DATABASE_URL,
+        (
+            settings.DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+            if settings.DATABASE_URL.startswith("postgres://")
+            else (
+                settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+                if settings.DATABASE_URL.startswith("postgresql://") and not settings.DATABASE_URL.startswith("postgresql+")
+                else settings.DATABASE_URL
+            )
+        ),
         pool_pre_ping=True,       # Validate connections before returning from pool
         pool_size=10,             # Keep 10 warm connections in pool
         max_overflow=20,          # Allow up to 20 burst connections

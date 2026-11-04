@@ -11,6 +11,11 @@ import threading
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
+import os
+import tempfile
+
+# Serverless environment compatibility: point Matplotlib to writable /tmp
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib"))
 
 import matplotlib
 # Enforce non-interactive Agg backend before importing pyplot
