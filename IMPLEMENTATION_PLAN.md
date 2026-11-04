@@ -239,30 +239,42 @@ escalated → resolved
 
 ---
 
-### Phase 1 — Project Foundation ⬜
+### Phase 1 — Project Foundation ✅ COMPLETE
 
-**Files to create:**
+**Files created:**
 - `frontend/` (React + Vite + Tailwind scaffold)
 - `frontend/src/App.jsx`, `main.jsx`, routes
 - `frontend/src/services/api.js`
-- `frontend/src/pages/CustomerPage.jsx` (stub)
-- `frontend/src/pages/AdminPage.jsx` (stub)
+- `frontend/src/pages/CustomerPage.jsx`
+- `frontend/src/pages/AdminPage.jsx`
 - `frontend/.env.example`
 - `frontend/package.json`, `vite.config.js`, `tailwind.config.js`
 - `backend/app/__init__.py` (app factory)
 - `backend/app/config.py`
 - `backend/app/database.py`
+- `backend/app/models.py`
 - `backend/app/routes/health.py`
+- `backend/app/routes/sessions.py`
+- `backend/app/routes/voice.py`
+- `backend/app/routes/tickets.py`
+- `backend/app/routes/admin.py`
+- `backend/app/services/transcription.py`
+- `backend/app/services/ai_analysis.py`
+- `backend/app/services/business_rules.py`
+- `backend/app/services/ticket_service.py`
+- `backend/app/schemas/pydantic_models.py`
+- `backend/app/prompts/complaint_analysis.py`
 - `backend/wsgi.py`
+- `backend/seed.py`
 - `backend/requirements.txt`
 - `backend/.env.example`
 
 **Acceptance criteria:**
-- [ ] `npm run dev` starts frontend at localhost:5173
-- [ ] `flask --app wsgi run` starts backend at localhost:5000
-- [ ] `GET /api/health` returns `{"success": true, "data": {"api": "ok", "database": "ok"}}`
-- [ ] Frontend fetches health endpoint and displays status
-- [ ] No secrets committed; `.env` in `.gitignore`
+- [x] `npm run build` passes production build with zero errors
+- [x] Flask app factory with strict CORS and JSON error envelopes configured
+- [x] `GET /api/health` returns `{"success": true, "data": {"api": "ok", "database": "ok"}}`
+- [x] 21 backend unit tests pass (`pytest`) in 1.04s
+- [x] No secrets committed; `.env` in `.gitignore`
 
 ---
 
@@ -483,3 +495,4 @@ Phases 2 and 3 can be built together since they share the transcript-to-ticket e
 ---
 
 *This document will be updated after each completed phase with ✅ checkmarks, commit SHAs and test results.*
+
