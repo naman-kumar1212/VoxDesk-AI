@@ -158,10 +158,10 @@ def get_tickets_dataframe(org_id, range_param: str = "all", start_str: Optional[
                     delta = t.resolved_at - t.created_at
                     res_hours = max(0.1, delta.total_seconds() / 3600.0)
     
-                # Department name normalization: clean and ensure "Billing" maps to "Billing Support"
+                # Department name normalization: ensure legacy "Billing Support" maps to official "Billing"
                 dept = (t.department or "General Support").strip()
-                if dept == "Billing":
-                    dept = "Billing Support"
+                if dept == "Billing Support":
+                    dept = "Billing"
     
                 # Consistent lower-cased status & priority
                 status_val = (t.status or "open").lower().strip()
@@ -413,7 +413,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
             label="Daily Intake",
         )
         ax.fill_between(daily["created_date"], daily["count"], color=VOX_PURPLE, alpha=0.12)
-        ax.set_title("Ticket Volume Ingestion Over Time", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+        # ax.set_title omitted: card header serves as primary title
         ax.set_ylabel("Daily Tickets", fontsize=9, color="#64748b", labelpad=8)
         max_y = daily["count"].max() if len(daily) else 1
         ax.set_ylim(bottom=0, top=max(max_y * 1.25, 4))
@@ -466,7 +466,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
                 linespacing=1.1,
             )
 
-        ax.set_title("Tickets by Resolution Status", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+        # ax.set_title omitted: card header serves as primary title
         ax.set_ylabel("Total Tickets", fontsize=9, color="#64748b", labelpad=8)
         ax.grid(axis="y", linestyle="--", alpha=0.4, color="#cbd5e1")
         ax.grid(axis="x", visible=False)
@@ -482,8 +482,15 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
         dept_counts = dept_s.values
         max_w = max(dept_counts) if len(dept_counts) else 1
 
-        palette = sns.color_palette("light:#7c3aed_r", n_colors=max(len(dept_s), 1))
-        colors = list(reversed(palette))
+        # Restrained Signal Slate categorical palette: brand violet for leader, refined slates for others
+        n_depts = len(dept_s)
+        base_slates = ["#94a3b8", "#cbd5e1", "#64748b", "#475569", "#334155"]
+        colors = []
+        for i in range(n_depts):
+            if i == n_depts - 1:  # Highest workload (last in ascending barh)
+                colors.append("#5B3CC4")
+            else:
+                colors.append(base_slates[i % len(base_slates)])
 
         bars = ax.barh(dept_names, dept_counts, color=colors, height=0.55, edgecolor="#ffffff", linewidth=1.2)
         ax.set_xlim(0, max_w * 1.32 if max_w > 0 else 5)
@@ -502,7 +509,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
                 color="#1e293b",
             )
 
-        ax.set_title("Department Active Workload (Ranked)", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+        # ax.set_title omitted: card header serves as primary title
         ax.set_xlabel("Assigned Tickets", fontsize=9, color="#64748b", labelpad=8)
         ax.grid(axis="x", linestyle="--", alpha=0.4, color="#cbd5e1")
         ax.grid(axis="y", visible=False)
@@ -550,8 +557,9 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
             if n_resolved >= 15:
                 try:
                     kde_ax = ax.twinx()
-                    sns.kdeplot(hours, ax=kde_ax, color="#4c1d95", linewidth=1.6)
+                    sns.kdeplot(hours, ax=kde_ax, color="#5B3CC4", linewidth=1.6, clip=(0, None))
                     kde_ax.set_yticks([])
+                    kde_ax.set_ylabel("")
                     kde_ax.grid(False)
                     kde_ax.spines["top"].set_visible(False)
                     kde_ax.spines["right"].set_visible(False)
@@ -559,7 +567,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
                 except Exception:
                     pass
 
-            ax.set_title(f"Resolution Time Distribution (N = {n_resolved} Resolved)", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+            ax.set_xlim(left=0)
             ax.set_xlabel("Hours to Resolution", fontsize=9, color="#64748b", labelpad=8)
             ax.set_ylabel("Resolved Count", fontsize=9, color="#64748b", labelpad=8)
             ax.legend(loc="upper right", frameon=True, facecolor="#ffffff", edgecolor="#cbd5e1", fontsize=8.5)
@@ -590,7 +598,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
                 fontweight="bold",
                 color="#1e293b",
             )
-        ax.set_title("Complaint Category Breakdown", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+        # ax.set_title omitted: card header serves as primary title
         ax.set_xlabel("Total Grievances", fontsize=9, color="#64748b", labelpad=8)
         ax.grid(axis="x", linestyle="--", alpha=0.4, color="#cbd5e1")
         ax.grid(axis="y", visible=False)
@@ -617,7 +625,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
             at.set_fontsize(9)
             at.set_fontweight("bold")
             at.set_color("#ffffff")
-        ax.set_title("Priority Level Allocation", fontsize=11.5, fontweight="bold", pad=12, color="#0f172a", loc="left")
+        # ax.set_title omitted: card header serves as primary title
         fig.subplots_adjust(left=0.10, right=0.96, top=0.88, bottom=0.10)
 
     else:
