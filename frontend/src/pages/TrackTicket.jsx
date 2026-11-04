@@ -57,7 +57,7 @@ export default function TrackTicket() {
     setHasSearched(true);
 
     try {
-      const data = await api.getTicket(clean);
+      const data = await api.trackTicket(clean);
       if (data && data.ticket) {
         setTicketData(data.ticket);
         setTicketNumber(clean);
