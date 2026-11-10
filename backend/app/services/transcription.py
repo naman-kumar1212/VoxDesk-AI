@@ -4,6 +4,7 @@ Never uses a paid tier. Raises QuotaExhaustedError on 429/quota errors.
 """
 import logging
 import os
+from typing import Union
 
 from app.config import settings
 
@@ -18,11 +19,11 @@ class QuotaExhaustedError(TranscriptionError):
     """Groq free quota is exhausted. Do not retry against a paid tier."""
 
 
-def transcribe_audio(file_path: str, original_filename: str) -> dict:
+def transcribe_audio(audio_source: Union[str, bytes], original_filename: str) -> dict:
     """
     Transcribe audio using Groq Free Plan Whisper.
+    Supports in-memory bytes or a filesystem path string.
     Returns dict with 'transcript' and optionally 'language'.
-    Deletes no files — the caller owns cleanup.
     """
     if not settings.GROQ_API_KEY:
         raise TranscriptionError("GROQ_API_KEY is not configured.")
@@ -39,13 +40,18 @@ def transcribe_audio(file_path: str, original_filename: str) -> dict:
     safe_filename = os.path.basename(original_filename) or "complaint.webm"
 
     try:
-        with open(file_path, "rb") as audio_file:
-            result = client.audio.transcriptions.create(
-                file=(safe_filename, audio_file.read()),
-                model=settings.WHISPER_MODEL,
-                language=settings.WHISPER_LANGUAGE,
-                response_format="json",
-            )
+        if isinstance(audio_source, bytes):
+            audio_bytes = audio_source
+        else:
+            with open(audio_source, "rb") as audio_file:
+                audio_bytes = audio_file.read()
+
+        result = client.audio.transcriptions.create(
+            file=(safe_filename, audio_bytes),
+            model=settings.WHISPER_MODEL,
+            language=settings.WHISPER_LANGUAGE,
+            response_format="json",
+        )
 
         transcript = (result.text or "").strip()
         if not transcript:
@@ -69,4 +75,3 @@ def transcribe_audio(file_path: str, original_filename: str) -> dict:
 
     except Exception as exc:
         raise TranscriptionError(f"Transcription failed: {exc}") from exc
-

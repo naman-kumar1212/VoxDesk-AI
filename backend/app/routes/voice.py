@@ -4,7 +4,6 @@ POST /api/voice/transcribe  — Groq Free Plan Whisper STT
 """
 import logging
 import os
-import tempfile
 
 from flask import Blueprint, jsonify, request
 from app.config import settings
@@ -54,15 +53,9 @@ def transcribe():
             413,
         )
 
-    # 4. Write to temp file and transcribe
-    suffix = ext if ext else ".webm"
-    tmp_path = None
+    # 4. In-memory transcription directly without disk write/read cycle
     try:
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-            tmp.write(audio_bytes)
-            tmp_path = tmp.name
-
-        result = transcribe_audio(tmp_path, audio_file.filename)
+        result = transcribe_audio(audio_bytes, audio_file.filename)
 
         return jsonify({
             "success": True,
@@ -88,11 +81,3 @@ def transcribe():
     except Exception as exc:
         logger.error("Unexpected transcription error: %s", exc)
         return _error("INTERNAL_ERROR", "An unexpected error occurred during transcription.", 500)
-    finally:
-        # Always delete temp audio — do not persist raw audio
-        if tmp_path and os.path.exists(tmp_path):
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-

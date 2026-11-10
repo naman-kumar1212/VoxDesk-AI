@@ -48,6 +48,9 @@ export default function VoiceComplaint({ onTranscriptReady }) {
   const isCancelledRef = useRef(false);
 
   useEffect(() => {
+    // Preload ReviewComplaint chunk in background while user speaks so /review navigation is instant
+    import('./ReviewComplaint').catch(() => {});
+
     return () => {
       cleanupMedia();
     };
