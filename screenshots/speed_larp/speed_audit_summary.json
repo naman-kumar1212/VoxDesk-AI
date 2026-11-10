@@ -1,0 +1,179 @@
+{
+  "landing_home": {
+    "runs": [
+      {
+        "run": 1,
+        "score": 96,
+        "lcpMs": 2028,
+        "lcpElement": "p.text-base sm:text-lg text-secondary-text max-w-xl leading-relaxed",
+        "fcpMs": 2028,
+        "cls": 0,
+        "tbtMs": 24,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 74,
+        "ttfbMs": 14,
+        "transferredKB": 0,
+        "requestCount": 3
+      },
+      {
+        "run": 2,
+        "score": 96,
+        "lcpMs": 2044,
+        "lcpElement": "p.text-base sm:text-lg text-secondary-text max-w-xl leading-relaxed",
+        "fcpMs": 2044,
+        "cls": 0,
+        "tbtMs": 20,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 70,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 3
+      },
+      {
+        "run": 3,
+        "score": 96,
+        "lcpMs": 2024,
+        "lcpElement": "p.text-base sm:text-lg text-secondary-text max-w-xl leading-relaxed",
+        "fcpMs": 2024,
+        "cls": 0,
+        "tbtMs": 25,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 75,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 3
+      }
+    ],
+    "median": {
+      "score": 96,
+      "lcpMs": 2028,
+      "cls": 0,
+      "tbtMs": 24,
+      "fcpMs": 2028,
+      "ttfbMs": 2,
+      "transferredKB": 0,
+      "requestCount": 3,
+      "lcpElement": "p.text-base sm:text-lg text-secondary-text max-w-xl leading-relaxed",
+      "longTasksCount": 1,
+      "longTasksMaxMs": 74
+    }
+  },
+  "voice_report": {
+    "runs": [
+      {
+        "run": 1,
+        "score": 99,
+        "lcpMs": 1884,
+        "lcpElement": "p.text-sm text-secondary-text max-w-md mx-auto",
+        "fcpMs": 1884,
+        "cls": 0,
+        "tbtMs": 10,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 60,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 3
+      },
+      {
+        "run": 2,
+        "score": 99,
+        "lcpMs": 1880,
+        "lcpElement": "p.text-sm text-secondary-text max-w-md mx-auto",
+        "fcpMs": 1880,
+        "cls": 0,
+        "tbtMs": 5,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 55,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 3
+      },
+      {
+        "run": 3,
+        "score": 99,
+        "lcpMs": 1856,
+        "lcpElement": "p.text-sm text-secondary-text max-w-md mx-auto",
+        "fcpMs": 1856,
+        "cls": 0,
+        "tbtMs": 9,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 59,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 3
+      }
+    ],
+    "median": {
+      "score": 99,
+      "lcpMs": 1880,
+      "cls": 0,
+      "tbtMs": 9,
+      "fcpMs": 1880,
+      "ttfbMs": 2,
+      "transferredKB": 0,
+      "requestCount": 3,
+      "lcpElement": "p.text-sm text-secondary-text max-w-md mx-auto",
+      "longTasksCount": 1,
+      "longTasksMaxMs": 59
+    }
+  },
+  "admin_dashboard": {
+    "runs": [
+      {
+        "run": 1,
+        "score": 89,
+        "lcpMs": 2560,
+        "lcpElement": "p.text-xs text-secondary-text leading-relaxed",
+        "fcpMs": 2440,
+        "cls": 0,
+        "tbtMs": 71,
+        "longTasksCount": 2,
+        "longTasksMaxMs": 110,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 8
+      },
+      {
+        "run": 2,
+        "score": 87,
+        "lcpMs": 2616,
+        "lcpElement": "p.text-xs text-secondary-text leading-relaxed",
+        "fcpMs": 2484,
+        "cls": 0,
+        "tbtMs": 108,
+        "longTasksCount": 2,
+        "longTasksMaxMs": 112,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 8
+      },
+      {
+        "run": 3,
+        "score": 90,
+        "lcpMs": 2496,
+        "lcpElement": "p.text-xs text-secondary-text leading-relaxed",
+        "fcpMs": 2392,
+        "cls": 0,
+        "tbtMs": 46,
+        "longTasksCount": 1,
+        "longTasksMaxMs": 96,
+        "ttfbMs": 2,
+        "transferredKB": 0,
+        "requestCount": 8
+      }
+    ],
+    "median": {
+      "score": 89,
+      "lcpMs": 2560,
+      "cls": 0,
+      "tbtMs": 71,
+      "fcpMs": 2440,
+      "ttfbMs": 2,
+      "transferredKB": 0,
+      "requestCount": 8,
+      "lcpElement": "p.text-xs text-secondary-text leading-relaxed",
+      "longTasksCount": 2,
+      "longTasksMaxMs": 110
+    }
+  }
+}
