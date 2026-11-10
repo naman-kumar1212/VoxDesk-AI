@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   CheckCircle2,
   Volume2,
-  VolumeX,
-  RotateCcw,
   Search,
-  Ticket as TicketIcon,
   Copy,
   Check,
-  Building2,
-  Tag,
-  ShieldAlert,
 } from 'lucide-react';
 import { speakConfirmation, stopSpeaking } from '../utils/tts';
 import StatusBadge from '../components/StatusBadge';
 
 export default function TicketConfirmation({ ticketResult: propResult }) {
   const location = useLocation();
-  const navigate = useNavigate();
 
   const ticketData = location.state?.ticketResult || propResult;
   const ticket = ticketData?.ticket;
@@ -73,36 +66,36 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
         <div className="flex items-center justify-between">
           <Link
             to="/"
-            className="text-xs font-semibold text-secondary-text hover:text-primary-text transition"
+            className="text-xs font-medium text-secondary-text hover:text-primary-text transition-colors"
           >
-            ← Return to Home
+            ← Return to home
           </Link>
-          <span className="text-xs font-medium text-emerald-700 font-semibold">Step 3 of 3: Registered</span>
+          <span className="text-xs font-mono text-emerald-700">Step 3 of 3: Registered</span>
         </div>
 
         {/* Confirmation Card */}
         <div className="bg-surface border border-border rounded-card p-6 sm:p-8 shadow-xs text-center space-y-6">
           {/* Success Checkmark Circle */}
-          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-            <CheckCircle2 className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto border border-emerald-100">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-primary-text tracking-tight">
-              Grievance Registered Successfully
+            <h1 className="text-2xl sm:text-3xl font-medium text-primary-text tracking-tight">
+              Grievance registered
             </h1>
-            <p className="text-xs text-secondary-text">
-              Your issue has been routed to the appropriate department for active investigation.
+            <p className="text-xs text-secondary-text leading-relaxed">
+              Your grievance has been dispatched to the assigned department for active investigation.
             </p>
           </div>
 
-          {/* Ticket Reference Block */}
+          {/* Ticket Reference Stamp Block */}
           <div className="p-4 rounded-xl bg-surface-subtle border border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
             <div>
-              <span className="text-[11px] font-semibold text-muted-text uppercase tracking-wider block">
-                Official Reference ID
+              <span className="text-[11px] font-mono text-muted-text block">
+                Ticket reference
               </span>
-              <span className="font-mono text-xl font-bold text-primary-text">
+              <span className="font-mono text-xl font-medium text-primary-text tabular-nums">
                 {ticket?.ticket_number || 'VD-DEMO'}
               </span>
             </div>
@@ -110,7 +103,7 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
             <button
               type="button"
               onClick={copyTicketId}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-semibold text-primary-text hover:bg-surface-muted transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-medium text-primary-text hover:bg-surface-muted transition-colors shadow-xs cursor-pointer"
             >
               {copied ? (
                 <>
@@ -119,7 +112,7 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-slate-500" />
+                  <Copy className="w-3.5 h-3.5 text-secondary-text" />
                   <span>Copy ID</span>
                 </>
               )}
@@ -127,16 +120,16 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
           </div>
 
           {/* Voice Audio Readout Bar */}
-          <div className="p-3.5 rounded-xl bg-surface-muted/70 border border-border flex items-center justify-between text-left">
+          <div className="p-3.5 rounded-xl bg-surface-muted/60 border border-border flex items-center justify-between text-left">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-voice-subtle text-voice">
+              <div className="p-2 rounded-lg bg-voice-subtle text-voice border border-voice/20">
                 <Volume2 className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-semibold text-primary-text block">
-                  Spoken Confirmation
+                <span className="text-xs font-medium text-primary-text block">
+                  Spoken confirmation
                 </span>
-                <span className="text-[11px] text-muted-text line-clamp-1 max-w-xs">
+                <span className="text-[11px] text-muted-text font-mono line-clamp-1 max-w-xs">
                   {spokenReply || 'Verbal confirmation playback ready'}
                 </span>
               </div>
@@ -145,34 +138,34 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
             <button
               type="button"
               onClick={toggleVoice}
-              className="px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-subtle transition cursor-pointer"
+              className="px-3 py-1.5 rounded-btn bg-surface border border-border text-xs font-medium text-secondary-text hover:bg-surface-subtle transition-colors cursor-pointer"
             >
-              {isSpeaking ? 'Pause Voice' : 'Replay Voice'}
+              {isSpeaking ? 'Pause voice' : 'Replay voice'}
             </button>
           </div>
 
           {/* Ticket Details Grid */}
           <div className="grid grid-cols-2 gap-3 text-left text-xs pt-1">
             <div className="p-3 rounded-lg bg-surface border border-border">
-              <span className="text-muted-text block mb-1">Target Department</span>
-              <span className="font-semibold text-primary-text">
+              <span className="text-muted-text block mb-1">Target department</span>
+              <span className="font-medium text-primary-text">
                 {ticket?.department?.name || ticket?.department_name || 'General Support'}
               </span>
             </div>
 
             <div className="p-3 rounded-lg bg-surface border border-border">
-              <span className="text-muted-text block mb-1">Initial Status</span>
+              <span className="text-muted-text block mb-1">Initial status</span>
               <StatusBadge type="status" value={ticket?.status || 'open'} />
             </div>
 
             <div className="p-3 rounded-lg bg-surface border border-border">
-              <span className="text-muted-text block mb-1">Assigned Priority</span>
+              <span className="text-muted-text block mb-1">Assigned priority</span>
               <StatusBadge type="priority" value={ticket?.priority || 'medium'} />
             </div>
 
             <div className="p-3 rounded-lg bg-surface border border-border">
-              <span className="text-muted-text block mb-1">Category Classification</span>
-              <span className="font-semibold text-primary-text">
+              <span className="text-muted-text block mb-1">Category classification</span>
+              <span className="font-medium text-primary-text">
                 {ticket?.category || 'Service Inquiry'}
               </span>
             </div>
@@ -182,17 +175,17 @@ export default function TicketConfirmation({ ticketResult: propResult }) {
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to={`/track?ticket=${ticket?.ticket_number || ''}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-xs transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
             >
               <Search className="w-3.5 h-3.5" />
-              <span>Track Ticket Online</span>
+              <span>Track ticket online</span>
             </Link>
 
             <Link
               to="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-muted transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-btn bg-surface border border-border text-xs font-medium text-secondary-text hover:bg-surface-muted transition-colors cursor-pointer"
             >
-              Return to Homepage
+              Return to homepage
             </Link>
           </div>
         </div>

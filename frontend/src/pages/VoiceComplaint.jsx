@@ -1,19 +1,14 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Mic,
   Square,
-  X,
   Loader2,
   AlertCircle,
-  Info,
-  RefreshCw,
   ArrowLeft,
   Keyboard,
   ShieldCheck,
-  Check,
   ArrowRight,
-  HelpCircle,
 } from 'lucide-react';
 import AudioWaveform from '../components/AudioWaveform';
 import { api } from '../services/api';
@@ -104,7 +99,7 @@ export default function VoiceComplaint({ onTranscriptReady }) {
         cleanupMedia();
 
         if (blob.size === 0) {
-          setErrorMessage('No audio data was captured. Please speak clearly and try again.');
+          setErrorMessage('No audio was captured. Please check microphone input and speak again.');
           setVoiceState('error');
           return;
         }
@@ -116,12 +111,12 @@ export default function VoiceComplaint({ onTranscriptReady }) {
             if (onTranscriptReady) onTranscriptReady(result.transcript);
             navigate('/review', { state: { transcript: result.transcript } });
           } else {
-            setErrorMessage('Could not decipher speech. Please try recording again or enter text.');
+            setErrorMessage('Could not decipher speech. Please record again or type your complaint.');
             setVoiceState('error');
           }
         } catch (err) {
           console.error('Transcription error:', err);
-          setErrorMessage(err.message || 'Speech-to-text service unavailable. Please use text mode.');
+          setErrorMessage(err.message || 'Speech transcription unavailable. Please use text mode.');
           setVoiceState('error');
         }
       };
@@ -195,41 +190,41 @@ export default function VoiceComplaint({ onTranscriptReady }) {
         <div className="flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-text hover:text-primary-text transition"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-text hover:text-primary-text transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to home</span>
           </Link>
-          <span className="text-xs font-medium text-muted-text">Step 1 of 3</span>
+          <span className="text-xs font-mono text-muted-text">Step 1 of 3</span>
         </div>
 
         {/* Card Container */}
         <div className="bg-surface border border-border rounded-card p-6 sm:p-8 shadow-xs">
-          <div className="text-center space-y-2 mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-text tracking-tight">
-              Report a Grievance
+          <div className="text-center space-y-1.5 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-medium text-primary-text tracking-tight">
+              Report a grievance
             </h1>
-            <p className="text-sm text-secondary-text max-w-md mx-auto">
-              Speak naturally to describe your issue. Our AI transcribes and categorizes your request in seconds.
+            <p className="text-xs sm:text-sm text-secondary-text max-w-md mx-auto leading-relaxed">
+              Speak naturally to describe what happened. Your audio is transcribed in sub-seconds and routed to the assigned department.
             </p>
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="flex p-1 bg-surface-muted rounded-btn max-w-xs mx-auto mb-8">
+          <div className="flex p-1 bg-surface-muted rounded-btn max-w-xs mx-auto mb-8 border border-border">
             <button
               type="button"
               onClick={() => {
                 cancelRecording();
                 setActiveMode('voice');
               }}
-              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeMode === 'voice'
                   ? 'bg-surface text-primary-text shadow-xs'
                   : 'text-muted-text hover:text-primary-text'
               }`}
             >
               <Mic className="w-3.5 h-3.5 text-voice" />
-              <span>Voice Record</span>
+              <span>Voice record</span>
             </button>
             <button
               type="button"
@@ -237,14 +232,14 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                 cancelRecording();
                 setActiveMode('text');
               }}
-              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeMode === 'text'
                   ? 'bg-surface text-primary-text shadow-xs'
                   : 'text-muted-text hover:text-primary-text'
               }`}
             >
-              <Keyboard className="w-3.5 h-3.5 text-slate-500" />
-              <span>Manual Text</span>
+              <Keyboard className="w-3.5 h-3.5 text-secondary-text" />
+              <span>Manual text</span>
             </button>
           </div>
 
@@ -261,16 +256,16 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                     <button
                       type="button"
                       onClick={startRecording}
-                      className="w-20 h-20 rounded-full bg-voice hover:bg-voice-hover text-white flex items-center justify-center shadow-md transition transform hover:scale-105 active:scale-95 cursor-pointer focus-visible:ring-4 focus-visible:ring-voice-subtle"
+                      className="w-18 h-18 rounded-full bg-voice hover:bg-voice-hover text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                       aria-label="Click to start voice recording"
                     >
-                      <Mic className="w-8 h-8" />
+                      <Mic className="w-7 h-7" />
                     </button>
                     <div className="space-y-1">
-                      <span className="text-sm font-semibold text-primary-text block">
+                      <span className="text-sm font-medium text-primary-text block">
                         Tap microphone to speak
                       </span>
-                      <span className="text-xs text-muted-text">
+                      <span className="text-xs text-muted-text font-mono">
                         Up to 45 seconds of natural audio
                       </span>
                     </div>
@@ -280,8 +275,8 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                 {/* Requesting microphone permissions */}
                 {voiceState === 'requesting' && (
                   <div className="flex flex-col items-center gap-3 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-voice" />
-                    <span className="text-xs font-semibold text-primary-text">
+                    <Loader2 className="w-7 h-7 animate-spin text-voice" />
+                    <span className="text-xs font-medium text-primary-text">
                       Requesting microphone access...
                     </span>
                   </div>
@@ -291,22 +286,22 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                 {voiceState === 'recording' && (
                   <div className="w-full flex flex-col items-center gap-5">
                     {/* Live Waveform Component */}
-                    <div className="w-full max-w-sm h-16 flex items-center justify-center">
+                    <div className="w-full max-w-sm h-14 flex items-center justify-center">
                       <AudioWaveform stream={streamRef.current} isRecording={true} />
                     </div>
 
                     {/* Timer and Progress */}
-                    <div className="flex items-center gap-3">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                      <span className="font-mono text-lg font-bold text-primary-text">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+                      <span className="font-mono text-base font-medium text-primary-text tabular-nums">
                         {formatTime(elapsedSeconds)}
                       </span>
-                      <span className="text-xs text-muted-text">/ 0:45 max</span>
+                      <span className="text-xs text-muted-text font-mono">/ 0:45 max</span>
                     </div>
 
-                    <div className="w-48 bg-border h-1.5 rounded-full overflow-hidden">
+                    <div className="w-48 bg-border h-1 rounded-full overflow-hidden">
                       <div
-                        className="bg-voice h-full transition-all duration-300"
+                        className="bg-voice h-full transition-[width] duration-150"
                         style={{ width: `${progressPercent}%` }}
                       />
                     </div>
@@ -316,17 +311,17 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                       <button
                         type="button"
                         onClick={cancelRecording}
-                        className="px-4 py-2 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-muted transition"
+                        className="px-4 py-2 rounded-btn bg-surface border border-border text-xs font-medium text-secondary-text hover:bg-surface-muted transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={stopRecording}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-btn bg-voice hover:bg-voice-hover text-white text-xs font-semibold shadow-xs transition"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-btn bg-voice hover:bg-voice-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5 fill-current" />
-                        <span>Done & Submit</span>
+                        <span>Done recording</span>
                       </button>
                     </div>
                   </div>
@@ -335,13 +330,13 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                 {/* Transcribing State */}
                 {voiceState === 'transcribing' && (
                   <div className="flex flex-col items-center gap-3 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                    <Loader2 className="w-7 h-7 animate-spin text-brand" />
                     <div className="space-y-1">
-                      <span className="text-sm font-semibold text-primary-text block">
+                      <span className="text-sm font-medium text-primary-text block">
                         Transcribing your speech...
                       </span>
-                      <span className="text-xs text-muted-text">
-                        Groq Whisper LPU processing in sub-seconds
+                      <span className="text-xs text-muted-text font-mono">
+                        Groq Whisper processing in sub-seconds
                       </span>
                     </div>
                   </div>
@@ -350,8 +345,8 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                 {/* Error State */}
                 {voiceState === 'error' && (
                   <div className="flex flex-col items-center gap-3 text-center max-w-md p-4">
-                    <AlertCircle className="w-8 h-8 text-rose-500" />
-                    <span className="text-xs font-semibold text-rose-700">
+                    <AlertCircle className="w-7 h-7 text-rose-600" />
+                    <span className="text-xs font-medium text-rose-700">
                       Recording was not completed
                     </span>
                     <p className="text-xs text-muted-text">{errorMessage}</p>
@@ -359,16 +354,16 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                       <button
                         type="button"
                         onClick={startRecording}
-                        className="px-4 py-1.5 rounded-btn bg-brand text-white text-xs font-semibold hover:bg-brand-hover transition"
+                        className="px-4 py-1.5 rounded-btn bg-brand text-white text-xs font-medium hover:bg-brand-hover transition-colors cursor-pointer"
                       >
-                        Try Again
+                        Try again
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveMode('text')}
-                        className="px-4 py-1.5 rounded-btn bg-surface border border-border text-xs font-semibold text-secondary-text hover:bg-surface-muted transition"
+                        className="px-4 py-1.5 rounded-btn bg-surface border border-border text-xs font-medium text-secondary-text hover:bg-surface-muted transition-colors cursor-pointer"
                       >
-                        Use Text Instead
+                        Use text instead
                       </button>
                     </div>
                   </div>
@@ -379,7 +374,7 @@ export default function VoiceComplaint({ onTranscriptReady }) {
               <div className="p-3.5 rounded-lg bg-surface-subtle border border-border flex items-start gap-2.5 text-xs text-secondary-text">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <p>
-                  Audio is streamed securely for real-time transcription and is never permanently archived without consent.
+                  Audio is streamed securely for real-time transcription and is never permanently stored without customer consent.
                 </p>
               </div>
             </div>
@@ -393,17 +388,17 @@ export default function VoiceComplaint({ onTranscriptReady }) {
               <div>
                 <label
                   htmlFor="manual-transcript"
-                  className="block text-xs font-semibold text-primary-text mb-1.5"
+                  className="block text-xs font-medium text-primary-text mb-1.5"
                 >
-                  Describe Your Grievance
+                  Describe your grievance
                 </label>
                 <textarea
                   id="manual-transcript"
                   rows={5}
                   value={manualText}
                   onChange={(e) => setManualText(e.target.value)}
-                  placeholder="Please state what happened, including any order or account numbers..."
-                  className="w-full p-3 text-sm text-primary-text bg-surface border border-border rounded-input focus:border-brand focus:ring-1 focus:ring-brand outline-none transition resize-none"
+                  placeholder="State what happened, including any relevant order or transaction numbers..."
+                  className="w-full p-3 text-sm text-primary-text bg-surface border border-border rounded-input focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-colors resize-none"
                 />
                 {manualError && (
                   <p className="text-xs text-rose-600 mt-1 font-medium">{manualError}</p>
@@ -412,8 +407,8 @@ export default function VoiceComplaint({ onTranscriptReady }) {
 
               {/* Sample Complaints for instant testing */}
               <div className="space-y-1.5 pt-1">
-                <span className="text-[11px] font-semibold text-muted-text uppercase tracking-wider block">
-                  Click to try a sample complaint:
+                <span className="text-[11px] font-medium text-muted-text block">
+                  Sample complaints
                 </span>
                 <div className="space-y-1.5">
                   {SAMPLE_COMPLAINTS.map((sample, idx) => (
@@ -421,7 +416,7 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                       key={idx}
                       type="button"
                       onClick={() => setManualText(sample)}
-                      className="w-full text-left p-2 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-border text-xs text-secondary-text transition line-clamp-1 cursor-pointer"
+                      className="w-full text-left p-2 rounded-lg bg-surface-subtle hover:bg-surface-muted border border-border text-xs text-secondary-text transition-colors line-clamp-1 cursor-pointer"
                     >
                       "{sample}"
                     </button>
@@ -432,9 +427,9 @@ export default function VoiceComplaint({ onTranscriptReady }) {
               <div className="flex justify-end pt-2">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-xs transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-btn bg-brand hover:bg-brand-hover text-white text-xs font-medium shadow-xs transition-colors cursor-pointer"
                 >
-                  <span>Review & Submit</span>
+                  <span>Review & submit</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
