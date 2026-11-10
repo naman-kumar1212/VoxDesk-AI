@@ -19,7 +19,7 @@ export default function App() {
   const [createdTicketResult, setCreatedTicketResult] = useState(null);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 flex flex-col selection:bg-primary-100 selection:text-primary-900">
+    <div className="min-h-screen bg-app font-sans text-slate-900 flex flex-col selection:bg-brand/10 selection:text-brand">
       {/* Hide customer navbar on admin dashboard to match reference Screen 6 */}
       {!isAdmin && <Navbar />}
 
@@ -66,7 +66,7 @@ export default function App() {
       {/* Main Footer on standard pages; minimal footer on recording page to prevent scroll overflow */}
       {!isAdmin && !isReport && <Footer />}
       {!isAdmin && isReport && (
-        <footer className="py-3 text-center text-[11px] text-slate-400 border-t border-slate-100 bg-white">
+        <footer className="py-3 text-center text-[11px] text-slate-400 border-t border-[#1F2937] bg-[#111827]">
           VoxDesk AI • Privacy Protected In-Memory Transcription • VocalLabs Hackathon Edition
         </footer>
       )}
