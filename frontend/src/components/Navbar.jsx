@@ -78,13 +78,15 @@ export default function Navbar() {
             Admin Sign In
           </Link>
 
-          <Link
+          {!isCustomerFlow && (
+            <Link
             to="/report"
             className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-brand hover:bg-brand-hover rounded-btn shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Mic className="w-3.5 h-3.5 text-white/90" />
-            <span>Report an Issue</span>
-          </Link>
+            <span>Report an issue</span>
+          </Link>
+          )}
         </div>
 
         {/* Mobile Hamburger Menu Toggle */}

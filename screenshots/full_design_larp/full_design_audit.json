@@ -70,7 +70,7 @@
     "width": 1440,
     "h1Count": 1,
     "h1Texts": [
-      "Track Your Ticket"
+      "Track your ticket"
     ],
     "fonts": [
       "Inter",
@@ -81,8 +81,7 @@
       "18px",
       "14px",
       "12px",
-      "24px",
-      "10px",
+      "30px",
       "11px"
     ],
     "fontWeights": [
@@ -359,7 +358,7 @@
     "width": 390,
     "h1Count": 1,
     "h1Texts": [
-      "Track Your Ticket"
+      "Track your ticket"
     ],
     "fonts": [
       "Inter",
@@ -371,7 +370,6 @@
       "14px",
       "12px",
       "24px",
-      "10px",
       "11px"
     ],
     "fontWeights": [

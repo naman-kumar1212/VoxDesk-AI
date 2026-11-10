@@ -256,10 +256,10 @@ export default function VoiceComplaint({ onTranscriptReady }) {
                     <button
                       type="button"
                       onClick={startRecording}
-                      className="w-18 h-18 rounded-full bg-voice hover:bg-voice-hover text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                      className="w-20 h-20 rounded-full bg-voice hover:bg-voice-hover text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                       aria-label="Click to start voice recording"
                     >
-                      <Mic className="w-7 h-7" />
+                      <Mic className="w-8 h-8" />
                     </button>
                     <div className="space-y-1">
                       <span className="text-sm font-medium text-primary-text block">

@@ -2,18 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
   Search,
-  CheckCircle2,
-  Clock,
   Check,
   AlertCircle,
   Loader2,
   ArrowLeft,
   RefreshCw,
-  Building2,
-  Calendar,
-  Layers,
-  ShieldAlert,
-  FileText,
   HelpCircle,
   ExternalLink,
 } from 'lucide-react';
@@ -29,7 +22,6 @@ export default function TrackTicket() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [errorType, setErrorType] = useState(null); // 'not_found' | 'network' | 'validation'
-  const [searchedId, setSearchedId] = useState('');
 
   const fetchTicket = async (numberToFetch) => {
     const raw = numberToFetch !== undefined ? numberToFetch : ticketNumber;
@@ -53,7 +45,6 @@ export default function TrackTicket() {
     setIsLoading(true);
     setErrorMessage(null);
     setErrorType(null);
-    setSearchedId(clean);
 
     try {
       const data = await api.trackTicket(clean);
@@ -103,19 +94,19 @@ export default function TrackTicket() {
         <div className="flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-text hover:text-primary-text transition"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-text hover:text-primary-text transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Home</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to home</span>
           </Link>
-          <span className="text-xs font-medium text-muted-text">Public Inquiry Desk</span>
+          <span className="text-xs font-mono text-muted-text">Public inquiry desk</span>
         </div>
 
         {/* Search Bar Card */}
         <div className="bg-surface border border-border rounded-card p-6 sm:p-7 shadow-xs space-y-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-primary-text tracking-tight">
-              Track Your Ticket
+            <h1 className="text-2xl sm:text-3xl font-medium text-primary-text tracking-tight">
+              Track your ticket
             </h1>
             <p className="text-xs text-secondary-text leading-relaxed">
               Enter your ticket reference ID to inspect live department routing, investigation stage, and audit updates.
@@ -124,7 +115,7 @@ export default function TrackTicket() {
 
           <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-text" />
               <input
                 type="text"
                 value={ticketNumber}
@@ -136,21 +127,21 @@ export default function TrackTicket() {
                   }
                 }}
                 placeholder="e.g. VD-10473"
-                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-input text-sm font-mono text-primary-text placeholder:text-muted-text focus:border-brand focus:ring-1 focus:ring-brand outline-none transition uppercase"
+                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-input text-sm font-mono text-primary-text placeholder:text-muted-text focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-colors uppercase tabular-nums"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-btn bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-medium shadow-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Searching...</span>
                 </>
               ) : (
-                <span>Track Ticket</span>
+                <span>Track ticket</span>
               )}
             </button>
           </form>
@@ -166,14 +157,14 @@ export default function TrackTicket() {
                 errorType === 'network' ? 'text-amber-600' : 'text-rose-600'
               }`} />
               <div className="flex-1">
-                <p className="font-semibold">{errorMessage}</p>
+                <p className="font-medium">{errorMessage}</p>
                 {errorType === 'network' && (
                   <button
                     type="button"
                     onClick={() => fetchTicket()}
-                    className="mt-1.5 text-xs font-bold text-amber-900 underline cursor-pointer"
+                    className="mt-1.5 text-xs font-medium text-amber-900 underline cursor-pointer"
                   >
-                    Retry Request
+                    Retry request
                   </button>
                 )}
               </div>
@@ -201,14 +192,14 @@ export default function TrackTicket() {
 
         {/* Ticket Result Display */}
         {ticketData && !isLoading && (
-          <div className="bg-surface border border-border rounded-card p-6 sm:p-7 shadow-xs space-y-6 animate-in fade-in duration-150">
+          <div className="bg-surface border border-border rounded-card p-6 sm:p-7 shadow-xs space-y-6">
             {/* Header with Reference & Refresh */}
             <div className="flex items-start justify-between pb-4 border-b border-border">
               <div>
-                <span className="text-[11px] font-semibold text-muted-text uppercase tracking-wider block">
-                  Ticket Reference
+                <span className="text-[11px] font-mono text-muted-text block">
+                  Ticket reference
                 </span>
-                <span className="font-mono text-xl sm:text-2xl font-bold text-primary-text">
+                <span className="font-mono text-xl sm:text-2xl font-medium text-primary-text tabular-nums">
                   {ticketData.ticket_number}
                 </span>
               </div>
@@ -218,7 +209,7 @@ export default function TrackTicket() {
                 <button
                   type="button"
                   onClick={() => fetchTicket(ticketData.ticket_number)}
-                  className="p-1.5 rounded-btn bg-surface border border-border text-slate-500 hover:text-primary-text transition shadow-xs cursor-pointer"
+                  className="p-1.5 rounded-btn bg-surface border border-border text-secondary-text hover:text-primary-text transition-colors shadow-xs cursor-pointer"
                   title="Refresh live status"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -228,8 +219,8 @@ export default function TrackTicket() {
 
             {/* Lifecycle Progression Timeline */}
             <div className="p-4 rounded-xl bg-surface-subtle border border-border space-y-4">
-              <span className="text-xs font-semibold text-primary-text block">
-                Investigation Lifecycle Progression
+              <span className="text-xs font-medium text-primary-text block">
+                Investigation lifecycle progression
               </span>
 
               <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
@@ -239,8 +230,8 @@ export default function TrackTicket() {
                     <Check className="w-2.5 h-2.5" />
                   </span>
                   <div className="text-xs">
-                    <span className="font-semibold text-primary-text block">Grievance Registered</span>
-                    <span className="text-[11px] text-muted-text">
+                    <span className="font-medium text-primary-text block">Grievance registered</span>
+                    <span className="text-[11px] text-muted-text font-mono">
                       Received and classified into organizational dispatch
                     </span>
                   </div>
@@ -251,21 +242,21 @@ export default function TrackTicket() {
                   <span
                     className={`absolute -left-6 top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
                       isInProgress
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-surface border-2 border-border text-transparent'
+                        ? 'bg-brand text-white'
+                        : 'bg-surface border border-border text-transparent'
                     }`}
                   >
                     {isInProgress && <Check className="w-2.5 h-2.5" />}
                   </span>
                   <div className="text-xs">
                     <span
-                      className={`font-semibold block ${
+                      className={`font-medium block ${
                         isInProgress ? 'text-primary-text' : 'text-muted-text'
                       }`}
                     >
-                      Under Investigation
+                      Under investigation
                     </span>
-                    <span className="text-[11px] text-muted-text">
+                    <span className="text-[11px] text-muted-text font-mono">
                       Assigned to {ticketData.department || ticketData.department?.name || ticketData.department_name || 'support specialists'}
                     </span>
                   </div>
@@ -279,14 +270,14 @@ export default function TrackTicket() {
                         ? 'bg-emerald-600 text-white'
                         : isEscalated
                         ? 'bg-rose-600 text-white'
-                        : 'bg-surface border-2 border-border text-transparent'
+                        : 'bg-surface border border-border text-transparent'
                     }`}
                   >
                     {(isResolved || isEscalated) && <Check className="w-2.5 h-2.5" />}
                   </span>
                   <div className="text-xs">
                     <span
-                      className={`font-semibold block ${
+                      className={`font-medium block ${
                         isResolved
                           ? 'text-emerald-700'
                           : isEscalated
@@ -295,12 +286,12 @@ export default function TrackTicket() {
                       }`}
                     >
                       {isResolved
-                        ? 'Resolved & Closed'
+                        ? 'Resolved & closed'
                         : isEscalated
-                        ? 'Supervisor Escalation'
-                        : 'Final Resolution'}
+                        ? 'Supervisor escalation'
+                        : 'Final resolution'}
                     </span>
-                    <span className="text-[11px] text-muted-text">
+                    <span className="text-[11px] text-muted-text font-mono">
                       {isResolved
                         ? 'Investigation verified and customer notified'
                         : isEscalated
@@ -315,22 +306,22 @@ export default function TrackTicket() {
             {/* Structured Ticket Details Grid */}
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-surface border border-border">
-                <span className="text-muted-text block mb-1">Target Department</span>
-                <span className="font-semibold text-primary-text">
+                <span className="text-muted-text block mb-1">Target department</span>
+                <span className="font-medium text-primary-text">
                   {ticketData.department || ticketData.department?.name || ticketData.department_name || 'General Support'}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-surface border border-border">
-                <span className="text-muted-text block mb-1">Severity Priority</span>
+                <span className="text-muted-text block mb-1">Severity priority</span>
                 <StatusBadge type="priority" value={ticketData.priority || 'medium'} />
               </div>
               <div className="p-3 rounded-lg bg-surface border border-border">
                 <span className="text-muted-text block mb-1">Category</span>
-                <span className="font-semibold text-primary-text">{ticketData.category || 'Support'}</span>
+                <span className="font-medium text-primary-text">{ticketData.category || 'Support'}</span>
               </div>
               <div className="p-3 rounded-lg bg-surface border border-border">
-                <span className="text-muted-text block mb-1">Date Logged</span>
-                <span className="font-semibold text-primary-text">
+                <span className="text-muted-text block mb-1">Date logged</span>
+                <span className="font-medium text-primary-text font-mono tabular-nums">
                   {ticketData.created_at ? new Date(ticketData.created_at).toLocaleDateString(undefined, {
                     month: 'short',
                     day: 'numeric',
@@ -343,8 +334,8 @@ export default function TrackTicket() {
             {/* Transcript Quote */}
             {ticketData.transcript && (
               <div className="space-y-1.5 pt-2 border-t border-border">
-                <span className="text-xs font-semibold text-primary-text block">
-                  Original Grievance Transcript
+                <span className="text-xs font-medium text-primary-text block">
+                  Original grievance transcript
                 </span>
                 <p className="p-3.5 rounded-lg bg-surface-subtle border border-border text-xs text-secondary-text leading-relaxed">
                   "{ticketData.transcript}"
@@ -359,29 +350,29 @@ export default function TrackTicket() {
           <div className="bg-surface border border-border rounded-card p-6 sm:p-7 shadow-xs space-y-5 text-left">
             <div className="flex items-center gap-2 pb-3 border-b border-border">
               <HelpCircle className="w-4 h-4 text-brand" />
-              <h2 className="text-sm font-semibold text-primary-text">How Grievance Tracking Works</h2>
+              <h2 className="text-sm font-medium text-primary-text">How grievance tracking works</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="p-3.5 rounded-lg bg-surface-subtle border border-border space-y-1.5">
-                <span className="w-5 h-5 rounded-full bg-brand text-white flex items-center justify-center font-bold text-[10px]">1</span>
-                <h3 className="font-semibold text-primary-text">Locate Reference ID</h3>
+                <span className="w-5 h-5 rounded-btn bg-surface border border-border text-primary-text font-mono flex items-center justify-center text-xs">01</span>
+                <h3 className="font-medium text-primary-text">Locate reference ID</h3>
                 <p className="text-muted-text text-[11px] leading-relaxed">
                   Find your reference (e.g. VD-XXXXX) from your voice intake confirmation or SMS.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-lg bg-surface-subtle border border-border space-y-1.5">
-                <span className="w-5 h-5 rounded-full bg-brand text-white flex items-center justify-center font-bold text-[10px]">2</span>
-                <h3 className="font-semibold text-primary-text">Instant Lookup</h3>
+                <span className="w-5 h-5 rounded-btn bg-surface border border-border text-primary-text font-mono flex items-center justify-center text-xs">02</span>
+                <h3 className="font-medium text-primary-text">Instant lookup</h3>
                 <p className="text-muted-text text-[11px] leading-relaxed">
                   Enter the ID above. Our query checks real-time database timestamps with zero login required.
                 </p>
               </div>
 
               <div className="p-3.5 rounded-lg bg-surface-subtle border border-border space-y-1.5">
-                <span className="w-5 h-5 rounded-full bg-brand text-white flex items-center justify-center font-bold text-[10px]">3</span>
-                <h3 className="font-semibold text-primary-text">Audit Progression</h3>
+                <span className="w-5 h-5 rounded-btn bg-surface border border-border text-primary-text font-mono flex items-center justify-center text-xs">03</span>
+                <h3 className="font-medium text-primary-text">Audit progression</h3>
                 <p className="text-muted-text text-[11px] leading-relaxed">
                   View assigned support teams, resolution milestones, and supervisor escalation logs.
                 </p>
@@ -392,9 +383,9 @@ export default function TrackTicket() {
               <span>Have a new issue to register?</span>
               <Link
                 to="/report"
-                className="font-semibold text-brand hover:text-brand-hover inline-flex items-center gap-1"
+                className="font-medium text-brand hover:text-brand-hover inline-flex items-center gap-1 transition-colors"
               >
-                <span>Submit Grievance</span>
+                <span>Submit grievance</span>
                 <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
