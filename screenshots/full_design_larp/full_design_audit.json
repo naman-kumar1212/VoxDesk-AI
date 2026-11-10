@@ -103,7 +103,7 @@
     "width": 1440,
     "h1Count": 1,
     "h1Texts": [
-      "Admin Console Sign In"
+      "Admin console sign in"
     ],
     "fonts": [
       "Inter"
@@ -115,8 +115,7 @@
     ],
     "fontWeights": [
       "400",
-      "700",
-      "600"
+      "500"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -391,7 +390,7 @@
     "width": 390,
     "h1Count": 1,
     "h1Texts": [
-      "Admin Console Sign In"
+      "Admin console sign in"
     ],
     "fonts": [
       "Inter"
@@ -403,8 +402,7 @@
     ],
     "fontWeights": [
       "400",
-      "700",
-      "600"
+      "500"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,

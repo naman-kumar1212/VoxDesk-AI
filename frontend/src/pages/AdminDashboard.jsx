@@ -149,9 +149,9 @@ export default function AdminDashboard() {
   // Loading state while verifying token
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600 mb-3" />
-        <p className="text-xs font-semibold text-slate-500">Checking administrator authorization...</p>
+      <div className="min-h-screen bg-app flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-brand mb-3" />
+        <p className="text-xs text-secondary-text">Checking administrator authorization...</p>
       </div>
     );
   }
@@ -167,13 +167,13 @@ export default function AdminDashboard() {
             <img
               src="/voxdesk-app-icon-512.png"
               alt="VoxDesk AI Icon"
-              className="w-12 h-12 rounded-2xl mx-auto shadow-xs border border-border"
+              className="w-12 h-12 rounded-card mx-auto shadow-xs border border-border"
             />
           </Link>
 
           <div className="space-y-1.5">
-            <h1 className="text-2xl font-bold text-primary-text tracking-tight">
-              Admin Console Sign In
+            <h1 className="text-2xl font-medium text-primary-text tracking-tight">
+              Admin console sign in
             </h1>
             <p className="text-xs text-secondary-text leading-relaxed">
               Authorized operations portal for grievance queue auditing, departmental routing, and analytics.
@@ -185,9 +185,9 @@ export default function AdminDashboard() {
             <div>
               <label
                 htmlFor="admin-email"
-                className="block text-xs font-semibold text-secondary-text mb-1.5"
+                className="block text-xs font-medium text-secondary-text mb-1.5"
               >
-                Administrator Email
+                Administrator email
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
             <div>
               <label
                 htmlFor="admin-password"
-                className="block text-xs font-semibold text-secondary-text mb-1.5"
+                className="block text-xs font-medium text-secondary-text mb-1.5"
               >
                 Password
               </label>
@@ -244,7 +244,7 @@ export default function AdminDashboard() {
             {authError && (
               <div
                 role="alert"
-                className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-medium flex items-center gap-2"
+                className="p-3 bg-rose-50 border border-rose-200 rounded-btn text-rose-700 text-xs font-medium flex items-center gap-2"
               >
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{authError}</span>
@@ -255,16 +255,16 @@ export default function AdminDashboard() {
             <button
               type="submit"
               disabled={isSubmittingLogin || !loginEmail.trim() || !loginPassword.trim()}
-              className="w-full py-2.5 px-4 bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-btn text-xs font-semibold shadow-xs transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              className="w-full py-2.5 px-4 bg-brand hover:bg-brand-hover disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-btn text-xs font-medium shadow-xs transition flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
             >
               {isSubmittingLogin ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Authorization...</span>
+                  <span>Verifying authorization...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign in</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -272,12 +272,12 @@ export default function AdminDashboard() {
           </form>
 
           {/* Navigation to Public Home */}
-          <div className="mt-6 pt-4 border-t border-slate-100">
+          <div className="mt-6 pt-4 border-t border-border">
             <Link
               to="/"
-              className="text-xs text-slate-500 hover:text-slate-800 font-semibold inline-flex items-center gap-1.5"
+              className="text-xs text-secondary-text hover:text-primary-text font-normal inline-flex items-center gap-1.5"
             >
-              ← Return to Public Home
+              ← Return to public home
             </Link>
           </div>
         </div>
