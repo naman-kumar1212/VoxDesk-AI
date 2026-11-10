@@ -32,30 +32,30 @@ export default function AdminSidebar({
 
   return (
     <aside
-      className="w-full h-full bg-[#111827] text-[#C7D2E0] flex flex-col justify-between border-r border-[#1F2937] select-none overflow-hidden"
+      className="w-full h-full bg-[#061B31] text-[#E3ECF7] flex flex-col justify-between border-r border-[#1C1E54] select-none overflow-hidden"
       aria-label="Admin Sidebar"
     >
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* Top Header: Brand Logo & Collapse / Close controls */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1F2937] shrink-0 bg-[#111827]">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#1C1E54] shrink-0 bg-[#061B31]">
         <Link
           to="/"
-          className="flex items-center gap-2.5 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-brand rounded-lg min-w-0"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-90 rounded-lg min-w-0"
           title="Return to public site"
         >
           {isCollapsed && !isMobile ? (
-            <div className="w-8 h-8 rounded-lg bg-brand text-white flex items-center justify-center font-mono font-medium text-xs shrink-0 shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-[#533AFD] text-white flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-sm">
               VD
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center p-1.5 shadow-xs shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#533AFD] text-white flex items-center justify-center p-1.5 shadow-sm shrink-0">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.2"
+                  strokeWidth="2.4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className="w-full h-full"
@@ -68,8 +68,8 @@ export default function AdminSidebar({
                   <line x1="20" y1="10" x2="20" y2="14" />
                 </svg>
               </div>
-              <span className="font-medium tracking-tight text-white leading-none text-base">
-                VoxDesk <span className="text-indigo-400 font-mono text-xs">Console</span>
+              <span className="font-semibold tracking-tight text-white leading-none text-sm">
+                VoxDesk <span className="text-[#FB76FA] font-mono text-[11px] font-normal">Console</span>
               </span>
             </div>
           )}
@@ -80,7 +80,7 @@ export default function AdminSidebar({
           <button
             type="button"
             onClick={onCloseMobile}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-[#A1AAB8] hover:text-white rounded-lg hover:bg-[#1C1E54] transition-colors"
             aria-label="Close sidebar drawer"
           >
             <X className="w-5 h-5" />
@@ -92,7 +92,7 @@ export default function AdminSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors hidden lg:flex"
+            className="p-1.5 text-[#A1AAB8] hover:text-white rounded-lg hover:bg-[#1C1E54] transition-colors hidden lg:flex"
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -102,10 +102,10 @@ export default function AdminSidebar({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* Middle Navigation Items (Dense 34px rows on 4px grid) */}
+      {/* Middle Navigation Items */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        <div className="px-2 pb-2 text-[11px] font-mono text-slate-500">
+        <div className="px-2 pb-2 text-[10px] font-mono font-medium tracking-wider text-[#A1AAB8] uppercase">
           {!isCollapsed || isMobile ? 'Operations' : '•••'}
         </div>
 
@@ -122,18 +122,18 @@ export default function AdminSidebar({
                 if (onTabChange) onTabChange(item.id);
                 if (isMobile && onCloseMobile) onCloseMobile();
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-btn text-xs font-medium transition-colors cursor-pointer relative ${
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer relative ${
                 isActive
-                  ? 'bg-[#26344B] text-white'
-                  : 'text-[#C7D2E0] hover:bg-[#182338] hover:text-white'
+                  ? 'bg-[#1C1E54] text-white shadow-sm'
+                  : 'text-[#D4DEE9] hover:bg-[#1C1E54]/60 hover:text-white'
               } ${isCollapsed && !isMobile ? 'justify-center px-0' : ''}`}
               title={item.name}
             >
-              {/* Quiet indigo active indicator hairline */}
+              {/* Stripe violet active indicator hairline */}
               {isActive && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-indigo-400 rounded-r-full" />
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-[#635BFF] rounded-r-full" />
               )}
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#635BFF]' : 'text-[#A1AAB8]'}`} />
               {(!isCollapsed || isMobile) && <span>{item.name}</span>}
             </button>
           );
@@ -143,17 +143,17 @@ export default function AdminSidebar({
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* Bottom User Profile & Sign Out Bar */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="p-3 border-t border-[#1F2937] bg-[#111827] space-y-2 shrink-0">
-        <div className={`flex items-center gap-2.5 p-2 rounded-btn bg-[#182338] border border-[#2E3C54]/40 ${isCollapsed && !isMobile ? 'justify-center p-1.5' : ''}`}>
-          <div className="w-7 h-7 rounded-btn bg-brand text-white flex items-center justify-center font-mono font-medium text-xs shrink-0">
+      <div className="p-3 border-t border-[#1C1E54] bg-[#061B31] space-y-2 shrink-0">
+        <div className={`flex items-center gap-2.5 p-2 rounded-lg bg-[#1C1E54]/70 border border-[#2B408A]/40 ${isCollapsed && !isMobile ? 'justify-center p-1.5' : ''}`}>
+          <div className="w-7 h-7 rounded-full bg-[#533AFD] text-white flex items-center justify-center font-mono font-semibold text-xs shrink-0 shadow-sm">
             {currentUser?.name?.charAt(0) || 'A'}
           </div>
           {(!isCollapsed || isMobile) && (
             <div className="flex-1 min-w-0 text-left">
-              <span className="text-xs font-medium text-white block truncate leading-tight">
+              <span className="text-xs font-semibold text-white block truncate leading-tight">
                 {currentUser?.name || 'Administrator'}
               </span>
-              <span className="text-[10px] font-mono text-slate-400 block truncate leading-tight">
+              <span className="text-[10px] font-mono text-[#A1AAB8] block truncate leading-tight">
                 {currentUser?.email || 'admin@voxdesk.ai'}
               </span>
             </div>
@@ -163,7 +163,7 @@ export default function AdminSidebar({
         <button
           type="button"
           onClick={onLogout}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-btn text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#FB76FA] hover:bg-[#FB76FA]/10 hover:text-[#FB76FA] transition-colors cursor-pointer ${
             isCollapsed && !isMobile ? 'justify-center px-0' : ''
           }`}
           title="Sign out of admin console"

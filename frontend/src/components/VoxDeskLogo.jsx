@@ -1,13 +1,12 @@
 import React from 'react';
 
 /**
- * VoxDeskLogo — Clean, proportional vector & optical SVG logo
+ * VoxDeskLogo — Stripe Precision Geometric Logo Mark
  *
- * Implements the Signal Slate design identity:
- * - Equalizer / Microphone icon with clean geometric bars
- * - "VoxDesk" in dark navy (#111827) on light surfaces, or crisp white (#FFFFFF) on dark surfaces
- * - "AI" in refined violet brand color (#5B3CC4 or #8B6CF0)
- * - Optical alignment and balanced spacing
+ * Combines:
+ * - Stripe violet (#533AFD) icon container with pill geometry
+ * - Deep brand ink (#061B31) for "VoxDesk"
+ * - Stripe electric violet (#635BFF) for "AI"
  */
 export default function VoxDeskLogo({ size = 'md', className = '', theme = 'light' }) {
   const isSm = size === 'sm';
@@ -15,13 +14,13 @@ export default function VoxDeskLogo({ size = 'md', className = '', theme = 'ligh
 
   const iconSize = isSm ? 'w-6 h-6' : isLg ? 'w-9 h-9' : 'w-7 h-7';
   const textClasses = isSm ? 'text-base' : isLg ? 'text-2xl' : 'text-lg';
-  const brandTextClass = theme === 'dark' ? 'text-white' : 'text-[#111827]';
-  const aiTextClass = theme === 'dark' ? 'text-[#8B6CF0]' : 'text-brand';
+  const brandTextClass = theme === 'dark' ? 'text-white' : 'text-[#061B31]';
+  const aiTextClass = theme === 'dark' ? 'text-[#ABA4FC]' : 'text-[#533AFD]';
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Restrained Equalizer/Voice Vector Icon in Brand Purple Container */}
-      <div className={`${iconSize} rounded-lg bg-brand text-white flex items-center justify-center p-1.5 shadow-xs shrink-0`}>
+      {/* Equalizer / Audio Intake Icon in Stripe Violet */}
+      <div className={`${iconSize} rounded-[10px] bg-[#533AFD] text-white flex items-center justify-center p-1.5 shadow-sm shrink-0`}>
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -32,7 +31,6 @@ export default function VoxDeskLogo({ size = 'md', className = '', theme = 'ligh
           className="w-full h-full"
           aria-hidden="true"
         >
-          {/* Sound wave / equalizer bars centered like a microphone wave */}
           <line x1="4" y1="10" x2="4" y2="14" />
           <line x1="8" y1="7" x2="8" y2="17" />
           <line x1="12" y1="4" x2="12" y2="20" />
@@ -42,7 +40,7 @@ export default function VoxDeskLogo({ size = 'md', className = '', theme = 'ligh
       </div>
 
       {/* Typography with optical weight and spacing */}
-      <span className={`font-bold tracking-tight leading-none ${brandTextClass} ${textClasses}`}>
+      <span className={`font-semibold tracking-tight leading-none ${brandTextClass} ${textClasses}`}>
         VoxDesk <span className={`${aiTextClass} font-semibold ml-0.5`}>AI</span>
       </span>
     </div>

@@ -32,7 +32,7 @@ const { chromium } = require('../frontend/node_modules/@playwright/test');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BASE_URL = process.env.BASE_URL || 'https://voxdesk-web-lac.vercel.app';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 const DEMO_ASSETS_DIR = path.resolve(__dirname, '../demo-assets');
 const TEMP_VIDEO_DIR = path.resolve(DEMO_ASSETS_DIR, '.tmp_video');
 
@@ -44,7 +44,8 @@ function sleep(ms) {
 }
 
 /**
- * Injects a visual cursor and a floating caption banner into the browser DOM.
+ * Injects a visual cursor and a floating caption banner into the browser DOM
+ * adhering to the Stripe Design System styling.
  */
 async function injectOverlays(page) {
   await page.evaluate(() => {
@@ -54,26 +55,26 @@ async function injectOverlays(page) {
     container.id = 'voxdesk-demo-overlays';
     container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999999;';
 
-    // 1. Subtle, intentional visual cursor
+    // 1. Stripe Violet Visual Cursor
     const cursor = document.createElement('div');
     cursor.id = 'voxdesk-cursor';
     cursor.style.cssText = `
       position: absolute;
       top: 0;
       left: 0;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
-      border: 2px solid #4338CA;
-      background: rgba(67, 56, 202, 0.2);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      border: 2px solid #533AFD;
+      background: rgba(83, 58, 253, 0.24);
+      box-shadow: 0 4px 16px rgba(83, 58, 253, 0.35);
       pointer-events: none;
       transform: translate(-100px, -100px);
       transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.12s ease;
       z-index: 9999999;
     `;
 
-    // 2. Focused acoustic caption pill
+    // 2. Stripe Deep Ink Caption Pill
     const caption = document.createElement('div');
     caption.id = 'voxdesk-caption';
     caption.style.cssText = `
@@ -81,26 +82,26 @@ async function injectOverlays(page) {
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(17, 24, 39, 0.94);
-      color: #F8FAFC;
-      border: 1px solid rgba(220, 227, 236, 0.25);
+      background: rgba(6, 27, 49, 0.94);
+      color: #FFFFFF;
+      border: 1px solid rgba(227, 236, 247, 0.3);
       border-radius: 9999px;
-      padding: 7px 18px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 8px 20px;
+      font-family: 'Sohne', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
       font-weight: 500;
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(10px);
+      gap: 10px;
+      box-shadow: 0 12px 30px rgba(6, 27, 49, 0.35);
+      backdrop-filter: blur(12px);
       transition: opacity 0.16s ease;
       opacity: 0;
       z-index: 9999998;
     `;
 
     caption.innerHTML = `
-      <span style="width: 8px; height: 8px; border-radius: 50%; background: #0F766E; display: inline-block;"></span>
+      <span style="width: 8px; height: 8px; border-radius: 50%; background: #00D66F; box-shadow: 0 0 8px #00D66F; display: inline-block;"></span>
       <span id="voxdesk-caption-text">VoxDesk AI</span>
     `;
 
@@ -132,7 +133,7 @@ async function setCaption(page, text) {
 async function moveCursor(page, x, y, steps = 10) {
   await page.evaluate(({ cx, cy }) => {
     const c = document.getElementById('voxdesk-cursor');
-    if (c) c.style.transform = `translate(${cx - 10}px, ${cy - 10}px)`;
+    if (c) c.style.transform = `translate(${cx - 11}px, ${cy - 11}px)`;
   }, { cx: x, cy: y });
   await page.mouse.move(x, y, { steps });
 }
@@ -166,7 +167,7 @@ async function animatedClick(page, selector) {
   // Quick press animation
   await page.evaluate(() => {
     const c = document.getElementById('voxdesk-cursor');
-    if (c) c.style.background = 'rgba(67, 56, 202, 0.6)';
+    if (c) c.style.background = 'rgba(83, 58, 253, 0.6)';
   });
   await sleep(50);
 
@@ -174,7 +175,7 @@ async function animatedClick(page, selector) {
 
   await page.evaluate(() => {
     const c = document.getElementById('voxdesk-cursor');
-    if (c) c.style.background = 'rgba(67, 56, 202, 0.2)';
+    if (c) c.style.background = 'rgba(83, 58, 253, 0.24)';
   });
   await sleep(80);
 }
@@ -209,7 +210,7 @@ async function smoothScroll(page, targetY, durationMs = 700) {
 
 async function main() {
   console.log('===============================================================');
-  console.log(' VoxDesk AI — Playwright Demo & Screenshot Generation Suite');
+  console.log(' VoxDesk AI — Stripe Design System Walkthrough Suite');
   console.log(` Target Site : ${BASE_URL}`);
   console.log(' Viewport    : 1440×900 @ 2x device scale');
   console.log(' Output Video: demo-assets/voxdesk-demo.webm');
@@ -266,7 +267,7 @@ async function main() {
     console.log('[Scene 1] Landing Page & Hero Section...');
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await injectOverlays(page);
-    await setCaption(page, 'Voice-first grievance intake for modern organizations');
+    await setCaption(page, 'Voice-first customer grievance automation for modern enterprise');
     await moveCursor(page, 720, 320);
     await sleep(600);
 
@@ -279,8 +280,8 @@ async function main() {
     await moveCursorTo(page, 'text=Acoustic intake console');
     await sleep(400);
 
-    await setCaption(page, 'Automated pipeline: Speech → Gemini AI → Structured dispatch');
-    await smoothScroll(page, 500, 500);
+    await setCaption(page, 'Automated pipeline: Speech → Groq Whisper → Gemini classification');
+    await smoothScroll(page, 520, 500);
     await sleep(600);
 
     await smoothScroll(page, 0, 500);
@@ -295,7 +296,7 @@ async function main() {
     await sleep(400);
 
     await setCaption(page, 'Step 1 — Real-time speech recording with live frequency meter');
-    await moveCursorTo(page, 'button[aria-label="Start recording audio complaint"]');
+    await moveCursorTo(page, 'button[aria-label*="voice recording"]');
     await sleep(600);
 
     console.log('  -> Capturing demo-assets/voice-recording.png');
@@ -327,8 +328,8 @@ async function main() {
     await page.screenshot({ path: transcriptReviewPath });
     console.log(`  ✓ Saved ${transcriptReviewPath}`);
 
-    await setCaption(page, 'Step 2 — Gemini classification & department dispatch preview');
-    await moveCursorTo(page, 'text=Detected Category');
+    await setCaption(page, 'Step 2 — Gemini classification & department dispatch telemetry');
+    await moveCursorTo(page, 'text=Detected Category, text=Domain / Category');
     await sleep(500);
     await moveCursorTo(page, 'text=Assigned Department');
     await sleep(400);
@@ -348,18 +349,23 @@ async function main() {
     console.log(`  ✓ Saved ${ticketConfirmationPath}`);
 
     await setCaption(page, 'Step 3 — Atomic ticket stamp & synthesized verbal confirmation');
-    await moveCursorTo(page, 'text=Ticket reference');
+    await moveCursorTo(page, 'text=Reference ID, text=Ticket reference');
     await sleep(600);
 
-    await moveCursorTo(page, 'button:has-text("Replay voice"), button:has-text("Pause voice")');
+    await moveCursorTo(page, 'button:has-text("Replay"), button:has-text("Mute"), button:has-text("Replay voice")');
     await sleep(500);
 
     await setCaption(page, 'Navigating to public ticket lifecycle tracker...');
-    await animatedClick(page, 'a:has-text("Track ticket online")');
+    const trackBtn = page.locator('a[href*="/track"], a:has-text("Track ticket online")').first();
+    if (await trackBtn.isVisible({ timeout: 6000 }).catch(() => false)) {
+      await animatedClick(page, 'a[href*="/track"], a:has-text("Track ticket online")');
+    } else {
+      await page.goto(`${BASE_URL}/track`, { waitUntil: 'domcontentloaded' });
+    }
 
     // ── SCENE 5: PUBLIC TICKET TRACKING (0:26 - 0:31) ────────────────────────
     console.log('[Scene 5] Public Ticket Tracking (/track)...');
-    await page.waitForURL('**/track*', { timeout: 8000 });
+    await page.waitForURL('**/track*', { timeout: 10000 }).catch(() => {});
     await injectOverlays(page);
     await sleep(600);
 
@@ -369,9 +375,9 @@ async function main() {
     console.log(`  ✓ Saved ${publicTrackingPath}`);
 
     await setCaption(page, 'Public Tracker — Real-time milestone progression & audit log');
-    await moveCursorTo(page, 'text=Grievance Status');
+    await moveCursorTo(page, 'text=Lifecycle milestones');
     await sleep(500);
-    await moveCursorTo(page, 'text=Activity Timeline');
+    await moveCursorTo(page, 'text=Assigned department');
     await sleep(600);
 
     // ── SCENE 6: ADMIN OPERATIONAL CONSOLE (0:31 - 0:42) ─────────────────────

@@ -4,42 +4,73 @@
 
 @layer base {
   :root {
-    --app-bg: #F5F7FA;
+    /* Stripe Design System Core Foundation */
+    --stripe-white: #FFFFFF;
+    --stripe-mist: #F8FAFD;
+    --stripe-mist-soft: #FCFDFE;
+    --stripe-ink: #061B31;
+    --stripe-text: #30313D;
+    --text-muted: #737373;
+
+    /* Stripe Brand & Accents */
+    --stripe-violet: #635BFF;
+    --stripe-violet-bright: #533AFD;
+    --stripe-violet-deep: #7232F1;
+    --stripe-indigo: #1318C1;
+    --stripe-blue: #0073E6;
+    --stripe-elements-blue: #0570DE;
+    --stripe-success: #00D66F;
+    --stripe-orange: #FF6118;
+    --stripe-pink: #FB76FA;
+    --stripe-yellow: #FFCF5E;
+    --stripe-danger: #DF1B41;
+
+    /* Semantic Aliases */
+    --app-bg: #F8FAFD;
     --surface: #FFFFFF;
-    --surface-subtle: #F0F3F6;
-    --surface-muted: #ECEFF4;
-    --border: #DCE3EC;
-    --border-strong: #C5D0DD;
-    --primary-text: #111827;
-    --secondary-text: #4B5565;
-    --muted-text: #6B7487;
-    --brand-primary: #4338CA;
-    --brand-hover: #3730A3;
-    --brand-subtle: #EEF2FF;
-    --voice-accent: #0F766E;
-    --voice-subtle: #F0FDF4;
-    --status-open: #64748B;
-    --status-in-progress: #2563EB;
-    --status-resolved: #15803D;
-    --status-escalated: #B91C1C;
-    --priority-low: #64748B;
-    --priority-medium: #B45309;
-    --priority-high: #B91C1C;
+    --surface-subtle: #F6F9FC;
+    --surface-muted: #ECF0F4;
+    --border: #E3ECF7;
+    --border-mid: #D4DEE9;
+    --border-strong: #D4DEE9;
+    --primary-text: #061B31;
+    --secondary-text: #30313D;
+    --muted-text: #737373;
+    --brand-primary: #533AFD;
+    --brand-hover: #635BFF;
+    --brand-subtle: #F2F0FE;
+    --voice-accent: #533AFD;
+    --voice-subtle: #F2F0FE;
+
+    /* Status indicators */
+    --status-open: #596780;
+    --status-in-progress: #0073E6;
+    --status-resolved: #00D66F;
+    --status-escalated: #DF1B41;
+    --priority-low: #596780;
+    --priority-medium: #FF6118;
+    --priority-high: #DF1B41;
+
+    /* Elevation Shadows */
+    --shadow-sm: 0 8px 20px rgba(13, 23, 56, 0.12);
+    --shadow-md: 0 18px 40px rgba(13, 23, 56, 0.15);
+    --shadow-lg: 0 28px 60px rgba(13, 23, 56, 0.18);
+    --shadow-focus: 0 0 0 3px rgba(5, 112, 222, 0.2);
   }
 
   body {
     margin: 0;
-    background-color: var(--app-bg);
-    color: var(--primary-text);
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--stripe-mist);
+    color: var(--stripe-text);
+    font-family: 'Sohne', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Accessible focus indicator across the application */
+  /* Stripe developer-grade focus indicator */
   :focus-visible {
-    outline: 2px solid var(--brand-primary);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(5, 112, 222, 0.25), 0 0 0 1px var(--stripe-elements-blue);
   }
 
   /* Support reduced motion preferences */
@@ -53,7 +84,58 @@
   }
 }
 
-/* Custom Scrollbar for compact tables & panels */
+/* Stripe Button & Card Utilities */
+.stripe-btn-primary {
+  background-color: #533AFD;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  box-shadow: 0 8px 20px rgba(83, 58, 253, 0.24);
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.stripe-btn-primary:hover:not(:disabled) {
+  background-color: #635BFF;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(83, 58, 253, 0.32);
+}
+.stripe-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.stripe-btn-secondary {
+  background-color: #FFFFFF;
+  color: #061B31;
+  border: 1px solid #D4DEE9;
+  border-radius: 9999px;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+.stripe-btn-secondary:hover:not(:disabled) {
+  background-color: #F8FAFD;
+  border-color: #C5D0DD;
+}
+
+.stripe-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(212, 222, 233, 0.75);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(13, 23, 56, 0.12);
+}
+
+.stripe-input {
+  background-color: #FFFFFF;
+  color: #30313D;
+  border: 1px solid #D4DEE9;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.stripe-input:focus {
+  border-color: #0570DE;
+  box-shadow: 0 0 0 1px #0570DE, 0 0 0 3px rgba(5, 112, 222, 0.15);
+  outline: none;
+}
+
+/* Custom Scrollbar for Stripe-like compact tables & panels */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -62,9 +144,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #D4DEE9;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #A0B2C6;
 }

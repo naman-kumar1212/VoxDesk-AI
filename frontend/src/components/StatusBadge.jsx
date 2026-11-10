@@ -1,18 +1,18 @@
 import React from 'react';
 
 /**
- * StatusBadge — Signal Slate Enterprise Semantic Badge System
+ * StatusBadge — Stripe Financial Infrastructure Semantic Badge System
  *
- * Implements strict semantic colors:
- * - Resolved / Success:   text-[#15803D] bg-[#ECFDF3] border-[#BBF7D0]
- * - In Progress / Info:   text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]
- * - Escalated / Danger:   text-[#B91C1C] bg-[#FEF2F2] border-[#FECACA]
- * - Open / Neutral:       text-[#475569] bg-[#F1F5F9] border-[#E2E8F0]
+ * Implements canonical Stripe palette:
+ * - Resolved / Success:   text-[#008A4B] bg-[#E6F9F0] border-[#A3F0C8]
+ * - In Progress / Info:   text-[#0073E6] bg-[#EBF5FE] border-[#B8DBFC]
+ * - Escalated / Danger:   text-[#DF1B41] bg-[#FDF0F3] border-[#F8BCC8]
+ * - Open / Neutral:       text-[#596780] bg-[#F6F9FC] border-[#E3ECF7]
  *
  * Priorities:
- * - High:   text-[#B91C1C] bg-[#FEF2F2] border-[#FECACA]
- * - Medium: text-[#B45309] bg-[#FFFBEB] border-[#FDE68A]
- * - Low:    text-[#475569] bg-[#F1F5F9] border-[#E2E8F0]
+ * - High:   text-[#DF1B41] bg-[#FDF0F3] border-[#F8BCC8]
+ * - Medium: text-[#D9530F] bg-[#FFF2EB] border-[#FED4C0]
+ * - Low:    text-[#596780] bg-[#F6F9FC] border-[#E3ECF7]
  */
 export default function StatusBadge({ type = 'status', value }) {
   const normalized = (value || '').toLowerCase().replace(/\s+/g, '_');
@@ -21,30 +21,30 @@ export default function StatusBadge({ type = 'status', value }) {
   if (type === 'priority') {
     const priorityConfig = {
       high: {
-        cls: 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]',
-        dot: 'bg-[#DC2626]',
+        cls: 'bg-[#FDF0F3] text-[#DF1B41] border-[#F8BCC8]',
+        dot: 'bg-[#DF1B41]',
         label: 'High Priority',
       },
       medium: {
-        cls: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
-        dot: 'bg-[#D97706]',
+        cls: 'bg-[#FFF2EB] text-[#D9530F] border-[#FED4C0]',
+        dot: 'bg-[#FF6118]',
         label: 'Medium Priority',
       },
       low: {
-        cls: 'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]',
-        dot: 'bg-[#64748B]',
+        cls: 'bg-[#F6F9FC] text-[#596780] border-[#E3ECF7]',
+        dot: 'bg-[#737373]',
         label: 'Low Priority',
       },
     };
 
     const cfg = priorityConfig[normalized] || {
-      cls: 'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]',
-      dot: 'bg-[#64748B]',
+      cls: 'bg-[#F6F9FC] text-[#596780] border-[#E3ECF7]',
+      dot: 'bg-[#737373]',
       label: normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : '—',
     };
 
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-tag text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} aria-hidden="true" />
         {cfg.label}
       </span>
@@ -54,35 +54,35 @@ export default function StatusBadge({ type = 'status', value }) {
   /* ── Status badges ───────────────────────────────────────────────── */
   const statusConfig = {
     open: {
-      cls: 'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]',
-      dot: 'bg-[#64748B]',
+      cls: 'bg-[#F6F9FC] text-[#596780] border-[#E3ECF7]',
+      dot: 'bg-[#737373]',
       label: 'Open',
     },
     in_progress: {
-      cls: 'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
-      dot: 'bg-[#3B82F6]',
+      cls: 'bg-[#EBF5FE] text-[#0073E6] border-[#B8DBFC]',
+      dot: 'bg-[#0073E6]',
       label: 'In Progress',
     },
     escalated: {
-      cls: 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]',
-      dot: 'bg-[#EF4444]',
+      cls: 'bg-[#FDF0F3] text-[#DF1B41] border-[#F8BCC8]',
+      dot: 'bg-[#DF1B41]',
       label: 'Escalated',
     },
     resolved: {
-      cls: 'bg-[#ECFDF3] text-[#15803D] border-[#BBF7D0]',
-      dot: 'bg-[#22C55E]',
+      cls: 'bg-[#E6F9F0] text-[#008A4B] border-[#A3F0C8]',
+      dot: 'bg-[#00D66F]',
       label: 'Resolved',
     },
   };
 
   const cfg = statusConfig[normalized] || {
-    cls: 'bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]',
-    dot: 'bg-[#64748B]',
+    cls: 'bg-[#F6F9FC] text-[#596780] border-[#E3ECF7]',
+    dot: 'bg-[#737373]',
     label: value || '—',
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-tag text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} aria-hidden="true" />
       {cfg.label}
     </span>
