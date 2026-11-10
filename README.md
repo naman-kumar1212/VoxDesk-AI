@@ -13,7 +13,7 @@
 | ⚡ **Live Backend API** | [https://voxdesk-api.vercel.app](https://voxdesk-api.vercel.app) | `Active` |
 | 🩺 **Backend Health Endpoint** | [https://voxdesk-api.vercel.app/api/health](https://voxdesk-api.vercel.app/api/health) | `200 OK` |
 | 🎬 **Playwright Demo Video** | [demo-assets/voxdesk-demo.webm](demo-assets/voxdesk-demo.webm) | `1440×900 @ 2x` |
-| 🖼️ **Animated Demo Preview** | [docs/voxdesk-demo.gif](docs/voxdesk-demo.gif) | `Preview GIF` |
+| 🖼️ **Animated Demo Preview** | [demo-assets/voxdesk-demo.gif](demo-assets/voxdesk-demo.gif) | `Preview GIF` |
 | 📋 **Product Requirements (PRD)** | [docs/PRD.md](docs/PRD.md) | `Released` |
 | 🏗️ **System Architecture Blueprint** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | `Released` |
 | 🔀 **User Flow & State Machines** | [docs/USER_FLOW.md](docs/USER_FLOW.md) | `Released` |
@@ -244,7 +244,7 @@ An automated, high-fidelity end-to-end product walkthrough recorded at **1440×9
 
 <p align="center">
   <a href="https://voxdesk-web-lac.vercel.app">
-    <img src="docs/voxdesk-demo.gif" alt="VoxDesk AI Product Demo Walkthrough" width="860" style="border-radius: 12px; border: 1px solid #DCE3EC; box-shadow: 0 10px 30px rgba(0,0,0,0.08);" />
+    <img src="demo-assets/voxdesk-demo.gif" alt="VoxDesk AI Product Demo Walkthrough" width="860" style="border-radius: 12px; border: 1px solid #DCE3EC; box-shadow: 0 10px 30px rgba(0,0,0,0.08);" />
   </a>
 </p>
 
@@ -417,7 +417,7 @@ Frontend will be live at `http://localhost:5173`.
 To re-record the full automated video and recapture all application screenshots:
 ```bash
 cd ..
-node scripts/record_demo_and_screenshots.js
+node scripts/demo.mjs
 ```
 
 ---
@@ -543,9 +543,8 @@ VoxDesk-AI/
 ├── demo-assets/                     # Full HD walkthrough video & 2x retina UI screenshots
 ├── docs/                            # PRD, Architecture, User Flow & demo GIF preview
 ├── scripts/
-│   ├── demo.mjs                     # Playwright 30-45s product walkthrough & screenshot generator
-│   ├── record_demo_and_screenshots.js # Unified runner
-│   └── generate_gif.py              # Lightweight animated GIF preview generator
+│   ├── demo.mjs                     # Independent Playwright 30-45s walkthrough & screenshot generator
+│   └── generate_gif.py              # Independent animated GIF preview generator
 └── README.md                        # Project documentation
 ```
 

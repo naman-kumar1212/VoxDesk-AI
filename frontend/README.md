@@ -102,7 +102,7 @@ node scripts/demo.mjs
 \\r
 
 - **Walkthrough Video**: demo-assets/voxdesk-demo.webm (30–45s interactive walkthrough)
-- **Animated GIF**: docs/voxdesk-demo.gif (optimally compressed preview)
+- **Animated GIF**: demo-assets/voxdesk-demo.gif (optimally compressed preview)
 - **UI Screenshots**: demo-assets/hero.png, demo-assets/active-workflow.png, demo-assets/result-state.png, demo-assets/dashboard.png, demo-assets/mobile-viewport.png\r
 
 ---

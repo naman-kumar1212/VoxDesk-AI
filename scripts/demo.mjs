@@ -1,5 +1,5 @@
 /**
- * VoxDesk AI — Playwright Demo Walkthrough & Screenshot Generator
+ * VoxDesk AI — Standalone Playwright Demo Walkthrough & Screenshot Generator
  *
  * Records a 30–45 second interactive product walkthrough at 1440×900 with deviceScaleFactor 2.
  * Captures 5 high-resolution screenshots:
@@ -10,14 +10,15 @@
  *   - demo-assets/mobile-viewport.png
  *
  * Saves the video to: demo-assets/voxdesk-demo.webm
- * Generates an animated preview GIF to: docs/voxdesk-demo.gif
+ *
+ * Usage:
+ *   node scripts/demo.mjs
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import { execSync } from 'child_process';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('../frontend/node_modules/@playwright/test');
@@ -27,11 +28,9 @@ const __dirname = path.dirname(__filename);
 
 const BASE_URL = process.env.BASE_URL || 'https://voxdesk-web-lac.vercel.app';
 const DEMO_ASSETS_DIR = path.resolve(__dirname, '../demo-assets');
-const DOCS_DIR = path.resolve(__dirname, '../docs');
 const TEMP_VIDEO_DIR = path.resolve(DEMO_ASSETS_DIR, '.tmp_video');
 
 fs.mkdirSync(DEMO_ASSETS_DIR, { recursive: true });
-fs.mkdirSync(DOCS_DIR, { recursive: true });
 fs.mkdirSync(TEMP_VIDEO_DIR, { recursive: true });
 
 function sleep(ms) {
@@ -204,7 +203,7 @@ async function smoothScroll(page, targetY, durationMs = 800) {
 
 async function main() {
   console.log('===============================================================');
-  console.log(' VoxDesk AI — High-Fidelity Playwright Walkthrough Generator');
+  console.log(' VoxDesk AI — Standalone Playwright Walkthrough Generator');
   console.log(` Target Site : ${BASE_URL}`);
   console.log(` Output Video: demo-assets/voxdesk-demo.webm`);
   console.log(' Viewport    : 1440×900 @ 2x device scale');
@@ -224,7 +223,7 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. MOBILE VIEWPORT SCREENSHOT (390×844 @ 2x)
   // ─────────────────────────────────────────────────────────────────────────────
-  console.log('[Step 1/7] Capturing mobile viewport screenshot...');
+  console.log('[Step 1/6] Capturing mobile viewport screenshot...');
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
@@ -242,7 +241,7 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────────────────
   // 2. MAIN 1440×900 RECORDING CONTEXT (TARGET: 30–45s)
   // ─────────────────────────────────────────────────────────────────────────────
-  console.log('\n[Step 2/7] Initializing high-resolution walkthrough recording (1440×900 @ 2x)...');
+  console.log('\n[Step 2/6] Initializing high-resolution walkthrough recording (1440×900 @ 2x)...');
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
@@ -419,37 +418,29 @@ async function main() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 3. GENERATE ANIMATED PREVIEW GIF (docs/voxdesk-demo.gif)
-  // ─────────────────────────────────────────────────────────────────────────────
-  console.log('\n[Step 7/7] Generating animated GIF preview via Python Pillow...');
-  try {
-    execSync('python scripts/generate_gif.py', { stdio: 'inherit' });
-  } catch (err) {
-    console.warn('Note on GIF generation:', err.message);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // 4. DISPLAY COMPRESSION & FFMPEG COMMANDS
+  // 3. DISPLAY GENERATED ARTIFACTS & STANDALONE COMPANION UTILITIES
   // ─────────────────────────────────────────────────────────────────────────────
   console.log('\n===============================================================');
-  console.log(' Playwright Demo Assets Generation Complete!');
+  console.log(' Playwright Walkthrough & Screenshot Generation Complete!');
   console.log('===============================================================');
-  console.log('Generated Assets:');
+  console.log('Generated Artifacts:');
   console.log('  1. demo-assets/voxdesk-demo.webm    (Full high-res video recording)');
   console.log('  2. demo-assets/hero.png             (Hero section @ 2x)');
   console.log('  3. demo-assets/active-workflow.png  (Grievance intake & audio meter @ 2x)');
   console.log('  4. demo-assets/result-state.png     (Ticket stamp & verbal confirmation @ 2x)');
   console.log('  5. demo-assets/dashboard.png        (Admin operational console @ 2x)');
   console.log('  6. demo-assets/mobile-viewport.png  (Mobile viewport 390×844 @ 2x)');
-  console.log('  7. docs/voxdesk-demo.gif            (High-quality looping animated preview)');
+  console.log('\nStandalone Companion Tool:');
+  console.log('  Generate animated GIF preview independently:');
+  console.log('    python scripts/generate_gif.py    -> demo-assets/voxdesk-demo.gif');
   console.log('\nFFmpeg Commands for Additional Export Formats:');
   console.log('---------------------------------------------------------------');
   console.log('1. Compressed MP4 (Web & Mobile optimized):');
   console.log('   ffmpeg -i demo-assets/voxdesk-demo.webm -c:v libx264 -crf 22 -preset slow -pix_fmt yuv420p -an docs/voxdesk-demo.mp4\n');
   console.log('2. High-framerate animated GIF:');
-  console.log('   ffmpeg -i demo-assets/voxdesk-demo.webm -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" docs/voxdesk-demo.gif\n');
+  console.log('   ffmpeg -i demo-assets/voxdesk-demo.webm -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" demo-assets/voxdesk-demo.gif\n');
   console.log('3. Fast 15-second teaser clip:');
-  console.log('   ffmpeg -ss 00:00:07 -to 00:00:27 -i demo-assets/voxdesk-demo.webm -vf "fps=15,scale=800:-1:flags=lanczos" docs/voxdesk-teaser.gif');
+  console.log('   ffmpeg -ss 00:00:07 -to 00:00:27 -i demo-assets/voxdesk-demo.webm -vf "fps=15,scale=800:-1:flags=lanczos" demo-assets/voxdesk-teaser.gif');
   console.log('===============================================================\n');
 }
 
