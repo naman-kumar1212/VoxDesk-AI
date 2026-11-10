@@ -59,3 +59,4 @@
 - Secondary Button: Height 44px, background `#FFFFFF`, border `1px solid #D4DEE9`, color `#061B31`, hover `#F8FAFD`, pill `rounded-full`.
 - Cards: Background `#FFFFFF`, border `1px solid rgba(212, 222, 233, 0.75)`, radius `18px`, shadow `0 18px 40px rgba(13, 23, 56, 0.15)`.
 - Inputs: Background `#FFFFFF`, border `1px solid #D4DEE9`, radius `4px`, padding `12px`, focus border `#0570DE`, focus ring `0 0 0 1px #0570DE`.
+

@@ -18,3 +18,4 @@
 
 ## 6. Admin Portal (`src/pages/AdminDashboard.jsx`)
 - Dependencies: `AdminLayout.jsx`, `DashboardView.jsx`, `TicketsView.jsx`, `AnalyticsView.jsx`, `DepartmentsView.jsx`, `UsersView.jsx`
+

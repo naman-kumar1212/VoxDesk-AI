@@ -13,3 +13,4 @@ Live Web Audio API `AnalyserNode` frequency spectrum visualizer sampling 16 freq
 
 ## 4. LoadingSkeleton (`src/components/LoadingSkeleton.jsx`)
 Zero layout shift placeholder skeletons matching exact component dimensions.
+

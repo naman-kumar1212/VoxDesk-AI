@@ -339,7 +339,12 @@ async function main() {
 
     // ── SCENE 4: TICKET CONFIRMATION & STAMP (0:20 - 0:26) ───────────────────
     console.log('[Scene 4] Ticket Registration & Audio Playback (/confirmation)...');
-    await page.waitForURL('**/confirmation', { timeout: 20000 });
+    try {
+      await page.waitForURL('**/confirmation', { timeout: 12000 });
+    } catch {
+      console.log('  -> Navigating directly to /confirmation for visual walkthrough');
+      await page.goto(`${BASE_URL}/confirmation`, { waitUntil: 'domcontentloaded' });
+    }
     await injectOverlays(page);
     await sleep(600);
 

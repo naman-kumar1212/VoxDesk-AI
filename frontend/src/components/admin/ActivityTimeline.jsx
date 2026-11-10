@@ -57,9 +57,9 @@ function getEventConfig(eventType, details = {}) {
       const { category, channel, department, priority } = details;
       return {
         icon: Plus,
-        iconBg: 'bg-brand-subtle',
-        iconColor: 'text-brand',
-        connectorColor: 'border-border',
+        iconBg: 'bg-[#533AFD]/10',
+        iconColor: 'text-[#533AFD]',
+        connectorColor: 'border-[#E3ECF7]',
         title: 'Ticket Created',
         description: [
           channel && `Received via ${friendlyChannel(channel)}.`,
@@ -79,9 +79,9 @@ function getEventConfig(eventType, details = {}) {
       if (operator) parts.push(`By: ${operator}.`);
       return {
         icon: RefreshCw,
-        iconBg: 'bg-surface-subtle',
-        iconColor: 'text-slate-600',
-        connectorColor: 'border-border',
+        iconBg: 'bg-[#0073E6]/10',
+        iconColor: 'text-[#0073E6]',
+        connectorColor: 'border-[#E3ECF7]',
         title: 'Status Updated',
         description: parts.join(' '),
       };
@@ -96,9 +96,9 @@ function getEventConfig(eventType, details = {}) {
       if (operator) parts.push(`By: ${operator}.`);
       return {
         icon: AlertTriangle,
-        iconBg: 'bg-[#FEF2F2]',
-        iconColor: 'text-[#B91C1C]',
-        connectorColor: 'border-[#FECACA]',
+        iconBg: 'bg-[#FFF1F2]',
+        iconColor: 'text-[#DF1B41]',
+        connectorColor: 'border-[#FECDD3]',
         title: 'Ticket Escalated',
         description: parts.join(' '),
       };
@@ -116,9 +116,9 @@ function getEventConfig(eventType, details = {}) {
       if (reason) parts.push(`Reason: ${reason}.`);
       return {
         icon: Building2,
-        iconBg: 'bg-surface-subtle',
-        iconColor: 'text-slate-600',
-        connectorColor: 'border-border',
+        iconBg: 'bg-[#533AFD]/10',
+        iconColor: 'text-[#533AFD]',
+        connectorColor: 'border-[#E3ECF7]',
         title: 'Department Reassigned',
         description: parts.join(' '),
       };
@@ -128,9 +128,9 @@ function getEventConfig(eventType, details = {}) {
       const { preview } = details;
       return {
         icon: StickyNote,
-        iconBg: 'bg-[#FFFBEB]',
-        iconColor: 'text-[#B45309]',
-        connectorColor: 'border-[#FDE68A]',
+        iconBg: 'bg-[#FFF8F3]',
+        iconColor: 'text-[#FF6118]',
+        connectorColor: 'border-[#FED7AA]',
         title: 'Admin Note Added',
         description: preview ? `Note: "${preview}"` : 'Internal note updated.',
       };
@@ -140,9 +140,9 @@ function getEventConfig(eventType, details = {}) {
       const { from_priority, to_priority } = details;
       return {
         icon: ArrowUpDown,
-        iconBg: 'bg-surface-subtle',
-        iconColor: 'text-slate-600',
-        connectorColor: 'border-border',
+        iconBg: 'bg-[#F8FAFD]',
+        iconColor: 'text-[#061B31]',
+        connectorColor: 'border-[#E3ECF7]',
         title: 'Priority Changed',
         description:
           from_priority && to_priority
@@ -156,9 +156,9 @@ function getEventConfig(eventType, details = {}) {
     default:
       return {
         icon: Activity,
-        iconBg: 'bg-surface-subtle',
-        iconColor: 'text-slate-500',
-        connectorColor: 'border-border',
+        iconBg: 'bg-[#F8FAFD]',
+        iconColor: 'text-[#737373]',
+        connectorColor: 'border-[#E3ECF7]',
         title: humanize(eventType) || 'Activity Logged',
         description: 'Administrative action recorded.',
       };
@@ -170,8 +170,8 @@ function getEventConfig(eventType, details = {}) {
 export default function ActivityTimeline({ events = [], isLoading = false }) {
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-slate-400 py-4 text-xs">
-        <Clock className="w-4 h-4 animate-pulse" />
+      <div className="flex items-center gap-2 text-[#737373] py-4 text-xs font-medium">
+        <Clock className="w-4 h-4 animate-pulse text-[#533AFD]" />
         <span>Loading activity history…</span>
       </div>
     );
@@ -179,8 +179,8 @@ export default function ActivityTimeline({ events = [], isLoading = false }) {
 
   if (!events || events.length === 0) {
     return (
-      <div className="py-6 text-center text-xs text-slate-400 space-y-1">
-        <Activity className="w-6 h-6 mx-auto text-slate-300" />
+      <div className="py-6 text-center text-xs text-[#737373] space-y-1">
+        <Activity className="w-6 h-6 mx-auto text-[#A1AAB8]" />
         <p>No activity recorded yet.</p>
       </div>
     );
@@ -202,7 +202,7 @@ export default function ActivityTimeline({ events = [], isLoading = false }) {
             {/* Timeline spine */}
             <div className="flex flex-col items-center shrink-0">
               <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg}`}
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${cfg.iconBg} shadow-xs`}
                 aria-hidden="true"
               >
                 <Icon className={`w-3.5 h-3.5 ${cfg.iconColor}`} />
@@ -215,14 +215,14 @@ export default function ActivityTimeline({ events = [], isLoading = false }) {
             {/* Event content */}
             <div className={`pb-4 flex-1 min-w-0 ${isLast ? 'pb-0' : ''}`}>
               <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-800 leading-tight">
+                <span className="text-xs font-semibold text-[#061B31] leading-tight">
                   {cfg.title}
                 </span>
-                <span className="text-[10px] text-slate-400 shrink-0 mt-0.5 whitespace-nowrap">
+                <span className="text-[10px] text-[#737373] shrink-0 mt-0.5 whitespace-nowrap font-mono">
                   {formatTs(evt.created_at)}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+              <p className="text-[11px] text-[#425466] mt-0.5 leading-relaxed">
                 {cfg.description}
               </p>
             </div>
@@ -232,4 +232,3 @@ export default function ActivityTimeline({ events = [], isLoading = false }) {
     </ol>
   );
 }
-

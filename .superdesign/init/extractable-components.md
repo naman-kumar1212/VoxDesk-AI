@@ -11,3 +11,4 @@ Tabular monospace reference block with one-click copy and verbal readout strip.
 
 ## 4. Admin Breadcrumb Topbar
 Sticky glassmorphic topbar with hierarchical breadcrumbs and profile button.
+

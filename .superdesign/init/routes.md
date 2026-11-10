@@ -13,3 +13,4 @@
 | `/admin/analytics` | `src/components/admin/AnalyticsView.jsx` | Statistical charts & date-range breakdown |
 | `/admin/departments` | `src/components/admin/DepartmentsView.jsx` | Department workload capacity & routing guards |
 | `/admin/users` | `src/components/admin/UsersView.jsx` | Staff RBAC management directory |
+

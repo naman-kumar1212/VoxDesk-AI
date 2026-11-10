@@ -212,3 +212,4 @@ Stripe feels like **finance infrastructure rendered with product-design confiden
 --shadow-lg: 0 28px 60px rgba(13, 23, 56, 0.18);
 --shadow-focus: 0 0 0 3px rgba(5, 112, 222, 0.2);
 ```
+

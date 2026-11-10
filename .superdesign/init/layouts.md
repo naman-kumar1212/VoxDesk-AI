@@ -11,3 +11,4 @@
 ## Admin Layout Shell
 - File: `src/components/admin/AdminLayout.jsx`
 - Structure: Viewport-height `100dvh` shell with fixed left rail (`AdminSidebar.jsx`), sticky breadcrumb topbar (`AdminTopbar.jsx`), and isolated inner scroll container (`AdminMainContent.jsx`).
+
