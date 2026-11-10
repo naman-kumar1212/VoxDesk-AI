@@ -1,15 +1,21 @@
 /**
- * VoxDesk AI — Standalone Playwright Demo Walkthrough & Screenshot Generator
+ * VoxDesk AI — Playwright Product Walkthrough & Asset Generator
  *
- * Records a 30–45 second interactive product walkthrough at 1440×900 with deviceScaleFactor 2.
- * Captures 5 high-resolution screenshots:
+ * Records a 35–45 second interactive product walkthrough at 1440×900 with deviceScaleFactor 2.
+ * Captures the 11 high-resolution screenshots required by documentation:
  *   - demo-assets/hero.png
- *   - demo-assets/active-workflow.png
- *   - demo-assets/result-state.png
- *   - demo-assets/dashboard.png
+ *   - demo-assets/voice-recording.png
+ *   - demo-assets/transcript-review.png
+ *   - demo-assets/ticket-confirmation.png
+ *   - demo-assets/public-tracking.png
+ *   - demo-assets/admin-dashboard.png
+ *   - demo-assets/admin-tickets.png
+ *   - demo-assets/admin-analytics.png
+ *   - demo-assets/admin-departments.png
+ *   - demo-assets/admin-users.png
  *   - demo-assets/mobile-viewport.png
  *
- * Saves the video to: demo-assets/voxdesk-demo.webm
+ * Saves raw video to: demo-assets/voxdesk-demo.webm
  *
  * Usage:
  *   node scripts/demo.mjs
@@ -63,7 +69,7 @@ async function injectOverlays(page) {
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       pointer-events: none;
       transform: translate(-100px, -100px);
-      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), background 0.12s ease;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.12s ease;
       z-index: 9999999;
     `;
 
@@ -88,7 +94,7 @@ async function injectOverlays(page) {
       gap: 9px;
       box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.35);
       backdrop-filter: blur(10px);
-      transition: opacity 0.18s ease;
+      transition: opacity 0.16s ease;
       opacity: 0;
       z-index: 9999998;
     `;
@@ -116,7 +122,7 @@ async function setCaption(page, text) {
     setTimeout(() => {
       txt.textContent = msg;
       el.style.opacity = '1';
-    }, 80);
+    }, 70);
   }, text);
 }
 
@@ -137,7 +143,7 @@ async function moveCursor(page, x, y, steps = 10) {
 async function moveCursorTo(page, selector) {
   try {
     const loc = page.locator(selector).first();
-    const box = await loc.boundingBox({ timeout: 3000 });
+    const box = await loc.boundingBox({ timeout: 2500 });
     if (box) {
       const cx = box.x + box.width / 2;
       const cy = box.y + box.height / 2;
@@ -155,41 +161,41 @@ async function animatedClick(page, selector) {
   const loc = page.locator(selector).first();
   await loc.waitFor({ state: 'visible', timeout: 5000 });
   await moveCursorTo(page, selector);
-  await sleep(120);
+  await sleep(100);
 
   // Quick press animation
   await page.evaluate(() => {
     const c = document.getElementById('voxdesk-cursor');
     if (c) c.style.background = 'rgba(67, 56, 202, 0.6)';
   });
-  await sleep(60);
+  await sleep(50);
 
-  await loc.click({ delay: 40 });
+  await loc.click({ delay: 35 });
 
   await page.evaluate(() => {
     const c = document.getElementById('voxdesk-cursor');
     if (c) c.style.background = 'rgba(67, 56, 202, 0.2)';
   });
-  await sleep(100);
+  await sleep(80);
 }
 
 /**
  * Realistic typing with natural keystroke cadence.
  */
-async function animatedType(page, selector, text, speedMs = 18) {
+async function animatedType(page, selector, text, speedMs = 15) {
   await animatedClick(page, selector);
   for (const char of text) {
     await page.keyboard.type(char);
-    await sleep(speedMs + (Math.random() * 8 - 4));
+    await sleep(speedMs + (Math.random() * 6 - 3));
   }
-  await sleep(120);
+  await sleep(100);
 }
 
 /**
  * Smooth natural scrolling.
  */
-async function smoothScroll(page, targetY, durationMs = 800) {
-  const steps = 18;
+async function smoothScroll(page, targetY, durationMs = 700) {
+  const steps = 16;
   const delay = durationMs / steps;
   const currentY = await page.evaluate(() => window.scrollY);
   const diff = targetY - currentY;
@@ -203,11 +209,11 @@ async function smoothScroll(page, targetY, durationMs = 800) {
 
 async function main() {
   console.log('===============================================================');
-  console.log(' VoxDesk AI — Standalone Playwright Walkthrough Generator');
+  console.log(' VoxDesk AI — Playwright Demo & Screenshot Generation Suite');
   console.log(` Target Site : ${BASE_URL}`);
-  console.log(` Output Video: demo-assets/voxdesk-demo.webm`);
   console.log(' Viewport    : 1440×900 @ 2x device scale');
-  console.log(' Target Time : 30–45 seconds');
+  console.log(' Output Video: demo-assets/voxdesk-demo.webm');
+  console.log(' Target Time : 35–45 seconds');
   console.log('===============================================================\n');
 
   const browser = await chromium.launch({
@@ -223,7 +229,7 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────────────────
   // 1. MOBILE VIEWPORT SCREENSHOT (390×844 @ 2x)
   // ─────────────────────────────────────────────────────────────────────────────
-  console.log('[Step 1/6] Capturing mobile viewport screenshot...');
+  console.log('[Step 1/12] Capturing mobile-viewport.png (390×844 @ 2x)...');
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
@@ -233,15 +239,15 @@ async function main() {
   const mobilePage = await mobileContext.newPage();
   await mobilePage.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await sleep(800);
-  const mobileScreenshotPath = path.join(DEMO_ASSETS_DIR, 'mobile-viewport.png');
-  await mobilePage.screenshot({ path: mobileScreenshotPath });
-  console.log(`  ✓ Saved ${mobileScreenshotPath}`);
+  const mobilePath = path.join(DEMO_ASSETS_DIR, 'mobile-viewport.png');
+  await mobilePage.screenshot({ path: mobilePath });
+  console.log(`  ✓ Saved ${mobilePath}`);
   await mobileContext.close();
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // 2. MAIN 1440×900 RECORDING CONTEXT (TARGET: 30–45s)
+  // 2. MAIN 1440×900 RECORDING CONTEXT (TARGET: 35–45s)
   // ─────────────────────────────────────────────────────────────────────────────
-  console.log('\n[Step 2/6] Initializing high-resolution walkthrough recording (1440×900 @ 2x)...');
+  console.log('\n[Step 2/12] Initializing high-resolution walkthrough recording (1440×900 @ 2x)...');
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 2,
@@ -269,19 +275,19 @@ async function main() {
     await page.screenshot({ path: heroPath });
     console.log(`  ✓ Saved ${heroPath}`);
 
-    // Quick glance at the acoustic console card and workflow
+    // Quick glance at acoustic intake console card and workflow
     await moveCursorTo(page, 'text=Acoustic intake console');
-    await sleep(500);
+    await sleep(400);
 
     await setCaption(page, 'Automated pipeline: Speech → Gemini AI → Structured dispatch');
-    await smoothScroll(page, 500, 600);
-    await sleep(700);
+    await smoothScroll(page, 500, 500);
+    await sleep(600);
 
     await smoothScroll(page, 0, 500);
     await sleep(400);
 
-    // ── SCENE 2: CORE AI WORKFLOW — INTAKE (0:06 - 0:14) ─────────────────────
-    console.log('[Scene 2] Navigating to Grievance Intake (/report)...');
+    // ── SCENE 2: VOICE RECORDING & INTAKE (0:06 - 0:13) ──────────────────────
+    console.log('[Scene 2] Grievance Intake Desk (/report)...');
     await setCaption(page, 'Initiating customer grievance intake...');
     await animatedClick(page, 'a[href="/report"]');
     await page.waitForURL('**/report', { timeout: 8000 });
@@ -290,12 +296,12 @@ async function main() {
 
     await setCaption(page, 'Step 1 — Real-time speech recording with live frequency meter');
     await moveCursorTo(page, 'button[aria-label="Start recording audio complaint"]');
-    await sleep(700);
+    await sleep(600);
 
-    console.log('  -> Capturing demo-assets/active-workflow.png');
-    const activeWorkflowPath = path.join(DEMO_ASSETS_DIR, 'active-workflow.png');
-    await page.screenshot({ path: activeWorkflowPath });
-    console.log(`  ✓ Saved ${activeWorkflowPath}`);
+    console.log('  -> Capturing demo-assets/voice-recording.png');
+    const voiceRecordingPath = path.join(DEMO_ASSETS_DIR, 'voice-recording.png');
+    await page.screenshot({ path: voiceRecordingPath });
+    console.log(`  ✓ Saved ${voiceRecordingPath}`);
 
     // Switch to manual text tab for clear, deterministic demonstration
     await setCaption(page, 'Accessible text mode with real-time intent heuristics');
@@ -304,61 +310,71 @@ async function main() {
 
     const complaintText =
       'Duplicate charge of $120.00 posted on November 2nd. Please refund the extra billing fee.';
-    await animatedType(page, '#manual-transcript', complaintText, 16);
+    await animatedType(page, '#manual-transcript', complaintText, 14);
     await sleep(400);
 
     await setCaption(page, 'Submitting customer grievance for AI categorization...');
     await animatedClick(page, 'button:has-text("Review & submit")');
 
-    // ── SCENE 3: VERIFICATION & GEMINI ROUTING (0:14 - 0:21) ─────────────────
+    // ── SCENE 3: TRANSCRIPT REVIEW & INTENT PREVIEW (0:13 - 0:20) ────────────
     console.log('[Scene 3] Transcript Verification & Intelligent Routing (/review)...');
     await page.waitForURL('**/review', { timeout: 10000 });
     await injectOverlays(page);
     await sleep(500);
 
+    console.log('  -> Capturing demo-assets/transcript-review.png');
+    const transcriptReviewPath = path.join(DEMO_ASSETS_DIR, 'transcript-review.png');
+    await page.screenshot({ path: transcriptReviewPath });
+    console.log(`  ✓ Saved ${transcriptReviewPath}`);
+
     await setCaption(page, 'Step 2 — Gemini classification & department dispatch preview');
     await moveCursorTo(page, 'text=Detected Category');
-    await sleep(600);
-    await moveCursorTo(page, 'text=Assigned Department');
     await sleep(500);
+    await moveCursorTo(page, 'text=Assigned Department');
+    await sleep(400);
 
     await setCaption(page, 'Confirming ticket registration into atomic database ledger...');
     await animatedClick(page, 'button:has-text("Submit grievance")');
 
-    // ── SCENE 4: RESULT STATE & CONFIRMATION (0:21 - 0:27) ───────────────────
-    console.log('[Scene 4] Awaiting Ticket Registration (/confirmation)...');
+    // ── SCENE 4: TICKET CONFIRMATION & STAMP (0:20 - 0:26) ───────────────────
+    console.log('[Scene 4] Ticket Registration & Audio Playback (/confirmation)...');
     await page.waitForURL('**/confirmation', { timeout: 20000 });
     await injectOverlays(page);
-    await sleep(700);
+    await sleep(600);
+
+    console.log('  -> Capturing demo-assets/ticket-confirmation.png');
+    const ticketConfirmationPath = path.join(DEMO_ASSETS_DIR, 'ticket-confirmation.png');
+    await page.screenshot({ path: ticketConfirmationPath });
+    console.log(`  ✓ Saved ${ticketConfirmationPath}`);
 
     await setCaption(page, 'Step 3 — Atomic ticket stamp & synthesized verbal confirmation');
     await moveCursorTo(page, 'text=Ticket reference');
-    await sleep(800);
-
-    console.log('  -> Capturing demo-assets/result-state.png');
-    const resultStatePath = path.join(DEMO_ASSETS_DIR, 'result-state.png');
-    await page.screenshot({ path: resultStatePath });
-    console.log(`  ✓ Saved ${resultStatePath}`);
+    await sleep(600);
 
     await moveCursorTo(page, 'button:has-text("Replay voice"), button:has-text("Pause voice")');
-    await sleep(600);
+    await sleep(500);
 
     await setCaption(page, 'Navigating to public ticket lifecycle tracker...');
     await animatedClick(page, 'a:has-text("Track ticket online")');
 
-    // ── SCENE 5: PUBLIC TICKET TRACKING (0:27 - 0:32) ────────────────────────
+    // ── SCENE 5: PUBLIC TICKET TRACKING (0:26 - 0:31) ────────────────────────
     console.log('[Scene 5] Public Ticket Tracking (/track)...');
     await page.waitForURL('**/track*', { timeout: 8000 });
     await injectOverlays(page);
-    await sleep(700);
-
-    await setCaption(page, 'Public Tracker — Real-time milestone dots & chronological audit log');
-    await moveCursorTo(page, 'text=Grievance Status');
     await sleep(600);
-    await moveCursorTo(page, 'text=Activity Timeline');
-    await sleep(700);
 
-    // ── SCENE 6: ADMIN OPERATIONAL CONSOLE (0:32 - 0:38) ─────────────────────
+    console.log('  -> Capturing demo-assets/public-tracking.png');
+    const publicTrackingPath = path.join(DEMO_ASSETS_DIR, 'public-tracking.png');
+    await page.screenshot({ path: publicTrackingPath });
+    console.log(`  ✓ Saved ${publicTrackingPath}`);
+
+    await setCaption(page, 'Public Tracker — Real-time milestone progression & audit log');
+    await moveCursorTo(page, 'text=Grievance Status');
+    await sleep(500);
+    await moveCursorTo(page, 'text=Activity Timeline');
+    await sleep(600);
+
+    // ── SCENE 6: ADMIN OPERATIONAL CONSOLE (0:31 - 0:42) ─────────────────────
     console.log('[Scene 6] Administrative Operations Console (/admin)...');
     await page.goto(`${BASE_URL}/admin`, { waitUntil: 'domcontentloaded' });
     await injectOverlays(page);
@@ -367,35 +383,70 @@ async function main() {
     const emailInput = page.locator('#admin-email');
     if (await emailInput.isVisible({ timeout: 3000 }).catch(() => false)) {
       await setCaption(page, 'Enterprise access control — Supabase authentication');
-      await animatedType(page, '#admin-email', 'admin@voxdesk.ai', 14);
+      await animatedType(page, '#admin-email', 'admin@voxdesk.ai', 12);
+      await sleep(100);
+      await animatedType(page, '#admin-password', 'AdminVoxDesk2026!', 12);
       await sleep(150);
-      await animatedType(page, '#admin-password', 'AdminVoxDesk2026!', 14);
-      await sleep(200);
       await animatedClick(page, 'button[type="submit"]');
       await page.waitForSelector('text=Total Tickets', { timeout: 12000 }).catch(() => {});
     }
 
     await injectOverlays(page);
-    await sleep(600);
+    await sleep(500);
     await setCaption(page, 'Operational overview: 6 live KPIs, queue health & department load');
     await moveCursorTo(page, 'text=Total Tickets');
-    await sleep(700);
+    await sleep(500);
 
-    console.log('  -> Capturing demo-assets/dashboard.png');
-    const dashboardPath = path.join(DEMO_ASSETS_DIR, 'dashboard.png');
-    await page.screenshot({ path: dashboardPath });
-    console.log(`  ✓ Saved ${dashboardPath}`);
+    console.log('  -> Capturing demo-assets/admin-dashboard.png');
+    const adminDashboardPath = path.join(DEMO_ASSETS_DIR, 'admin-dashboard.png');
+    await page.screenshot({ path: adminDashboardPath });
+    console.log(`  ✓ Saved ${adminDashboardPath}`);
 
-    // Quick hover on Tickets tab to show deep management
+    // Quick tab hops to capture the remaining admin screenshots
+    // Tickets tab
+    await setCaption(page, 'Tickets management: paginated queue, multi-filters & triage drawer');
+    await animatedClick(page, 'button:has-text("Tickets")');
+    await sleep(500);
+    console.log('  -> Capturing demo-assets/admin-tickets.png');
+    const adminTicketsPath = path.join(DEMO_ASSETS_DIR, 'admin-tickets.png');
+    await page.screenshot({ path: adminTicketsPath });
+    console.log(`  ✓ Saved ${adminTicketsPath}`);
+
+    // Analytics tab
+    await animatedClick(page, 'button:has-text("Analytics")');
+    await sleep(600);
+    console.log('  -> Capturing demo-assets/admin-analytics.png');
+    const adminAnalyticsPath = path.join(DEMO_ASSETS_DIR, 'admin-analytics.png');
+    await page.screenshot({ path: adminAnalyticsPath });
+    console.log(`  ✓ Saved ${adminAnalyticsPath}`);
+
+    // Departments tab
+    await animatedClick(page, 'button:has-text("Departments")');
+    await sleep(500);
+    console.log('  -> Capturing demo-assets/admin-departments.png');
+    const adminDepartmentsPath = path.join(DEMO_ASSETS_DIR, 'admin-departments.png');
+    await page.screenshot({ path: adminDepartmentsPath });
+    console.log(`  ✓ Saved ${adminDepartmentsPath}`);
+
+    // Users tab
+    await animatedClick(page, 'button:has-text("Users")');
+    await sleep(500);
+    console.log('  -> Capturing demo-assets/admin-users.png');
+    const adminUsersPath = path.join(DEMO_ASSETS_DIR, 'admin-users.png');
+    await page.screenshot({ path: adminUsersPath });
+    console.log(`  ✓ Saved ${adminUsersPath}`);
+
+    // Return to dashboard
+    await animatedClick(page, 'button:has-text("Dashboard")');
+    await sleep(400);
     await setCaption(page, 'VoxDesk AI — Exact, calm, voice-first grievance automation');
-    await moveCursorTo(page, 'button:has-text("Tickets")');
-    await sleep(900);
+    await sleep(600);
 
   } catch (err) {
     console.error('Error during demo walkthrough flow:', err);
   } finally {
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`\n[Walkthrough Complete] Elapsed duration: ${elapsedSeconds}s (Target: 30–45s)`);
+    console.log(`\n[Walkthrough Complete] Elapsed duration: ${elapsedSeconds}s (Target: 35–45s)`);
 
     const videoObj = page.video();
     await page.close();
@@ -417,30 +468,23 @@ async function main() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // 3. DISPLAY GENERATED ARTIFACTS & STANDALONE COMPANION UTILITIES
-  // ─────────────────────────────────────────────────────────────────────────────
   console.log('\n===============================================================');
-  console.log(' Playwright Walkthrough & Screenshot Generation Complete!');
+  console.log(' Playwright Demo Walkthrough Completed Successfully!');
   console.log('===============================================================');
   console.log('Generated Artifacts:');
-  console.log('  1. demo-assets/voxdesk-demo.webm    (Full high-res video recording)');
-  console.log('  2. demo-assets/hero.png             (Hero section @ 2x)');
-  console.log('  3. demo-assets/active-workflow.png  (Grievance intake & audio meter @ 2x)');
-  console.log('  4. demo-assets/result-state.png     (Ticket stamp & verbal confirmation @ 2x)');
-  console.log('  5. demo-assets/dashboard.png        (Admin operational console @ 2x)');
-  console.log('  6. demo-assets/mobile-viewport.png  (Mobile viewport 390×844 @ 2x)');
-  console.log('\nStandalone Companion Tool:');
-  console.log('  Generate animated GIF preview independently:');
-  console.log('    python scripts/generate_gif.py    -> demo-assets/voxdesk-demo.gif');
-  console.log('\nFFmpeg Commands for Additional Export Formats:');
-  console.log('---------------------------------------------------------------');
-  console.log('1. Compressed MP4 (Web & Mobile optimized):');
-  console.log('   ffmpeg -i demo-assets/voxdesk-demo.webm -c:v libx264 -crf 22 -preset slow -pix_fmt yuv420p -an docs/voxdesk-demo.mp4\n');
-  console.log('2. High-framerate animated GIF:');
-  console.log('   ffmpeg -i demo-assets/voxdesk-demo.webm -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" demo-assets/voxdesk-demo.gif\n');
-  console.log('3. Fast 15-second teaser clip:');
-  console.log('   ffmpeg -ss 00:00:07 -to 00:00:27 -i demo-assets/voxdesk-demo.webm -vf "fps=15,scale=800:-1:flags=lanczos" demo-assets/voxdesk-teaser.gif');
+  console.log('  • demo-assets/voxdesk-demo.webm      (Full interactive walkthrough video)');
+  console.log('  • demo-assets/hero.png               (Landing page hero @ 2x)');
+  console.log('  • demo-assets/voice-recording.png    (Audio grievance intake @ 2x)');
+  console.log('  • demo-assets/transcript-review.png  (Transcript & intent preview @ 2x)');
+  console.log('  • demo-assets/ticket-confirmation.png (Reference stamp & audio readout @ 2x)');
+  console.log('  • demo-assets/public-tracking.png    (Public ticket status tracker @ 2x)');
+  console.log('  • demo-assets/admin-dashboard.png    (Operational metrics & overview @ 2x)');
+  console.log('  • demo-assets/admin-tickets.png      (Paginated tickets queue @ 2x)');
+  console.log('  • demo-assets/admin-analytics.png    (Statistical analytics charts @ 2x)');
+  console.log('  • demo-assets/admin-departments.png  (Department workload table @ 2x)');
+  console.log('  • demo-assets/admin-users.png        (Staff RBAC directory @ 2x)');
+  console.log('  • demo-assets/mobile-viewport.png    (Mobile 390×844 viewport @ 2x)');
+  console.log('\nNext Step: Run `python scripts/generate_media.py` to produce docs/media/ MP4 & GIF exports.');
   console.log('===============================================================\n');
 }
 
