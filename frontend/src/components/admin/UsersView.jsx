@@ -156,7 +156,7 @@ export default function UsersView({ authToken, currentUser }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+          <h1 className="text-2xl font-medium text-primary-text tracking-tight">
             Users Management
           </h1>
           <p className="text-xs text-secondary-text mt-0.5">
@@ -357,7 +357,7 @@ export default function UsersView({ authToken, currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
           <div className="bg-surface border border-border rounded-card p-6 shadow-elevated w-full max-w-md space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h2 className="text-base font-bold text-primary-text">
+              <h2 className="text-base font-medium text-primary-text">
                 {editingUser ? 'Edit User Profile' : 'Add Team Member'}
               </h2>
               <button

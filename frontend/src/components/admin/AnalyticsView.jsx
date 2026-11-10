@@ -225,7 +225,7 @@ export default function AnalyticsView({ authToken }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+          <h1 className="text-2xl font-medium text-primary-text tracking-tight">
             Analytics &amp; Performance
           </h1>
           <p className="text-xs text-secondary-text mt-0.5">
@@ -376,7 +376,7 @@ export default function AnalyticsView({ authToken }) {
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold text-primary-text font-mono tracking-tight">
+            <div className="text-3xl font-medium text-primary-text font-mono tabular-nums tracking-tight">
               {isLoadingSummary ? '...' : (summary?.total_volume?.toLocaleString() ?? 0)}
             </div>
           </div>
@@ -400,7 +400,7 @@ export default function AnalyticsView({ authToken }) {
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold text-primary-text font-mono tracking-tight">
+            <div className="text-3xl font-medium text-primary-text font-mono tabular-nums tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.escalation_rate ?? 0}%`}
             </div>
           </div>
@@ -426,7 +426,7 @@ export default function AnalyticsView({ authToken }) {
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold text-primary-text font-mono tracking-tight">
+            <div className="text-3xl font-medium text-primary-text font-mono tabular-nums tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.resolution_rate ?? 0}%`}
             </div>
           </div>
@@ -452,7 +452,7 @@ export default function AnalyticsView({ authToken }) {
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold text-primary-text font-mono tracking-tight">
+            <div className="text-3xl font-medium text-primary-text font-mono tabular-nums tracking-tight">
               {isLoadingSummary ? '...' : `${summary?.avg_resolution_hours ?? 0}h`}
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function AnalyticsView({ authToken }) {
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-primary-text tracking-tight">
+                    <h3 className="text-sm font-medium text-primary-text tracking-tight">
                       {chart.title}
                     </h3>
                     <p className="text-[11px] text-secondary-text mt-0.5">
@@ -743,7 +743,7 @@ export default function AnalyticsView({ authToken }) {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-primary-text tracking-tight">
+                        <h3 className="text-sm font-medium text-primary-text tracking-tight">
                           {chart.title}
                         </h3>
                         <p className="text-[11px] text-secondary-text mt-0.5">

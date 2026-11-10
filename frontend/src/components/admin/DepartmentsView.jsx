@@ -264,7 +264,7 @@ export default function DepartmentsView({ authToken }) {
 
         <div>
 
-          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+          <h1 className="text-2xl font-medium text-primary-text tracking-tight">
 
             Departments Management
 
@@ -598,7 +598,7 @@ export default function DepartmentsView({ authToken }) {
 
             <div className="flex items-center justify-between pb-3 border-b border-border">
 
-              <h2 className="text-base font-bold text-primary-text">
+              <h2 className="text-base font-medium text-primary-text">
 
                 {editingDept ? 'Edit Department' : 'Add Department'}
 
@@ -778,7 +778,7 @@ export default function DepartmentsView({ authToken }) {
 
             <div className="space-y-1">
 
-              <h2 className="text-base font-bold text-primary-text">Delete Department?</h2>
+              <h2 className="text-base font-medium text-primary-text">Delete Department?</h2>
 
               <p className="text-xs text-muted-text">
 

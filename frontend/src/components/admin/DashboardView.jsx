@@ -65,7 +65,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>
-          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+          <h1 className="text-2xl font-medium text-primary-text tracking-tight">
             Operational Overview
           </h1>
           <p className="text-xs text-secondary-text mt-0.5">
@@ -149,7 +149,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-slate-700" />
-              <h2 className="text-sm font-semibold text-primary-text">Grievance Categories</h2>
+              <h2 className="text-sm font-medium text-primary-text">Grievance Categories</h2>
             </div>
             <span className="text-xs text-muted-text font-mono">
               {categoryEntries.length} categories
@@ -195,7 +195,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-700" />
-              <h2 className="text-sm font-semibold text-primary-text">Department Workload</h2>
+              <h2 className="text-sm font-medium text-primary-text">Department Workload</h2>
             </div>
             <span className="text-xs text-muted-text">Active distribution</span>
           </div>
@@ -250,7 +250,7 @@ export default function DashboardView({ authToken, onNavigateToTickets }) {
       {/* ─────────────────────────────────────────────────────────────────── */}
       <div className="bg-surface border border-border rounded-card p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
-          <h2 className="text-sm font-semibold text-primary-text">Recent Chronological Audit Log</h2>
+          <h2 className="text-sm font-medium text-primary-text">Recent Chronological Audit Log</h2>
           <button
             type="button"
             onClick={() => onNavigateToTickets && onNavigateToTickets()}

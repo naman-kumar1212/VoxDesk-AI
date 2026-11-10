@@ -403,7 +403,7 @@ export default function TicketsView({ authToken }) {
 
         <div>
 
-          <h1 className="text-2xl font-bold text-primary-text tracking-tight">
+          <h1 className="text-2xl font-medium text-primary-text tracking-tight">
 
             Tickets Management
 

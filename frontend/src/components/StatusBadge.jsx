@@ -44,7 +44,7 @@ export default function StatusBadge({ type = 'status', value }) {
     };
 
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-tag text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} aria-hidden="true" />
         {cfg.label}
       </span>
@@ -82,7 +82,7 @@ export default function StatusBadge({ type = 'status', value }) {
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-tag text-xs font-medium border whitespace-nowrap ${cfg.cls}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} aria-hidden="true" />
       {cfg.label}
     </span>
