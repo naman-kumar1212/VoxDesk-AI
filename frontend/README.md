@@ -92,6 +92,21 @@ frontend/
 
 ---
 
+## 📸 Product Walkthrough & Asset Generation
+
+The frontend visual experience, user interactions, and responsive states are recorded automatically using Playwright Chromium:
+
+\ash
+# Generate 1440×900 @ 2x video walkthrough and high-resolution screenshots
+node scripts/demo.mjs
+\\r
+
+- **Walkthrough Video**: demo-assets/voxdesk-demo.webm (30–45s interactive walkthrough)
+- **Animated GIF**: docs/voxdesk-demo.gif (optimally compressed preview)
+- **UI Screenshots**: demo-assets/hero.png, demo-assets/active-workflow.png, demo-assets/result-state.png, demo-assets/dashboard.png, demo-assets/mobile-viewport.png\r
+
+---
+
 ## 🚀 Setup & Local Execution
 
 ### 1. Install Dependencies

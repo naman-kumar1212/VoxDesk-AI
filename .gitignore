@@ -73,6 +73,6 @@ logs/
 
 
 # Allow tracked product demo video walkthrough
-!frontend/public/voxdesk_demo_walkthrough.webm
+!demo-assets/voxdesk-demo.webm
 
 unslop/

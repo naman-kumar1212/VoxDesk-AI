@@ -12,7 +12,8 @@
 | 💻 **GitHub Repository** | [https://github.com/naman-kumar1212/VoxDesk-AI](https://github.com/naman-kumar1212/VoxDesk-AI) | `Public` |
 | ⚡ **Live Backend API** | [https://voxdesk-api.vercel.app](https://voxdesk-api.vercel.app) | `Active` |
 | 🩺 **Backend Health Endpoint** | [https://voxdesk-api.vercel.app/api/health](https://voxdesk-api.vercel.app/api/health) | `200 OK` |
-| 🎬 **Playwright Demo Video** | [frontend/public/voxdesk_demo_walkthrough.webm](frontend/public/voxdesk_demo_walkthrough.webm) | `720p HD` |
+| 🎬 **Playwright Demo Video** | [demo-assets/voxdesk-demo.webm](demo-assets/voxdesk-demo.webm) | `1440×900 @ 2x` |
+| 🖼️ **Animated Demo Preview** | [docs/voxdesk-demo.gif](docs/voxdesk-demo.gif) | `Preview GIF` |
 | 📋 **Product Requirements (PRD)** | [docs/PRD.md](docs/PRD.md) | `Released` |
 | 🏗️ **System Architecture Blueprint** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | `Released` |
 | 🔀 **User Flow & State Machines** | [docs/USER_FLOW.md](docs/USER_FLOW.md) | `Released` |
@@ -235,107 +236,103 @@ flowchart TD
 
 ---
 
-## 📸 Screenshots & Video Walkthrough
+## 📸 Product Walkthrough & Visual Tour
 
-### 🎬 Playwright End-to-End Demo Video
-An automated, full-fidelity end-to-end walkthrough recorded using Playwright Chromium with simulated media devices:
+### 🎬 Interactive Product Walkthrough
 
-🎥 **[Download / Watch HD Walkthrough (WebM Video)](frontend/public/voxdesk_demo_walkthrough.webm)** *(15.8 MB, 720p HD)*  
-🌐 *Stream online directly from production CDN:* [https://voxdesk-web-lac.vercel.app/voxdesk_demo_walkthrough.webm](https://voxdesk-web-lac.vercel.app/voxdesk_demo_walkthrough.webm)
+An automated, high-fidelity end-to-end product walkthrough recorded at **1440×900 with 2× device scale** using Playwright Chromium:
 
+<p align="center">
+  <a href="https://voxdesk-web-lac.vercel.app">
+    <img src="docs/voxdesk-demo.gif" alt="VoxDesk AI Product Demo Walkthrough" width="860" style="border-radius: 12px; border: 1px solid #DCE3EC; box-shadow: 0 10px 30px rgba(0,0,0,0.08);" />
+  </a>
+</p>
+
+<p align="center">
+  <strong><a href="https://voxdesk-web-lac.vercel.app">🚀 Explore Live Application</a></strong> &nbsp;•&nbsp;
+  <strong><a href="demo-assets/voxdesk-demo.webm">🎥 Download Full HD Video (WebM, 1440×900 @ 2x)</a></strong>
+</p>
+
+#### ⏱️ Walkthrough Scene Breakdown (Duration: ~45s)
+
+| Time | Scene | Description & Highlighted Features |
+|:---:|:---|:---|
+| **00:00 - 00:06** | **Hero & Value Proposition** | Acoustic intake console, 4-step pipeline overview, and primary call to action. |
+| **00:06 - 00:14** | **Voice Grievance Intake (`/report`)** | Live Web Audio API frequency visualizer, real-time speech capture, and accessible manual text fallback with instant heuristic preview. |
+| **00:14 - 00:21** | **Transcript Verification & AI Intent (`/review`)** | Customer verification stage showing Google Gemini category extraction, automated department dispatch proposal, and urgency assignment. |
+| **00:21 - 00:27** | **Atomic Registration & Verbal Confirmation (`/confirmation`)** | Monospace reference stamp (`VD-XXXXXXXX`), zero-cost Web SpeechSynthesis verbal playback readout, and target routing details. |
+| **00:27 - 00:32** | **Public Grievance Tracking (`/track`)** | Real-time milestone dots (`open` → `in_progress` → `resolved`), status badges, and chronological audit log. |
+| **00:32 - 00:45** | **Administrative Operations Console (`/admin`)** | Supabase Auth access, 6 live operational KPIs, queue health breakdown, department workloads, and paginated ticket triage drawer. |
+
+---
+
+### 🖼️ High-Resolution UI Gallery (Captured at 1440×900 @ 2x)
+
+#### 1. Landing Page & Hero Section
+*Clean, voice-first design with the Acoustic Intake Console preview and transparent value proposition:*
+<p align="center">
+  <img src="demo-assets/hero.png" alt="VoxDesk AI Landing Page Hero" width="860" style="border-radius: 10px; border: 1px solid #DCE3EC;" />
+</p>
+
+---
+
+#### 2. Grievance Intake Desk (`/report`)
+*Live Web Audio API frequency spectrum analyzer, 45-second duration countdown, and accessible text mode:*
+<p align="center">
+  <img src="demo-assets/active-workflow.png" alt="Grievance Intake Desk" width="860" style="border-radius: 10px; border: 1px solid #DCE3EC;" />
+</p>
+
+---
+
+#### 3. Ticket Stamp & Spoken Audio Confirmation (`/confirmation`)
+*Atomic database registration with tabular monospace ticket reference, department allocation, and native browser verbal confirmation:*
+<p align="center">
+  <img src="demo-assets/result-state.png" alt="Ticket Confirmation" width="860" style="border-radius: 10px; border: 1px solid #DCE3EC;" />
+</p>
+
+---
+
+#### 4. Enterprise Administrative Operations Console (`/admin/dashboard`)
+*Central command center with 6 core operational KPIs, grievance category breakdown, and real-time department workload queue:*
+<p align="center">
+  <img src="demo-assets/dashboard.png" alt="Admin Operational Dashboard" width="860" style="border-radius: 10px; border: 1px solid #DCE3EC;" />
+</p>
+
+---
+
+#### 5. Responsive Mobile Viewport (390×844 @ 2x)
+*Mobile-first design with zero layout shift, touch-friendly targets, and full WCAG 2.2 AA contrast compliance:*
+<p align="center">
+  <img src="demo-assets/mobile-viewport.png" alt="Mobile Touch Viewport" width="360" style="border-radius: 12px; border: 1px solid #DCE3EC;" />
+</p>
+
+---
+
+### 🔄 How to Regenerate Demo Assets
+
+All video and image assets can be regenerated at any time using the headless Playwright automation suite:
+
+```bash
+# 1. Run the high-resolution Playwright walkthrough suite
+node scripts/demo.mjs
+
+# (Or run via the unified runner)
+node scripts/demo.mjs
 ```
-Walkthrough Timeline (Total: 2m 27s):
-├─ 00:00 - 00:15  Landing Page Showcase, Architecture Overview & Value Props
-├─ 00:15 - 00:35  Customer Voice Grievance Recording with Audio Waveform & Timer
-├─ 00:35 - 00:50  Transcript Review, Heuristic Intent Preview & Submission
-├─ 00:50 - 01:05  Spoken Confirmation, Generated Ticket ID & Department Allocation
-├─ 01:05 - 01:25  Public Ticket Tracking with Live Status & Chronological Event Timeline
-├─ 01:25 - 01:40  Administrator Authentication via Supabase Auth
-├─ 01:40 - 01:55  Admin Overview Dashboard with 6 Operational KPIs & Workload Distribution
-├─ 01:55 - 02:10  Paginated Tickets Table, Real-Time Search, Filters & Activity Drawer
-├─ 02:10 - 02:22  In-Memory Statistical Analytics & Date Range Visualizations
-└─ 02:22 - 02:27  Department Directory & RBAC Administrative Staff Management
+
+#### Optional FFmpeg Export Commands
+To generate additional compressed formats or high-framerate GIFs from the raw recording:
+
+```bash
+# Export compressed MP4 (Web & Mobile optimized)
+ffmpeg -i demo-assets/voxdesk-demo.webm -c:v libx264 -crf 22 -preset slow -pix_fmt yuv420p -an docs/voxdesk-demo.mp4
+
+# Export high-framerate animated GIF
+ffmpeg -i demo-assets/voxdesk-demo.webm -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" docs/voxdesk-demo.gif
+
+# Export short 15-second teaser clip
+ffmpeg -ss 00:00:07 -to 00:00:27 -i demo-assets/voxdesk-demo.webm -vf "fps=15,scale=800:-1:flags=lanczos" docs/voxdesk-teaser.gif
 ```
-
----
-
-### 1. Landing Page & Customer Portal
-Modern, accessible landing page introducing the voice-first support workflow, end-to-end architecture, and quick access to voice recording or manual complaint intake:
-
-![Landing Page](screenshots/landing_hero.png)
-
----
-
-### 2. Customer Voice Grievance Intake
-Speak naturally to describe any issue. Features real-time audio waveform visualizer, 45-second countdown timer, audio privacy assurance, and text fallback:
-
-![Customer Voice Grievance Desk](screenshots/voice_recording.png)
-
----
-
-### 3. Editable Transcript Review & AI Intent Preview
-Customers inspect and edit transcribed text before submitting. Live AI heuristic preview displays the detected category and destination department in real time:
-
-![Transcript Review](screenshots/review_complaint.png)
-
----
-
-### 4. Ticket Creation & Spoken Audio Confirmation
-Immediate ticket reference allocation (`VD-XXXX`), assigned department, severity priority, and native browser speech confirmation:
-
-![Ticket Confirmation](screenshots/ticket_confirmation.png)
-
----
-
-### 5. Public Grievance Tracking
-Customers track the exact lifecycle of their ticket with status badges, priority markers, assigned department, and human-readable activity timeline:
-
-![Public Ticket Tracking](screenshots/ticket_tracking.png)
-
----
-
-### 6. Administrative Authentication Console
-Secure authentication powered by Supabase Auth with bcrypt-hashed credentials, password visibility toggle, and rate protection:
-
-![Admin Login](screenshots/admin_login.png)
-
----
-
-### 7. Administrative Operational Console (Overview)
-Operational command center displaying 6 core KPIs (Total, Open, In Progress, Resolved, Escalated, High Priority), grievance category breakdown, and department workloads:
-
-![Admin Dashboard](screenshots/admin_dashboard.png)
-
----
-
-### 8. Tickets Management & Activity Timeline Drawer
-Server-side paginated data table with real-time text search, multi-filters (Status, Priority, Category, Department), sort options, and slide-over inspection drawer:
-
-![Admin Tickets](screenshots/admin_tickets.png)
-
----
-
-### 9. In-Memory Analytics & Statistical Visualizations
-Server-rendered statistical charts using Pandas, Matplotlib, and Seaborn with sub-5ms in-memory cache responses and date range filtering (7D, 30D, 90D, All Time):
-
-![Admin Analytics](screenshots/admin_analytics.png)
-
-| Ticket Ingestion Volume Over Time | Status Distribution Breakdown |
-|:---:|:---:|
-| ![Volume Over Time](screenshots/chart_volume_over_time.png) | ![Status Distribution](screenshots/chart_status_distribution.png) |
-
-| Department Active Workload (Ranked) | Resolution Time Spread (Mean & Median) |
-|:---:|:---:|
-| ![Department Workload](screenshots/chart_department_workload.png) | ![Resolution Time](screenshots/chart_resolution_time.png) |
-
----
-
-### 10. Department Workload Directory & Staff Access
-Monitor departmental capacity, configure escalation routing, and manage administrative accounts with role-based access control:
-
-| Departments Management | Users & RBAC Directory |
-|:---:|:---:|
-| ![Departments Management](screenshots/admin_departments.png) | ![Users Directory](screenshots/admin_users.png) |
 
 ---
 
@@ -543,9 +540,12 @@ VoxDesk-AI/
 │   │   └── main.jsx                 # Application entrypoint
 │   ├── package.json                 # Frontend dependencies & build scripts
 │   └── vite.config.js               # Vite bundler configuration
-├── screenshots/                     # 15 high-resolution UI screenshots & charts
+├── demo-assets/                     # Full HD walkthrough video & 2x retina UI screenshots
+├── docs/                            # PRD, Architecture, User Flow & demo GIF preview
 ├── scripts/
-│   └── record_demo_and_screenshots.js # Automated Playwright recording script
+│   ├── demo.mjs                     # Playwright 30-45s product walkthrough & screenshot generator
+│   ├── record_demo_and_screenshots.js # Unified runner
+│   └── generate_gif.py              # Lightweight animated GIF preview generator
 └── README.md                        # Project documentation
 ```
 

@@ -131,6 +131,19 @@ The test suite validates:
 
 ---
 
+## 🎬 Automated Playwright Verification & Product Walkthrough
+
+The backend API and database transactions are exercised end-to-end against the live frontend using the root Playwright automation suite:
+
+\ash
+# Run 30–45s automated product walkthrough and regenerate high-resolution demo assets
+node scripts/demo.mjs
+\\r
+
+All walkthrough video recordings and high-resolution screenshot artifacts are saved directly to demo-assets/ and docs/voxdesk-demo.gif.
+
+---
+
 ## ⚡ Performance Optimizations
 
 1. **SQL Aggregation Consolidation:** Dashboard metrics query uses PostgreSQL `FILTER (WHERE ...)` to compute counts and distributions in a single roundtrip, eliminating 5 redundant network queries.
