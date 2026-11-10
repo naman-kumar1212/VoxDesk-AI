@@ -172,9 +172,9 @@ export default function AdminDashboard() {
           </Link>
 
           <div className="space-y-1.5">
-            <h2 className="text-2xl font-bold text-primary-text tracking-tight">
+            <h1 className="text-2xl font-bold text-primary-text tracking-tight">
               Admin Console Sign In
-            </h2>
+            </h1>
             <p className="text-xs text-secondary-text leading-relaxed">
               Authorized operations portal for grievance queue auditing, departmental routing, and analytics.
             </p>

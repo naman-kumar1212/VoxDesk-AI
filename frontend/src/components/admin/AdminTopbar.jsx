@@ -53,7 +53,7 @@ export default function AdminTopbar({
           <span className="font-bold text-slate-800 tracking-tight">
             VoxDesk Control Center
           </span>
-          <span className="text-slate-300">/</span>
+          <span className="text-slate-400" aria-hidden="true">/</span>
           <span className="font-semibold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-100/60">
             {activeTab}
           </span>
