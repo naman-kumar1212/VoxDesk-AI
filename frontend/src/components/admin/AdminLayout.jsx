@@ -52,7 +52,7 @@ export default function AdminLayout({
   }, [mobileOpen]);
 
   return (
-    <div className="fixed inset-0 flex bg-slate-50 font-sans overflow-hidden select-none">
+    <div className="fixed inset-0 flex bg-app font-sans overflow-hidden select-none">
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 1. Permanent Desktop Sidebar (Full Viewport Height 100dvh) */}
       {/* ─────────────────────────────────────────────────────────────────── */}
@@ -109,7 +109,7 @@ export default function AdminLayout({
       {/* ─────────────────────────────────────────────────────────────────── */}
       {/* 3. Right Area: Sticky Topbar + Independently Scrollable Main Content */}
       {/* ─────────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-slate-50">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-app">
         <AdminTopbar
           activeTab={activeTab}
           currentUser={currentUser}
@@ -124,4 +124,3 @@ export default function AdminLayout({
     </div>
   );
 }
-

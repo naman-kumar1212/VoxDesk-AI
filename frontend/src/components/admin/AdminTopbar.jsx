@@ -37,47 +37,47 @@ export default function AdminTopbar({
   }, [profileDropdownOpen]);
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0 select-none">
+    <header className="h-16 bg-surface border-b border-border px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0 select-none">
       {/* Left Area: Mobile Menu Trigger & Breadcrumbs */}
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onOpenMobileSidebar}
-          className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+          className="md:hidden p-2 text-secondary-text hover:text-primary-text rounded-btn hover:bg-surface-subtle transition-colors cursor-pointer"
           aria-label="Open sidebar navigation"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-bold text-slate-800 tracking-tight">
+          <span className="font-medium text-primary-text">
             VoxDesk Control Center
           </span>
           <span className="text-slate-400" aria-hidden="true">/</span>
-          <span className="font-semibold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-100/60">
+          <span className="font-medium text-brand bg-brand-subtle px-2 py-0.5 rounded-tag border border-brand/20">
             {activeTab}
           </span>
         </div>
       </div>
 
-      {/* Right Area: Admin Profile Dropdown Pill */}
+      {/* Right Area: Admin Profile Button */}
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
           onClick={() => setProfileDropdownOpen((prev) => !prev)}
           aria-expanded={profileDropdownOpen}
           aria-haspopup="menu"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 transition cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-btn border border-border bg-surface text-xs font-medium text-secondary-text shadow-xs hover:bg-surface-subtle hover:text-primary-text transition-colors cursor-pointer"
         >
-          <div className="w-5 h-5 rounded-full bg-primary-700 text-white flex items-center justify-center text-[10px] font-bold">
+          <div className="w-5 h-5 rounded-btn bg-brand text-white flex items-center justify-center text-[10px] font-mono font-medium">
             {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
           </div>
           <span className="hidden sm:inline truncate max-w-[140px]">
             {currentUser?.name || currentUser?.email || 'Admin'}
           </span>
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-              profileDropdownOpen ? 'rotate-180 text-primary-600' : ''
+            className={`w-3.5 h-3.5 text-secondary-text transition-transform duration-150 ${
+              profileDropdownOpen ? 'rotate-180 text-brand' : ''
             }`}
           />
         </button>
@@ -86,16 +86,16 @@ export default function AdminTopbar({
         {profileDropdownOpen && (
           <div
             role="menu"
-            className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl shadow-lg p-2 z-30 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+            className="absolute right-0 mt-2 w-52 bg-surface border border-border rounded-card shadow-md p-1.5 z-30 space-y-1"
           >
-            <div className="px-3 py-2 border-b border-slate-100 text-xs">
-              <div className="font-bold text-slate-800 truncate">
+            <div className="px-3 py-2 border-b border-border text-xs">
+              <div className="font-medium text-primary-text truncate">
                 {currentUser?.name || 'Administrator'}
               </div>
-              <div className="text-[10px] text-slate-400 truncate">
+              <div className="text-[10px] font-mono text-muted-text truncate">
                 {currentUser?.email || 'admin@voxdesk.ai'}
               </div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-primary-600 mt-1">
+              <div className="text-[10px] font-mono text-brand mt-1">
                 Role: {currentUser?.role || 'Admin'}
               </div>
             </div>
@@ -104,10 +104,10 @@ export default function AdminTopbar({
               to="/"
               role="menuitem"
               onClick={() => setProfileDropdownOpen(false)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition"
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-secondary-text hover:text-primary-text hover:bg-surface-subtle rounded-btn transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Exit to Public Home</span>
+              <span>Exit to public home</span>
             </Link>
 
             <button
@@ -117,10 +117,10 @@ export default function AdminTopbar({
                 setProfileDropdownOpen(false);
                 if (onLogout) onLogout();
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl font-semibold transition cursor-pointer"
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-btn font-medium transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span>Sign out</span>
             </button>
           </div>
         )}
@@ -128,4 +128,3 @@ export default function AdminTopbar({
     </header>
   );
 }
-

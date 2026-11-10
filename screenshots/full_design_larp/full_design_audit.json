@@ -147,9 +147,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -178,9 +178,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -211,9 +211,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -231,7 +231,8 @@
       "Users Management"
     ],
     "fonts": [
-      "Inter"
+      "Inter",
+      "IBM Plex Mono"
     ],
     "fontSizes": [
       "16px",
@@ -242,9 +243,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -275,9 +276,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -435,9 +436,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -466,9 +467,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -499,9 +500,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -519,7 +520,8 @@
       "Users Management"
     ],
     "fonts": [
-      "Inter"
+      "Inter",
+      "IBM Plex Mono"
     ],
     "fontSizes": [
       "16px",
@@ -530,9 +532,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
@@ -563,9 +565,9 @@
     ],
     "fontWeights": [
       "400",
+      "500",
       "700",
-      "600",
-      "500"
+      "600"
     ],
     "lowContrastIssues": [],
     "horizontalOverflow": false,
