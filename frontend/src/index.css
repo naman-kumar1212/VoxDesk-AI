@@ -4,20 +4,20 @@
 
 @layer base {
   :root {
-    --app-bg: #F4F6F9;
+    --app-bg: #F5F7FA;
     --surface: #FFFFFF;
-    --surface-subtle: #F8FAFC;
-    --surface-muted: #EEF2F7;
+    --surface-subtle: #F0F3F6;
+    --surface-muted: #ECEFF4;
     --border: #DCE3EC;
     --border-strong: #C5D0DD;
     --primary-text: #111827;
-    --secondary-text: #475569;
-    --muted-text: #64748B;
-    --brand-primary: #5B3CC4;
-    --brand-hover: #4B2FA8;
-    --brand-subtle: #F0EBFF;
+    --secondary-text: #4B5565;
+    --muted-text: #6B7487;
+    --brand-primary: #4338CA;
+    --brand-hover: #3730A3;
+    --brand-subtle: #EEF2FF;
     --voice-accent: #0F766E;
-    --voice-subtle: #E6F5F2;
+    --voice-subtle: #F0FDF4;
     --status-open: #64748B;
     --status-in-progress: #2563EB;
     --status-resolved: #15803D;

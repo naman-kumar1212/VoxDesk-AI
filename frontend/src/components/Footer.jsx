@@ -17,7 +17,7 @@ export default function Footer() {
               Enterprise AI voice customer grievance and automated ticket routing platform. Speak naturally to file support tickets, receive instant structured AI classification, and track real-time resolution updates.
             </p>
             <div className="pt-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#182338] text-[11px] font-medium text-slate-300 border border-[#2E3C54]">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-btn bg-[#182338] text-[11px] font-medium text-slate-300 border border-[#2E3C54]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 VocalLabs Voice AI Hackathon Edition
               </span>
@@ -26,7 +26,7 @@ export default function Footer() {
 
           {/* Quick Navigation */}
           <div className="md:col-span-3 space-y-3 text-left">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-white">
+            <h4 className="text-xs font-medium text-white">
               Platform
             </h4>
             <ul className="space-y-2 text-xs">
@@ -55,7 +55,7 @@ export default function Footer() {
 
           {/* Admin & Security */}
           <div className="md:col-span-4 space-y-3 text-left">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-white">
+            <h4 className="text-xs font-medium text-white">
               Administration & Trust
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -66,7 +66,7 @@ export default function Footer() {
                 to="/admin"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-[#182338] hover:bg-[#26344B] text-slate-200 border border-[#2E3C54] text-xs font-semibold transition shadow-xs"
               >
-                <Shield className="w-3.5 h-3.5 text-[#8B6CF0]" />
+                <Shield className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Admin Operations Console</span>
               </Link>
             </div>

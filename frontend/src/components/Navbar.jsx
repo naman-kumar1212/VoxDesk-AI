@@ -80,7 +80,7 @@ export default function Navbar() {
 
           <Link
             to="/report"
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-brand hover:bg-brand-hover rounded-btn shadow-xs transition transform hover:-translate-y-0.5 active:translate-y-0 focus-visible:ring-2 focus-visible:ring-brand"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-brand hover:bg-brand-hover rounded-btn shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Mic className="w-3.5 h-3.5 text-white/90" />
             <span>Report an Issue</span>
