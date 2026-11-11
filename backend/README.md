@@ -55,7 +55,7 @@ backend/
 ├── migrate_admin_features.py# Schema migrations for departments & admin users
 ├── requirements.txt         # Pinned Python dependencies
 ├── vercel.json              # Vercel Serverless Python runtime configuration
-└── wsgi.py                  # WSGI entrypoint
+└── api/index.py             # Serverless & WSGI application entrypoint
 ```
 
 ---
@@ -106,7 +106,7 @@ python create_admin.py --email admin@voxdesk.ai --password "AdminVoxDesk2026!" -
 
 ### 3. Start Local Development Server
 ```bash
-python wsgi.py
+python api/index.py
 ```
 The Flask API runs at `http://localhost:5000` with hot-reloading and performance logging.
 

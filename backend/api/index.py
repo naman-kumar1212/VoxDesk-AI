@@ -51,3 +51,6 @@ app.wsgi_app = VercelWSGIWrapper(app.wsgi_app)
 
 # Vercel serverless function entrypoint compatibility
 handler = app
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

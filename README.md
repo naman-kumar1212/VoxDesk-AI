@@ -400,7 +400,7 @@ python create_admin.py --email your-admin-email@example.com --password your-stro
 
 Start the Flask server:
 ```bash
-python wsgi.py
+python api/index.py
 ```
 Backend API will be live at `http://localhost:5000`.
 
@@ -464,7 +464,7 @@ VoxDesk-AI/
 │   ├── tests/                   # 39 passing pytest unit and integration tests
 │   ├── requirements.txt         # Pinned Python package dependencies
 │   ├── vercel.json              # Serverless Python runtime configuration
-│   └── wsgi.py                  # WSGI application entrypoint
+│   └── api/index.py             # WSGI and serverless entrypoint
 ├── frontend/
 │   ├── src/
 │   │   ├── components/          # Navigation, status badges, and admin layout modules
@@ -482,7 +482,6 @@ VoxDesk-AI/
 ├── scripts/
 │   ├── demo.mjs                 # Playwright 35–45s product walkthrough generator
 │   ├── generate_media.py        # Standalone FFmpeg MP4 and animated GIF converter
-│   └── generate_gif.py          # Standalone GIF generator utility
 ├── LICENSE                      # MIT Open Source License
 └── README.md                    # Project documentation
 ```
