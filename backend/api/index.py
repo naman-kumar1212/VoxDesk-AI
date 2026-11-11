@@ -18,10 +18,13 @@ from app import create_app
 app = create_app()
 
 
+ENTRYPOINT_PATHS = ("/api/index", "/index", "/api/index.py", "/index.py")
+
+
 class VercelWSGIWrapper:
     """
     WSGI wrapper ensuring clean PATH_INFO resolution behind Vercel edge proxy.
-    If the proxy passes the physical entrypoint identifier (/api/index or /index),
+    If the proxy passes the physical entrypoint identifier,
     it recovers the legitimate client-requested path from request headers.
     """
     def __init__(self, wsgi_app):
@@ -29,8 +32,7 @@ class VercelWSGIWrapper:
 
     def __call__(self, environ, start_response):
         path = environ.get("PATH_INFO", "")
-        # If edge proxy passed physical entrypoint, recover the real requested URI
-        if path in ("/api/index", "/index", "/api/index.py", "/index.py"):
+        if path in ENTRYPOINT_PATHS:
             orig_uri = (
                 environ.get("HTTP_X_FORWARDED_URI")
                 or environ.get("HTTP_X_REAL_PATH")
@@ -39,11 +41,7 @@ class VercelWSGIWrapper:
                 or ""
             )
             clean_orig = orig_uri.split("?")[0] if orig_uri else ""
-            if clean_orig and clean_orig not in ("/api/index", "/index", "/api/index.py", "/index.py"):
-                environ["PATH_INFO"] = clean_orig
-            else:
-                # Default to root endpoint
-                environ["PATH_INFO"] = "/"
+            environ["PATH_INFO"] = clean_orig if clean_orig and clean_orig not in ENTRYPOINT_PATHS else "/"
 
         return self.wsgi_app(environ, start_response)
 

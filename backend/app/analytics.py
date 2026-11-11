@@ -54,7 +54,6 @@ VOX_BLUE = "#2563EB"
 VOX_EMERALD = "#15803D"
 VOX_AMBER = "#B45309"
 VOX_DANGER = "#B91C1C"
-VOX_ROSE = "#B91C1C"
 VOX_SLATE = "#64748B"
 
 
@@ -227,10 +226,8 @@ def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[
             "department_breakdown": {},
             "department_table": [],
             "status_table": [
-                {"status": "Open", "count": 0, "percentage": 0.0, "color": VOX_SLATE},
-                {"status": "In Progress", "count": 0, "percentage": 0.0, "color": VOX_BLUE},
-                {"status": "Escalated", "count": 0, "percentage": 0.0, "color": VOX_ROSE},
-                {"status": "Resolved", "count": 0, "percentage": 0.0, "color": VOX_EMERALD},
+                {"status": s, "count": 0, "percentage": 0.0, "color": col}
+                for s, col in [("Open", VOX_SLATE), ("In Progress", VOX_BLUE), ("Escalated", VOX_DANGER), ("Resolved", VOX_EMERALD)]
             ],
         }
 
@@ -291,7 +288,7 @@ def get_analytics_summary(org_id, range_param: str = "all", start_str: Optional[
             "key": "escalated",
             "count": escalated_count,
             "percentage": round((escalated_count / total_volume) * 100, 1),
-            "color": VOX_ROSE,
+            "color": VOX_DANGER,
         },
         {
             "status": "Resolved",
@@ -442,7 +439,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
     elif chart_name == "status_distribution":
         order = ["open", "in_progress", "escalated", "resolved"]
         labels = ["Open", "In Progress", "Escalated", "Resolved"]
-        status_palette = [VOX_SLATE, VOX_BLUE, VOX_ROSE, VOX_EMERALD]
+        status_palette = [VOX_SLATE, VOX_BLUE, VOX_DANGER, VOX_EMERALD]
 
         counts_map = df["status"].value_counts().to_dict()
         counts = [int(counts_map.get(s, 0)) for s in order]
@@ -551,7 +548,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
             )
 
             # Reference lines
-            ax.axvline(mean_hrs, color=VOX_ROSE, linestyle="--", linewidth=2.0, label=f"Mean: {mean_hrs:.1f} hrs")
+            ax.axvline(mean_hrs, color=VOX_DANGER, linestyle="--", linewidth=2.0, label=f"Mean: {mean_hrs:.1f} hrs")
             ax.axvline(median_hrs, color=VOX_BLUE, linestyle="-.", linewidth=2.0, label=f"Median: {median_hrs:.1f} hrs")
 
             # Only show KDE if N >= 15 to avoid misleading sparse curves
@@ -631,7 +628,7 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
 
     else:
         ax.text(0.5, 0.5, f"Unknown chart identifier: {chart_name}",
-                ha="center", va="center", transform=ax.transAxes, color=VOX_ROSE, fontsize=11)
+                ha="center", va="center", transform=ax.transAxes, color=VOX_DANGER, fontsize=11)
         ax.set_axis_off()
 
     buf = io.BytesIO()
@@ -643,10 +640,3 @@ def render_chart_png(org_id, chart_name: str, range_param: str = "all", start_st
         _CHART_CACHE[cache_key] = (now_ts, final_bytes)
     return final_bytes
 
-# Pre-warm Matplotlib font cache on import to prevent runtime findfont stalls
-try:
-    _fig = plt.figure(figsize=(1, 1))
-    plt.text(0, 0, "warm")
-    plt.close("all")
-except Exception:
-    pass

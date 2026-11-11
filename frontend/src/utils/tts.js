@@ -19,20 +19,11 @@ export function speakConfirmation(text, { onEnd, onError } = {}) {
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
-    // Try to find an English (en-IN or en-US/en-GB) voice
+    // Try to find an English voice (en-IN preferred, then en-*)
     const voices = window.speechSynthesis.getVoices();
-    const indianVoice = voices.find((v) => v.lang === 'en-IN');
-    const englishVoice = voices.find((v) => v.lang && v.lang.startsWith('en'));
-
-    if (indianVoice) {
-      utterance.voice = indianVoice;
-      utterance.lang = 'en-IN';
-    } else if (englishVoice) {
-      utterance.voice = englishVoice;
-      utterance.lang = englishVoice.lang;
-    } else {
-      utterance.lang = 'en-US';
-    }
+    const voice = voices.find((v) => v.lang === 'en-IN') || voices.find((v) => v.lang && v.lang.startsWith('en'));
+    if (voice) utterance.voice = voice;
+    utterance.lang = voice?.lang || 'en-US';
 
     if (onEnd) utterance.onend = onEnd;
     if (onError) utterance.onerror = onError;
